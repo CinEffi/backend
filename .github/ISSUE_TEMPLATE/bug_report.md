@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Bug 이슈 템플릿
+about: 템플릿에 맞춰서 작성해주세요
 title: ''
-labels: bug
+labels: ''
 assignees: ''
 
 ---
