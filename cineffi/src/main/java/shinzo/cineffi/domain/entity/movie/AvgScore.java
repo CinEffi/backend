@@ -20,11 +20,14 @@ public class AvgScore extends BaseEntity {
     private Long id;
 
     @Builder.Default
-    private float allAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    private float allAvgScore = 0f;
 
     @Builder.Default
-    private float cinephileAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    private float cinephileAvgScore = 0f;
 
     @Builder.Default
-    private float levelAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    private float levelAvgScore = 0f;
 }

@@ -22,13 +22,15 @@ import java.time.LocalDateTime;
 public abstract class BaseEntity {
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(columnDefinition = "TIMESTAMP(3) WITHOUT TIME ZONE", nullable = false)
     private LocalDateTime modifiedAt;
 
     @Builder.Default
+    @Column(nullable = false)
     private boolean isDelete = false;
 
 }

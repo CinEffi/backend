@@ -8,7 +8,7 @@ spring:
 #
         # local postgres
         url: jdbc:postgresql://localhost:5432/cineffi
-        username: jeongsion
+        username:
         password:
         driver-class-name: org.postgresql.Driver
 
