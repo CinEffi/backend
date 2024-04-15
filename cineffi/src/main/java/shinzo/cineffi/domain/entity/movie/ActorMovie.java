@@ -18,6 +18,7 @@ public class ActorMovie extends BaseEntity {
     @Column(name = "Actor_movie_id")
     private Long id;
 
+    @Column(nullable = false)
     private String character;
 
     private int orders;

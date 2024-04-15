@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Type;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -25,12 +26,16 @@ public class Movie extends BaseEntity {
     private Long id;
 
     private String title;
-    private LocalDateTime releaseDate;
+
+    @Column(columnDefinition = "DATE")
+    private LocalDate releaseDate;
 
     @Lob
     private byte[] poster;
     private String originCountry;
     private String[] genre;
+
+    @Column(columnDefinition = "TIME")
     private LocalTime runtime;
     private String introduction;
 
