@@ -18,6 +18,7 @@ import shinzo.cineffi.domain.entity.user.UserProfile;
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
+
 public class Review extends BaseEntity {
 
     @Id

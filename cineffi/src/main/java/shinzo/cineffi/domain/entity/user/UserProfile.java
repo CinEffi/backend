@@ -31,7 +31,6 @@ public class UserProfile {
 
     private String name;
 
-
     @Lob
     private byte[] profileImage;
 

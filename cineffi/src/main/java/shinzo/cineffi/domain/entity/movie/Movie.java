@@ -44,7 +44,7 @@ public class Movie extends BaseEntity {
     private Director director;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "avgScore_id")
+    @JoinColumn(name = "avg_score_id")
     private AvgScore avgScore;
 
 }
