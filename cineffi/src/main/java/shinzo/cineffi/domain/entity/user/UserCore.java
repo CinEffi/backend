@@ -25,7 +25,6 @@ public class UserCore extends BaseEntity {
 
 
 
-
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "userCore")
     @PrimaryKeyJoinColumn
     private UserProfile userProfile;

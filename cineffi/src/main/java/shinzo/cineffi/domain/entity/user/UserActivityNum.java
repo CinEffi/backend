@@ -3,11 +3,15 @@ package shinzo.cineffi.domain.entity.user;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DialectOverride;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@DynamicInsert
 public class UserActivityNum {
 
     @Id
@@ -19,18 +23,17 @@ public class UserActivityNum {
     @JoinColumn(name = "user_id")
     private UserCore userCore;
 
+    @ColumnDefault("0")
+    private int collectionNum;
 
-    @Builder.Default
-    private int collectionNum = 0;
+    @ColumnDefault("0")
+    private int scrapNum;
 
-    @Builder.Default
-    private int scrapNum = 0;
+    @ColumnDefault("0")
+    private int followingsNum;
 
-    @Builder.Default
-    private int followingsNum = 0;
-
-    @Builder.Default
-    private int followersNum = 0;
+    @ColumnDefault("0")
+    private int followersNum;
 
 
 }

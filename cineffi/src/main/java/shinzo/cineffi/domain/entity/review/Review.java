@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.user.UserCore;
@@ -15,6 +17,8 @@ import shinzo.cineffi.domain.entity.user.UserProfile;
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@DynamicInsert
+
 public class Review extends BaseEntity {
 
     @Id
@@ -22,14 +26,14 @@ public class Review extends BaseEntity {
     @Column(name = "review_id")
     private Long id;
 
-    @Builder.Default
-    private String content = "";
+    @ColumnDefault("''")
+    private String content;
 
-    @Builder.Default
-    private float score = 5;
+    @ColumnDefault("5")
+    private float score;
 
-    @Builder.Default
-    private int likeNum = 0;
+    @ColumnDefault("0")
+    private int likeNum;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

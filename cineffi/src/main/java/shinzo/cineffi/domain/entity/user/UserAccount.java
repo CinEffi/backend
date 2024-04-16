@@ -22,9 +22,6 @@ public class UserAccount {
     @JoinColumn(name = "user_id")
     private UserCore userCore;
 
-
-
-
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)

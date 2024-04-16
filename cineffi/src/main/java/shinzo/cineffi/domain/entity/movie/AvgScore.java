@@ -6,12 +6,15 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@DynamicInsert
 public class AvgScore extends BaseEntity {
 
     @Id
@@ -19,12 +22,15 @@ public class AvgScore extends BaseEntity {
     @Column(name = "avg_score_id")
     private Long id;
 
-    @Builder.Default
-    private float allAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    @ColumnDefault("0")
+    private float allAvgScore;
 
-    @Builder.Default
-    private float cinephileAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    @ColumnDefault("0")
+    private float cinephileAvgScore;
 
-    @Builder.Default
-    private float levelAvgScore = 0;
+    @Column(columnDefinition = "NUMERIC(2,1)")
+    @ColumnDefault("0")
+    private float levelAvgScore;
 }
