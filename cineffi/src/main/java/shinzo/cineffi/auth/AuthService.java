@@ -10,8 +10,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import shinzo.cineffi.domain.dto.KakaoProfile;
 import shinzo.cineffi.domain.dto.KakaoToken;
-import shinzo.cineffi.user.repository.UserAccountRepository;
+import shinzo.cineffi.domain.entity.user.UserAccount;
+import shinzo.cineffi.domain.entity.user.UserCore;
 import shinzo.cineffi.user.repository.UserCoreRepository;
 
 @Transactional
@@ -36,14 +38,13 @@ import shinzo.cineffi.user.repository.UserRepository;
 @ResponseBody
 public class AuthService {
     private final UserCoreRepository userCoreRepo;
-    private final UserAccountRepository userAccountRepo;
 
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
     private String redirectUrl;
 
-    public KakaoToken getAccessToken(String code){
+    public KakaoToken getKakaoToken(String code){
         RestTemplate rt = new RestTemplate();
         //요청보낼 헤더 생성
         HttpHeaders headers = new HttpHeaders();
@@ -78,6 +79,36 @@ public class AuthService {
         return kakaoToken;
 
     }
+
+    public KakaoProfile findKakaoProfile(String accessToken){
+        RestTemplate rt = new RestTemplate();
+
+        //헤더 생성
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        HttpEntity<MultiValueMap<String, String>> kakaoProfileRequest = new HttpEntity<>(headers);
+
+        //요청을 만들어 보내고, 그걸 응답에 받기
+        ResponseEntity<String> kakaoProfileResponse = rt.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                kakaoProfileRequest,
+                String.class
+        );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        KakaoProfile kakaoProfile = null;
+        try{
+            kakaoProfile = objectMapper.readValue(kakaoProfileResponse.getBody(), KakaoProfile.class);
+        }catch (JsonProcessingException e){
+            e.printStackTrace();
+        }
+        System.out.println(kakaoProfile);
+        return kakaoProfile;
+    }
+
 
 
 
