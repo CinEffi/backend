@@ -21,11 +21,14 @@ public class AuthController {
     private final AuthService authService;
 
     @GetMapping("/api/auth/login/kakao")
-    public KakaoToken getKakaoToken(@RequestParam final String code){
-        //인가코드로 엑세스 코드 발급
-        KakaoToken kakaoToken = authService.getAccessToken(code);
+    public String getKakaoToken(@RequestParam final String code){
+        //인가코드로 카카오 토큰 발급
+        KakaoToken kakaoToken = authService.getKakaoToken(code);
 
-        return kakaoToken;
+        //카카오 토큰으로 카카오 개인정보 가져오기
+        authService.findKakaoProfile(kakaoToken.getAccessToken());
+
+        return "sdf";
     }
 
 }
