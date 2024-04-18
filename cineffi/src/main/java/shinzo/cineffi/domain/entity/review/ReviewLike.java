@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import shinzo.cineffi.domain.entity.BaseEntity;
-import shinzo.cineffi.domain.entity.user.UserCore;
+import shinzo.cineffi.domain.entity.user.User;
 
 @Entity
 @Getter
@@ -25,5 +25,5 @@ public class ReviewLike extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserCore userCore;
+    private User user;
 }

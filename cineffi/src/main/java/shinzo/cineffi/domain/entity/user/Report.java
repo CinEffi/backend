@@ -25,9 +25,9 @@ public class Report extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reported_id")
-    private UserCore reported; //신고당한 사람
+    private User reported; //신고당한 사람
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id")
-    private UserCore reporter; //신고자
+    private User reporter; //신고자
 }
