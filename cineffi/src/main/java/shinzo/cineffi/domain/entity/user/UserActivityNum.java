@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DynamicInsert;
 
 @Entity
@@ -21,7 +20,7 @@ public class UserActivityNum {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")
-    private UserCore userCore;
+    private User user;
 
     @ColumnDefault("0")
     private int collectionNum;
