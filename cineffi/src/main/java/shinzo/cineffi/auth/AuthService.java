@@ -38,7 +38,7 @@ public class AuthService {
         UserAccount userAccount = UserAccount.builder()
                 .loginType(request.getLoginType())
                 .password(BCrypt.hashpw(request.getPassword(),BCrypt.gensalt()))
-                .Email(request.getEmail())
+                .email(request.getEmail())
                 .user(user)
                 .build();
 

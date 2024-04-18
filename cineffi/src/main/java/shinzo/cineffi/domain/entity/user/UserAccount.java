@@ -25,7 +25,7 @@ public class UserAccount {
     @Enumerated(EnumType.STRING)
     private LoginType loginType;
 
-    private String Email;
+    private String email;
 
     private String password;
 }
