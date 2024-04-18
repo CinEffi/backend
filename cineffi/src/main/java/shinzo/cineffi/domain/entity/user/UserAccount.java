@@ -20,14 +20,12 @@ public class UserAccount {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_id")
-    private UserCore userCore;
-
-    private String phoneNumber;
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private LoginType loginType;
 
-    private String kakaoEmail;
+    private String Email;
 
     private String password;
 }
