@@ -25,10 +25,11 @@ public class AuthController {
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.getKakaoToken(code);
 
-        //카카오 토큰으로 카카오 개인정보 가져오기
-        authService.findKakaoProfile(kakaoToken.getAccessToken());
+        //카카오 토큰으로 로그인 or 회원가입
+        authService.loginByKakao(kakaoToken.getAccessToken());
 
-        return "sdf";
+
+        return "임시 반환값";
     }
 
 }

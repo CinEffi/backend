@@ -12,9 +12,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.KakaoProfile;
 import shinzo.cineffi.domain.dto.KakaoToken;
-import shinzo.cineffi.domain.entity.user.UserAccount;
-import shinzo.cineffi.domain.entity.user.UserCore;
-import shinzo.cineffi.user.repository.UserCoreRepository;
+import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.enums.LoginType;
+import shinzo.cineffi.user.repository.UserAccountRepository;
+import shinzo.cineffi.user.repository.UserRepository;
+
+import java.util.Optional;
+
+import static shinzo.cineffi.domain.enums.LoginType.KAKAO;
 
 @Transactional
 @Service
@@ -37,13 +42,37 @@ import shinzo.cineffi.user.repository.UserRepository;
 @Service
 @ResponseBody
 public class AuthService {
-    private final UserCoreRepository userCoreRepo;
+    private final UserRepository userRepo;
+    private final UserAccountRepository userAccountRepo;
 
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
     private String redirectUrl;
 
+
+    //카카오 로그인 or 회원가입
+    public String loginByKakao(String accessToken){
+        //가입을 한 회원인지 확인하기
+        String email = getKakaoEmail(accessToken);
+        Optional<User> user = userRepo.findUserForJoin(KAKAO, email);
+
+        //가입한 적 없으면 회원가입, 있으면 로그인 (재욱님꺼 보고 그걸 잘 가공해서 들고오면 될듯?)
+        if(user.isEmpty()) joinUser(KAKAO, email);
+        else loginUser();
+
+        return "임시 반환값";
+    }
+    public User joinUser (LoginType loginType, String email){
+
+        return userRepo.findUserForJoin(KAKAO, "임시 반환값").get();
+    }
+    public User loginUser(){
+
+        return userRepo.findUserForJoin(KAKAO, "임시 반환값").get();
+    }
+
+    //카카오 인증코드로 카카오 토큰 가져오기
     public KakaoToken getKakaoToken(String code){
         RestTemplate rt = new RestTemplate();
         //요청보낼 헤더 생성
@@ -80,7 +109,8 @@ public class AuthService {
 
     }
 
-    public KakaoProfile findKakaoProfile(String accessToken){
+    //카카오 토큰으로 카카오 이메일 가져오기
+    public String getKakaoEmail(String accessToken){
         RestTemplate rt = new RestTemplate();
 
         //헤더 생성
@@ -105,8 +135,8 @@ public class AuthService {
         }catch (JsonProcessingException e){
             e.printStackTrace();
         }
-        System.out.println(kakaoProfile);
-        return kakaoProfile;
+
+        return kakaoProfile.getKakaoAccount().getEmail();
     }
 
 
