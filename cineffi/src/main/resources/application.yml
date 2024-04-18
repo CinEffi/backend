@@ -1,17 +1,10 @@
 spring:
   datasource:
-    #    H2
-    #         url: jdbc:h2:tcp://localhost/~/login
-    #         username: sa
-    #         password: 123
-    #         driver-class-name: org.h2.Driver
-    #
     # local postgres
     url: jdbc:postgresql://localhost:5432/cineffi
-    username: postgres
-    password: wpdnr2
+    username: yeji
+    password: 1234
     driver-class-name: org.postgresql.Driver
-
 
 
   jpa:
@@ -44,3 +37,7 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+
+kakao:
+  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
+  redirect_url: http://localhost:3000/auth
