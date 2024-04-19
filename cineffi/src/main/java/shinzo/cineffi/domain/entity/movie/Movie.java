@@ -5,13 +5,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.Type;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -33,7 +30,9 @@ public class Movie extends BaseEntity {
     @Lob
     private byte[] poster;
     private String originCountry;
-    private String[] genre;
+
+    @OneToMany(mappedBy = "movie")
+    private List<MovieGenre> genre;
 
     @Column(columnDefinition = "TIME")
     private LocalTime runtime;
