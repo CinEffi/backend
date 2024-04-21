@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import shinzo.cineffi.domain.dto.EmailRequestDTO;
+import shinzo.cineffi.domain.dto.LoginRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
@@ -19,8 +19,9 @@ public class UserController {
         this.userService = userService;
     }
 
+    //이메일 로그인
     @PostMapping("/api/auth/login/email")
-    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody EmailRequestDTO request){
+    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
 
         boolean LoginSuccess = userService.emailLogin(request);
         if(LoginSuccess) {

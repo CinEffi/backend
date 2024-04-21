@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Getter@Setter@RequiredArgsConstructor
-public class EmailRequestDTO {
-    private final String Email;
+public class AuthCodeDTO {
+    String email;
+    int code;
 }
