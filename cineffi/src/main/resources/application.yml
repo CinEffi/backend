@@ -5,13 +5,12 @@ spring:
 #         username: sa
 #         password: 123
 #         driver-class-name: org.h2.Driver
-#
+
         # local postgres
         url: jdbc:postgresql://localhost:5432/cineffi
-        username:
-        password:
+        username: postgres
+        password: oxcart
         driver-class-name: org.postgresql.Driver
-
 
 
   jpa:

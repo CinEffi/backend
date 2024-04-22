@@ -16,6 +16,7 @@ import java.util.Base64;
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
+@Table(name = "Users")
 public class User extends BaseEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +25,6 @@ public class User extends BaseEntity {
 
     //자동닉네임 생성해주기("cow@123", "horse@999", "soft-cow@a123") //나중에 구현하기
     private String nickname;
-
 
     @ColumnDefault("1")
     private int level;
@@ -41,7 +41,7 @@ public class User extends BaseEntity {
     @ColumnDefault("0")
     private int exp;
 
-
+    @Transient
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL,mappedBy = "user")
     @PrimaryKeyJoinColumn

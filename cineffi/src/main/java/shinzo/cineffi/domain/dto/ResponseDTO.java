@@ -37,7 +37,6 @@ public class ResponseDTO<T> {
                 );
     }
 
-
     public static ResponseEntity<ResponseDTO<?>> toAllExceptionResponseEntity(HttpStatus httpStatus, String errorMsg) {
         return ResponseEntity
                 .status(httpStatus.value())

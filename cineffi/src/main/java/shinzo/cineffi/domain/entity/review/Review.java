@@ -10,8 +10,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.movie.Movie;
-import shinzo.cineffi.domain.entity.user.UserCore;
-import shinzo.cineffi.domain.entity.user.UserProfile;
+import shinzo.cineffi.domain.entity.user.User;
 
 @Entity
 @Getter
@@ -37,7 +36,7 @@ public class Review extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserProfile userProfile;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id")
