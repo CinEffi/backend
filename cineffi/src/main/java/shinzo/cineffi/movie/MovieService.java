@@ -33,11 +33,10 @@ public class MovieService {
 
     public List<Integer> testMovieId() {
         int minPage = 1;
-        int maxPage = 43671;
         List<Integer> ids = new ArrayList<>();
 
-        for(int i = minPage; i<maxPage; i++) {
-            final int currentPage = i;
+        while(true) {
+            final int currentPage = minPage;
             List<Integer> pageIds = wc.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/discover/movie")
@@ -61,14 +60,18 @@ public class MovieService {
             if (pageIds != null) {
                 ids.addAll(pageIds);
             }
+            else break;
 
-            if(i % 39 == 0) {
+            if(currentPage % 49 == 0) {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
-                    throw new CustomException(ErrorMsg.DUPLICATE_EMAIL);
+                    e.printStackTrace();
+                    new CustomException(ErrorMsg.DUPLICATE_EMAIL);
                 }
             }
+
+            minPage++;
         }
         return ids;
     }
