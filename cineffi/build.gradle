@@ -39,6 +39,7 @@ dependencies {
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	//통신을 위한 웹 클라이언트
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'io.netty:netty-all:4.1.109.Final'
 }
 
 tasks.named('test') {
