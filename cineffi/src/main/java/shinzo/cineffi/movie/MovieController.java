@@ -14,7 +14,9 @@ public class MovieController {
 
     @GetMapping("/api/movie/init")
     public ResponseEntity<List<Integer>> init(){
-        List<Integer> ids = movieService.getMovieId();
+        List<Integer> ids = movieService.fetchAllMovieIds();
         return ResponseEntity.ok(ids);
     }
+
+
 }
