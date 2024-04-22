@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.MovieRepository;
 
 import java.util.ArrayList;
@@ -18,9 +21,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MovieService {
     private final MovieRepository movieRepo;
-    @Value("${TMDB.access_token}")
+    @Value("${tmdb.access_token}")
     private String accessToken;
-    @Value("${TMDB.api_key}")
+    @Value("${tmdb.api_key}")
     private String apiKey;
     private WebClient wc = WebClient.builder()
             .baseUrl("https://api.themoviedb.org/3")
@@ -28,14 +31,13 @@ public class MovieService {
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
             .build();
 
-    // tmdb의 영화id 저장할 메서드
-    public List<Integer> getMovieId() {
-        int page = 1;
-        int totalPage = 43671;
+    public List<Integer> testMovieId() {
+        int minPage = 1;
+        int maxPage = 43671;
         List<Integer> ids = new ArrayList<>();
 
-        while (page <= totalPage) {
-            final int currentPage = page;
+        for(int i = minPage; i<maxPage; i++) {
+            final int currentPage = i;
             List<Integer> pageIds = wc.get()
                     .uri(uriBuilder -> uriBuilder
                             .path("/discover/movie")
@@ -59,7 +61,14 @@ public class MovieService {
             if (pageIds != null) {
                 ids.addAll(pageIds);
             }
-            page++;
+
+            if(i % 39 == 0) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new CustomException(ErrorMsg.DUPLICATE_EMAIL);
+                }
+            }
         }
         return ids;
     }
