@@ -1,5 +1,8 @@
 package shinzo.cineffi.movie;
 
+import com.google.common.collect.Lists;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -41,52 +44,112 @@ public class MovieService {
     @Value("${tmdb.path_data}")
     private String pathData;
 
+    @PersistenceContext
+    private EntityManager entityManager;
     private WebClient wc = WebClient.builder()
             .baseUrl(baseURL)
             .defaultHeader(HttpHeaders.ACCEPT, "application/json")
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
             .build();
 
-    //영화 데이터 init 하기
-    public List<Movie> initMovieData(){
-        //테스트 영화id 저장
-        for (int i = 3; i < 12; i++) {
-            Movie movie = Movie.builder().tmdbId(i).build();
-            movieRepo.save(movie);
+    public List<Integer> fetchAllMovieIds() {
+        List<Integer> ids = new ArrayList<>();
+        int startYear = 2024; // 예를 들어 2000년부터 시작
+        int endYear = LocalDate.now().getYear(); // 현재 연도까지
+//        int endYear =  2024; //원하는 년도까지(수동수정)
+
+        for (int year = startYear; year <= endYear; year++) {
+            for (int month = 1; month <= 1; month++) {
+                String startDate = String.format("%d-%02d-01", year, month);
+//                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
+                String endDate = String.format("%d-%02d-10", year, month); //10일치만 테스트
+                ids.addAll(fetchMovieIdsByDate(startDate, endDate));
+            }
         }
 
+        return ids;
+    }
+    private List<Integer> fetchMovieIdsByDate(String startDate, String endDate) {
+        List<Integer> ids = new ArrayList<>();
+        int currentPage = 1;
+        int totalPages = Integer.MAX_VALUE;
+
+        while (currentPage <= totalPages) {
+            int finalCurrentPage = currentPage;
+            WebClient.ResponseSpec responseSpec = wc.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(pathData + "/discover/movie")
+                            .queryParam("primary_release_date.gte", startDate)
+                            .queryParam("primary_release_date.lte", endDate)
+                            .queryParam("page", finalCurrentPage)
+                            .queryParam("api_key", apiKey)
+                            .queryParam("sort_by",  "popularity.asc")
+                            .build())
+                    .retrieve();
+
+            Map<String, Object> response = responseSpec.bodyToMono(Map.class).block();
+            if (response == null) break;
+
+            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+            totalPages = (int) response.get("total_pages");
+            ids.addAll(results.stream().map(result -> (int) result.get("id")).collect(Collectors.toList()));
+
+            currentPage++;
+            if (currentPage > totalPages) break;
+        }
+        return ids;
+    }
+
+    // 가져온 영화 ID를 DB에 저장하는 로직
+    public void saveMovieIds (List < Integer > movieIds) {
+        final int batchSize = 100; //병목현상을 줄이기 위해 100개씩 분할저장함
+        List<List<Integer>> batches = Lists.partition(movieIds, batchSize);
+
+        for (List<Integer> batch : batches) {
+            List<Movie> movies = batch.stream()
+                    .filter(id -> !movieRepo.existsByTmdbId(id)) //중복되는 영화 id 걸러주기
+                    .map(id -> Movie.builder().tmdbId(id).build())
+                    .collect(Collectors.toList());
+
+            movieRepo.saveAll(movies);
+            entityManager.flush();
+            entityManager.clear();
+
+        }
+    }
+
+    //영화 데이터 init 하기
+    public List<Movie> initMovieData() {
         List<Movie> movies = movieRepo.findAll();
         for (int i = 0; i < movies.size(); i++) {
             Movie movie = movies.get(i);
             Map<String, Object> detailData = getMovieDetailData(movie.getTmdbId());
 
             Movie makeMovie = null;
-            if(detailData == null) continue;
+            if (detailData == null) continue;
             else makeMovie = makeMovieData(detailData, movie);
-
         }
         movieRepo.flush();
         return movieRepo.findAll();
     }
 
-    //영화 상세정보 요청하기 for initMovieData()
-    public Map<String, Object> getMovieDetailData(int tmdbId){
-        WebClient.ResponseSpec responseSpec = wc.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(pathData + "/movie/" + tmdbId)
-                        .queryParam("language", "ko-KR")
-                        .queryParam("append_to_response", "credits")
-                        .queryParam("api_key", apiKey)
-                        .build())
-                .retrieve();
+        //영화 상세정보 요청하기 for initMovieData()
+        public Map<String, Object> getMovieDetailData ( int tmdbId ){
+            WebClient.ResponseSpec responseSpec = wc.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path(pathData + "/movie/" + tmdbId)
+                            .queryParam("language", "ko-KR")
+                            .queryParam("append_to_response", "credits")
+                            .queryParam("api_key", apiKey)
+                            .build())
+                    .retrieve();
 
-
-        try {
-            return responseSpec.bodyToMono(Map.class).block();
-        } catch (Exception e) {
-            return null;
+            try {
+                return responseSpec.bodyToMono(Map.class).block();
+            } catch (Exception e) {
+                return null;
+            }
         }
-    }
 
     //이미지 데이터 요청하기 for makeMovieData()
     private byte[] getImg(String imagePath) {
@@ -125,6 +188,7 @@ public class MovieService {
         if(genreMap.containsKey(genreStr)) return genreMap.get(genreStr);
         else throw new CustomException(ErrorMsg.FAILED_TO_MOVIE_PROCESS);
     }
+
     private List<MovieGenre> makeMovieGenre(List<String> genreStrs, Movie movie) {
         if( genreStrs.size() > 0 ) {
             return genreStrs.stream()
@@ -133,12 +197,12 @@ public class MovieService {
                     .collect(Collectors.toList());
         }
         else {
-            List<MovieGenre> nullList = new ArrayList<>();
-            return nullList;
+            return new ArrayList<>();
         }
     }
 
-    private Director getDirector(List<Map<String, Object>> crews){
+
+    private Director saveDirector(List<Map<String, Object>> crews){
         Map<String, Object> crew = new HashMap<>();
         for (Map<String, Object> crewInMap : crews){
             if(crewInMap.get("job").equals("Director")) {
@@ -147,8 +211,11 @@ public class MovieService {
             }
         }
 
-        Director director = null;
-        if(crew.size() != 0) {
+        Optional<Director> directorOpt = directorRepo.findByName((String) crew.get("name"));
+
+        if (directorOpt.isPresent()) return directorOpt.get();
+        else{
+            Director director = null;
             director = Director.builder()
                     .name((String) crew.get("name"))
                     .build();
@@ -157,9 +224,8 @@ public class MovieService {
                         .profileImage(getImg((String) crew.get("profile_path")))
                         .build();
             }
+            return directorRepo.save(director);
         }
-        if(directorRepo.findByName(director.getName()).isEmpty()) return directorRepo.save(director);
-        else return director;
     }
 
     //응답 받은 데이터 가공 및 저장 for initMovieData()
@@ -185,7 +251,7 @@ public class MovieService {
                 .originCountry(newOriginCountrys.size() != 0 ? newOriginCountrys.get(0) : null)
                 .runtime(newRuntime)
                 .introduction(newIntroduction)
-                .director(getDirector(crews))
+                .director(saveDirector(crews))
                 .avgScore(avgScore)
                 .build();
 
