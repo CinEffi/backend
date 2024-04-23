@@ -1,9 +1,16 @@
 package shinzo.cineffi.domain.entity.movie;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import shinzo.cineffi.domain.enums.Genre;
 
 @Entity
+@Getter
+@SuperBuilder (toBuilder = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MovieGenre {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
