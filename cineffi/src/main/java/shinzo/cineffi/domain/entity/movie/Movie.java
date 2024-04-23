@@ -38,7 +38,7 @@ public class Movie extends BaseEntity {
     @Lob
     private String introduction;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "director_id")
     private Director director;
 
