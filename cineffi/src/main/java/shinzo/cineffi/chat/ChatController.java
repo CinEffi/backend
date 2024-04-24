@@ -2,7 +2,7 @@ package shinzo.cineffi.chat;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+//import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.domain.dto.ChatroomCreateDTO;
 import shinzo.cineffi.domain.dto.ChatroomSearchDTO;
@@ -35,7 +35,8 @@ public class ChatController {
    @PostMapping("/create")
    public ResponseEntity<ResponseDTO<?>> createChatroom(
            @RequestBody ChatroomCreateDTO chatroomCreateDTO) {
-      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+//      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+      Long user_id = 1L;
       Long chatroom_id = chatService.createChatroom(chatroomCreateDTO, user_id);
       ResponseDTO<Long> responseDto = ResponseDTO.<Long>builder()
           .message(SuccessMsg.SUCCESS.getDetail()).result(chatroom_id).build();
@@ -45,7 +46,8 @@ public class ChatController {
    @DeleteMapping("/{chatroomId}/delete")
    public ResponseEntity<ResponseDTO<?>> deleteChatroom(
            @PathVariable Long chatroomId) {
-      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+//      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+      Long user_id = 1L;
       chatService.deleteChatroom(chatroomId, user_id);
       ResponseDTO<Long> responseDto = ResponseDTO.<Long>builder()
               .message(SuccessMsg.SUCCESS.getDetail())
@@ -57,7 +59,8 @@ public class ChatController {
    @PostMapping("/{chatroomId}/join")
    public ResponseEntity<ResponseDTO<?>> joinChatroom(
            @PathVariable Long chatroomId) {
-      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+//      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+      Long user_id = 1L;
       Long userChat_id = chatService.joinChatroom(chatroomId, user_id);
       ResponseDTO<Long> responseDto = ResponseDTO.<Long>builder()
               .message(SuccessMsg.SUCCESS.getDetail())
@@ -69,7 +72,8 @@ public class ChatController {
    @PostMapping("/{chatroomId}/exit")
    public ResponseEntity<ResponseDTO<?>> exitChatroom(
            @PathVariable Long chatroomId) {
-      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+//      Long user_id = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+      Long user_id = 1L;
       Long userChat_id = chatService.exitChatroom(chatroomId, user_id);
       ResponseDTO<Long> responseDto = ResponseDTO.<Long>builder()
               .message(SuccessMsg.SUCCESS.getDetail())

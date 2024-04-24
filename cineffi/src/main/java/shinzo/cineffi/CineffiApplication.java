@@ -6,7 +6,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import shinzo.cineffi.domain.entity.movie.Actor;
 
-@SpringBootApplication(exclude = SecurityAutoConfiguration.class)
+// @SpringBootApplication(exclude = SecurityAutoConfiguration.class)
+@SpringBootApplication
 @EnableJpaAuditing
 public class CineffiApplication {
 	public static void main(String[] args) {
