@@ -156,6 +156,8 @@ public class MovieService {
         String newTitle = (String) movieDetailData.get("title");
         LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
         byte[] newPoster = getPosterImg((String) movieDetailData.get("poster_path"));
+        //테스트를 위해 추가한 코드. 테스트 끝나면 지우자
+        newPoster = null;
         List<String> newOriginCountrys = (List<String>) movieDetailData.get("origin_country");
         List<Map<String, Object>> genres = (List<Map<String, Object>>) movieDetailData.get("genres");
         List<String> genreStrs = genres.stream().map(obj-> (String) obj.get("name")).collect(Collectors.toList());
