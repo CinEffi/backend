@@ -5,11 +5,9 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @Entity
@@ -35,8 +33,8 @@ public class Movie extends BaseEntity {
     @OneToMany(mappedBy = "movie")
     private List<MovieGenre> genreList;
 
-    @Column(columnDefinition = "TIME")
-    private LocalTime runtime;
+    private int runtime;
+    @Lob
     private String introduction;
 
     @OneToOne(fetch = FetchType.LAZY)
