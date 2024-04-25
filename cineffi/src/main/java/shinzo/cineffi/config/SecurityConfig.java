@@ -2,8 +2,11 @@ package shinzo.cineffi.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,8 +16,10 @@ import org.springframework.security.config.annotation.web.configurers.FormLoginC
 import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import shinzo.cineffi.jwt.JWTFilter;
 import shinzo.cineffi.jwt.JWTProvider;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
@@ -59,22 +64,15 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable);//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/auth/signup","/api/auth/**","/api/auth/verify/email","/api/verify/email/check").permitAll()//토큰 없이 동작해야하는 사이트
-//                    .anyRequest().authenticated());
-                        .anyRequest().permitAll());
+                        .requestMatchers("/api/auth/signup","/api/auth/login/email","/api/verify/email/check").permitAll()//토큰 없이 동작해야하는 사이트
+                        .anyRequest().authenticated());
+//                        .anyRequest().permitAll());
         http
                 .requestCache(RequestCacheConfigurer::disable);
         http
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));//JWT 방식에서는 스프링시큐리티가 세션을 만들 이유가 없다.
-
-//        http
-//                .addFilterBefore(new JWTFilter(jwtProvider,userAccountRepository), UsernamePasswordAuthenticationFilter.class);
-//                .addFilterAfter(new LoginFilter(authenticationManager(authenticationConfiguration), jwtProvider, userAccountRepository), JWTFilter.class);
-//        http
-//                .addFilterBefore(new JWTFilter(jwtProvider,userAccountRepository), LoginFilter.class)
-//                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtProvider, userAccountRepository), UsernamePasswordAuthenticationFilter.class);
-
-
+        http
+                .addFilterBefore(new JWTFilter(jwtProvider, userAccountRepository), SecurityContextHolderAwareRequestFilter.class);
         return http.build();
 
 

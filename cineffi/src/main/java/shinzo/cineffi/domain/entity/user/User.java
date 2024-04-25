@@ -23,7 +23,7 @@ public class User extends BaseEntity {
     @Column(name = "user_id")
     private Long id;
 
-    //닉네임도 입력 받음
+    //자동닉네임 생성해주기("cow@123", "horse@999", "soft-cow@a123") //나중에 구현하기
     private String nickname;
 
 

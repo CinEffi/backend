@@ -1,10 +1,7 @@
 package shinzo.cineffi.domain.entity.user;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import shinzo.cineffi.domain.enums.LoginType;
 
@@ -30,8 +27,10 @@ public class UserAccount {
     private String email;
 
     private String password;
-
+    //JWT 토큰 저장
     private String userToken;
+    //JWT 토큰 저장
+    //로그인시 Refresh Token DB 저장
     public void changeToken(String token) {
         this.userToken = token;
     }
