@@ -8,8 +8,8 @@ spring:
 
         # local postgres
         url: jdbc:postgresql://localhost:5432/cineffi
-        username: minn
-        password: #n1234
+        username:
+        password:
         driver-class-name: org.postgresql.Driver
 
 
@@ -25,3 +25,8 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+
+
+kobis:
+  api_key: 5b5979d8f9822605465799f4de0d864a
+  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
