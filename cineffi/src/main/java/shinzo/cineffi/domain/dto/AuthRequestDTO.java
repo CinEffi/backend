@@ -8,9 +8,6 @@ import shinzo.cineffi.domain.enums.LoginType;
 @Setter
 @RequiredArgsConstructor
 public class AuthRequestDTO {
-    private String name;
-    private String phoneNumber;
     private String email;
-    private LoginType LoginType;
     private String password;
 }

@@ -3,6 +3,7 @@ package shinzo.cineffi.auth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
@@ -20,7 +21,6 @@ public class MailController {
 
     @PostMapping("/api/auth/verify/email")
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO request) {
-        System.out.println(request);
         int number = mailService.sendMail(request.getEmail());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                 .isSuccess(true)
@@ -35,7 +35,10 @@ public class MailController {
 
     // 인증번호 일치여부 확인
     @GetMapping("/api/verify/email/check")
-    public ResponseEntity<ResponseDTO<Boolean>> mailCheck(@RequestBody AuthCodeDTO request) {
+    public ResponseEntity<ResponseDTO<Boolean>> mailCheck(@RequestParam("code") int code, @RequestParam("email") String email) {
+        AuthCodeDTO request = new AuthCodeDTO();
+        request.setCode(code);
+        request.setEmail(email);
         boolean ischecked = mailService.checkCode(request);
         if(ischecked) {
             ResponseDTO<Boolean> responseDTO = ResponseDTO.<Boolean>builder()

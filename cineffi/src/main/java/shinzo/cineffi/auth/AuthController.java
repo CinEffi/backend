@@ -24,6 +24,7 @@ public class AuthController {
     public ResponseEntity<ResponseDTO<String>> signup(@RequestBody AuthRequestDTO request) {
         boolean AuthSuccess = authService.authUser(request);
         if(AuthSuccess) {
+            System.out.println("signup success");
             ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                     .isSuccess(true)
                     .message(SuccessMsg.SUCCESS.getDetail())
@@ -33,9 +34,9 @@ public class AuthController {
         else{
             return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
                     .body(ResponseDTO.<String>builder()
-                            .isSuccess(false)
-                            .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
-                            .build());
+                    .isSuccess(false)
+                    .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                    .build());
         }
     }
 }

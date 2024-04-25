@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
-@Getter@Setter@RequiredArgsConstructor
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class EmailRequestDTO {
-    private final String Email;
+    String email;
 }

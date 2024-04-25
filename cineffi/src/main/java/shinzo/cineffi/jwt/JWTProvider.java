@@ -14,7 +14,8 @@ public class JWTProvider {
         Collection<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(role));
         String userSequence = JWTUtil.getClaimAttribute(token, "sequence");
 
-        return new CustomAuthenticatedUser(authorities, Long.valueOf(userSequence), true);
+        CustomAuthenticatedUser customAuthenticatedUser = new CustomAuthenticatedUser(authorities, Long.valueOf(userSequence), true);
+        return customAuthenticatedUser;
     }
-    }
+}
 

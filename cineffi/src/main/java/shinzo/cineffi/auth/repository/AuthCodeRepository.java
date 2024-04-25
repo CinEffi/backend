@@ -1,7 +1,6 @@
 package shinzo.cineffi.auth.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import shinzo.cineffi.domain.entity.user.AuthCode;
 
 import java.util.Optional;

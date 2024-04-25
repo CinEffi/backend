@@ -10,14 +10,13 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Date;
 
-import static shinzo.cineffi.exception.message.ErrorMsg.Invalid_token;
-import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_ID;
+import static shinzo.cineffi.exception.message.ErrorMsg.*;
 
 public class JWTUtil {
 
     //jwt 키 발급
-    private static Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    //access token 1시간
+    public static Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
     public static final long ACCESS_PERIOD = 1000L * 60L * 60L;
     //refresh 토큰 2주
     public static final long REFRESH_PERIOD = 1000L * 60L * 60L * 24L * 14L;
@@ -39,13 +38,14 @@ public class JWTUtil {
                             .setExpiration(new Date(now.getTime() + ACCESS_PERIOD))
                             .signWith(key, SignatureAlgorithm.HS256)                //암호화. JWT에는 권한까지 되어있기 때문에 중요.
                             .compact();
-                    System.out.println(accessToken);
+
+                    System.out.println("key: "+key);
 
                     String refreshToken = jwtBuilder.setIssuedAt(now)
                             .setExpiration(new Date(now.getTime() + REFRESH_PERIOD))        //암호화. JWT에는 권한까지 되어있기 때문에 중요.
                             .signWith(key, SignatureAlgorithm.HS256)
                             .compact();
-            System.out.println(refreshToken);
+
             return new JWToken(accessToken,refreshToken);
 
         } catch (Exception e) {
@@ -85,9 +85,9 @@ public class JWTUtil {
     }
     public static boolean isValidToken(String token) {//throws RuntimeException
         try {
-            System.out.println("validToken start");
+
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            System.out.println("validToken");
+
             return !Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getExpiration().before(new Date());
         } catch (ExpiredJwtException e) {
             return false;
@@ -96,22 +96,23 @@ public class JWTUtil {
         }
     }
 
+
+
     public static String resolveAccessToken(HttpServletRequest req) throws RuntimeException {
-
-        String accessToken = req.getHeader("Authorization");
-        System.out.println("access token");
-        System.out.println(accessToken);
-        if (accessToken == null) throw new CustomException(NOT_LOGGED_ID);
-
-        return accessToken;
-
+        System.out.println("resolveAccessToken start");
+        Cookie[] cookies = req.getCookies();
+        if (null == cookies) throw new CustomException(NOT_LOGGED_ID);;
+        Cookie accessToken = Arrays.stream(cookies)
+                .filter(c -> c.getName().equals("Refresh"))
+                .findAny()
+                .orElse(new Cookie("void", null));
+        return accessToken.getValue();
     }
 
     public static String resolveRefreshToken(HttpServletRequest req) throws RuntimeException {
         System.out.println("refresh token");
         Cookie[] cookies = req.getCookies();
         if (null == cookies) return null;
-//        Cookie accessToken = Arrays.stream(cookies)
         Cookie refreshToken = Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("Refresh"))
                 .findAny()
