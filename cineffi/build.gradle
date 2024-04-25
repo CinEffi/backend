@@ -50,6 +50,12 @@ dependencies {
 	//컬렉션을 서브 리스트로 나눔(분할저장을 간단하게 처리하기 위해서)
 	implementation("com.google.guava:guava:33.1.0-jre")
 
+//	testImplementation 'org.springframework.security:spring-security-test'
+
+
+	implementation files('libs/kobis-opcl-rest-v1.0.jar')
+	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+
 }
 
 tasks.named('test') {
