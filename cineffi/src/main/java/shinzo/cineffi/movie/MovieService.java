@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import shinzo.cineffi.domain.entity.movie.*;
 import shinzo.cineffi.domain.enums.Genre;
@@ -17,6 +18,7 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,14 +48,14 @@ public class MovieService {
 
     @PersistenceContext
     private EntityManager entityManager;
+    private static final int MAX_PAGES = 500;
     private WebClient wc = WebClient.builder()
             .baseUrl(baseURL)
             .defaultHeader(HttpHeaders.ACCEPT, "application/json")
             .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
             .build();
 
-    public List<Integer> fetchAllMovieIds() {
-        List<Integer> ids = new ArrayList<>();
+    public void fetchTMDBIdsByDate() {
         int startYear = 2024; // 예를 들어 2000년부터 시작
         int endYear = LocalDate.now().getYear(); // 현재 연도까지
 //        int endYear =  2024; //원하는 년도까지(수동수정)
@@ -62,94 +64,75 @@ public class MovieService {
             for (int month = 1; month <= 1; month++) {
                 String startDate = String.format("%d-%02d-01", year, month);
 //                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-10", year, month); //10일치만 테스트
-                ids.addAll(fetchMovieIdsByDate(startDate, endDate));
+                String endDate = String.format("%d-%02d-05", year, month); //5일치만 테스트
+
+                List<Movie> movies = requestTMDBIds(startDate, endDate);
+                initMovieData(movies);
             }
         }
 
-        return ids;
-    }
-    private List<Integer> fetchMovieIdsByDate(String startDate, String endDate) {
-        List<Integer> ids = new ArrayList<>();
-        int currentPage = 1;
-        int totalPages = Integer.MAX_VALUE;
-
-        while (currentPage <= totalPages) {
-            int finalCurrentPage = currentPage;
-            WebClient.ResponseSpec responseSpec = wc.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(pathData + "/discover/movie")
-                            .queryParam("primary_release_date.gte", startDate)
-                            .queryParam("primary_release_date.lte", endDate)
-                            .queryParam("page", finalCurrentPage)
-                            .queryParam("api_key", apiKey)
-                            .queryParam("sort_by",  "popularity.asc")
-                            .build())
-                    .retrieve();
-
-            Map<String, Object> response = responseSpec.bodyToMono(Map.class).block();
-            if (response == null) break;
-
-            List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-            totalPages = (int) response.get("total_pages");
-            ids.addAll(results.stream().map(result -> (int) result.get("id")).collect(Collectors.toList()));
-
-            currentPage++;
-            if (currentPage > totalPages) break;
-        }
-        return ids;
     }
 
-    // 가져온 영화 ID를 DB에 저장하는 로직
-    public void saveMovieIds (List < Integer > movieIds) {
-        final int batchSize = 100; //병목현상을 줄이기 위해 100개씩 분할저장함
-        List<List<Integer>> batches = Lists.partition(movieIds, batchSize);
-
-        for (List<Integer> batch : batches) {
-            List<Movie> movies = batch.stream()
-                    .filter(id -> !movieRepo.existsByTmdbId(id)) //중복되는 영화 id 걸러주기
-                    .map(id -> Movie.builder().tmdbId(id).build())
-                    .collect(Collectors.toList());
-
-            movieRepo.saveAll(movies);
-            entityManager.flush();
-            entityManager.clear();
-
-        }
+    private List<Movie> requestTMDBIds(String startDate, String endDate) {
+        return Flux.range(1, MAX_PAGES) // 최대 페이지 수까지 Flux 생성
+                .flatMap(page -> wc.get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path(pathData + "/discover/movie")
+                                .queryParam("sort_by", "popularity.asc")
+                                .queryParam("primary_release_date.gte", startDate)
+                                .queryParam("primary_release_date.lte", endDate)
+                                .queryParam("page", page)
+                                .queryParam("api_key", apiKey)
+                                .queryParam("with_runtime.gte", "40")
+                                .queryParam("language", "en-US")
+                                .build())
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .map(response -> new AbstractMap.SimpleEntry<>(page, response))
+                        .onErrorResume(e -> Mono.empty())
+                )
+                .takeWhile(entry -> {
+                    Map<String, Object> response = entry.getValue();
+                    if (response == null) return false;
+                    int totalPages = (int) response.get("total_pages");
+                    return entry.getKey() <= (totalPages > MAX_PAGES ? MAX_PAGES : totalPages);
+                })
+                .flatMap(entry -> Flux.fromIterable((List<Map<String, Object>>) entry.getValue().get("results")))
+                .map(result -> (Integer) result.get("id"))
+                .filter(id -> !movieRepo.existsByTmdbId(id)) // 중복되는 ID 거르기
+                .map(id -> Movie.builder().tmdbId(id).build())
+                .map(movie -> (Movie) movieRepo.save(movie))
+                .collectList()
+                .block();
     }
 
     //영화 데이터 init 하기
-    public List<Movie> initMovieData() {
-        List<Movie> movies = movieRepo.findAll();
-        for (int i = 0; i < movies.size(); i++) {
-            Movie movie = movies.get(i);
-            Map<String, Object> detailData = getMovieDetailData(movie.getTmdbId());
+    public void initMovieData(List<Movie> movieEmptys) {
+        for (Movie movieEmpty : movieEmptys){
+            Map<String, Object> detailData = getMovieDetailData(movieEmpty.getTmdbId());
+            Movie movie = null;
+            if (detailData != null) movie = makeMovieData(detailData, movieEmpty);
 
-            Movie makeMovie = null;
-            if (detailData == null) continue;
-            else makeMovie = makeMovieData(detailData, movie);
         }
-        movieRepo.flush();
-        return movieRepo.findAll();
     }
 
-        //영화 상세정보 요청하기 for initMovieData()
-        public Map<String, Object> getMovieDetailData ( int tmdbId ){
-            WebClient.ResponseSpec responseSpec = wc.get()
+    //영화 상세정보 요청하기 for initMovieData()
+    public Map<String, Object> getMovieDetailData (int tmdbId){
+        try {
+            return wc.get()
                     .uri(uriBuilder -> uriBuilder
                             .path(pathData + "/movie/" + tmdbId)
                             .queryParam("language", "ko-KR")
                             .queryParam("append_to_response", "credits")
                             .queryParam("api_key", apiKey)
                             .build())
-                    .retrieve();
-
-            try {
-                return responseSpec.bodyToMono(Map.class).block();
-            } catch (Exception e) {
-                return null;
-            }
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+        } catch (Exception e) {
+            return null;  // 에러 발생 시 null 반환
         }
+    }
 
     //이미지 데이터 요청하기 for makeMovieData()
     private byte[] getImg(String imagePath) {
