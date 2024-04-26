@@ -388,4 +388,10 @@ public class MovieService {
         return new GenreMovieListDTO(genre, dtoList);
     }
 
+
+    private final BoxOfficeApi boxOfficeApi;
+
+    public void insertDailyBoxOffice() {
+        boxOfficeApi.dailyBoxOffice();
+    }
 }
