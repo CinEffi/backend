@@ -287,4 +287,10 @@ public class MovieService {
     }
 
 
+
+    private final BoxOfficeApi boxOfficeApi;
+
+    public void insertDailyBoxOffice() {
+        boxOfficeApi.dailyBoxOffice();
+    }
 }
