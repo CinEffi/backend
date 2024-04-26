@@ -5,12 +5,13 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class DailyBoxOffice {
+public class DailyMovie {
 
 
     @Id
@@ -23,7 +24,7 @@ public class DailyBoxOffice {
     //DB 저장 일자
     private String targetDt;
 
-    private String audiAcc;
+    private String movieNm;
 
     //나머지 상세 데이터들은 TMDB에서 받아오는 걸로!!!!(기억)
 
