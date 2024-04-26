@@ -1,47 +1,77 @@
 package shinzo.cineffi.movie;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.domain.entity.movie.DailyMovie;
 import shinzo.cineffi.movie.repository.DailyBoxOfficeRepository;
-import kr.or.kobis.kobisopenapi.consumer.rest.KobisOpenAPIRestService;
-
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import org.springframework.beans.factory.annotation.Value;
+
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class BoxOfficeApi {
 
     private final DailyBoxOfficeRepository dailyBoxOfficeRepository;
 
-    String key = "5b5979d8f9822605465799f4de0d864a";
+    @Value("${kobis.api_key}")
+    private String apiKey;
+
+
 
     public void dailyBoxOffice() {
-
-        String dailyResponse = "";
-
         //요청 인터페이스들
         //전날 박스오피스 조회
         LocalDateTime time = LocalDateTime.now().minusDays(1);
-        String targetDt = time.format(DateTimeFormatter.ofPattern("yyyMMdd"));
+        String targetDt = time.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        //ROW 개수
-        String itemPerPage = "10";
 
-        //다양성영화(Y)/상업영화(N)/전체(default)
-        String multiMovieYn = "";
+        HttpClient client = HttpClient.newHttpClient();
+        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", apiKey, targetDt);
 
-        //한국영화(K)/외국영화(F)/전체(default)
-        String repNationCd = "";
-
-        //상영지역별 코드/전체(default)
-        String wideAreaCd = "";
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
 
 
         try {
-            //KOBIS 오픈 API Rest Client를 통해 호출
-            KobisOpenAPIRestService service = new KobisOpenAPIRestService(key);
-        }
+            //해당날의 데이터를 삭제하고 시작
+            dailyBoxOfficeRepository.deleteByTargetDt(targetDt);
 
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JSONParser jsonParser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(response.body());
+            JSONObject boxOfficeResult = (JSONObject) jsonObject.get("boxOfficeResult");
+            JSONArray dailyBoxOfficeList = (JSONArray) boxOfficeResult.get("dailyBoxOfficeList");
+
+
+            int limit = Math.min(dailyBoxOfficeList.size(), 10);
+            for (int i = 0; i < limit; i++) {
+                JSONObject dailyBoxOffice = (JSONObject) dailyBoxOfficeList.get(i);
+
+                //JSON obiject -> java Object(Entity) 변환
+                DailyMovie dailyMovie = DailyMovie.builder()
+                        .rank(dailyBoxOffice.get("rank").toString())
+                        .movieNm(dailyBoxOffice.get("movieNm").toString())
+                        .targetDt(targetDt)
+                        .build();
+
+                dailyBoxOfficeRepository.save(dailyMovie);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
