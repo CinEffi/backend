@@ -31,6 +31,7 @@ public class UserAccount {
     private String userToken;
     //JWT 토큰 저장
     //로그인시 Refresh Token DB 저장
+    private Boolean isAuthentication;
     public void changeToken(String token) {
         this.userToken = token;
     }

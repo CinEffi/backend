@@ -45,6 +45,7 @@ public class MailController {
                     .isSuccess(true)
                     .message(SuccessMsg.SUCCESS.getDetail())
                     .build();
+
             return ResponseEntity.ok(responseDTO);
         }
         else{

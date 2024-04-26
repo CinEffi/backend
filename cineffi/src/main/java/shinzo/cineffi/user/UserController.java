@@ -27,7 +27,6 @@ public class UserController {
 
     @PostMapping("/api/auth/login/email")
     public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
-        System.out.println("로그인 시도중");
     Long userId = userService.getUserIdByEmail(request.getEmail());
     boolean LoginSuccess = userService.emailLogin(request);
 

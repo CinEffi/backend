@@ -10,4 +10,6 @@ import shinzo.cineffi.domain.enums.LoginType;
 public class AuthRequestDTO {
     private String email;
     private String password;
+    private String nickname;
+    private Boolean isauthentication;
 }

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import shinzo.cineffi.auth.repository.AuthCodeRepository;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
@@ -42,32 +43,39 @@ public class MailService {
             body += "<h3>" + "감사합니다." + "</h3>";
             message.setText(body,"UTF-8", "html");
             message.saveChanges();
-
-            saveAuthCode(request,number);
+            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
+            saveAuthCode(request,number,expirationTime);
         } catch (MessagingException e) {
             logger.error("Error occurred while creating email message", e);
         }
 
         return message;
     }
-
-    public void saveAuthCode(String email,int code) {
+    public void saveAuthCode(String email,int code, LocalDateTime expirationTime) {
         AuthCode authCode = AuthCode.builder()
                 .email(email)
                 .time(LocalDateTime.now())
                 .code(code)
+                .expirationTime(expirationTime)
                 .build();
 
         authCodeRepository.save(authCode);
     }
-
+    //expirationTime 값이 now 이전인 AuthCode엔티티 목록 반환
+    //반환된 리스트를 삭제
+    @Scheduled(fixedRate = 60000) // 1분 간격으로 실행
+    public void deleteExpiredAuthCodes() {
+        LocalDateTime now = LocalDateTime.now();
+        authCodeRepository.findByExpirationTimeBefore(now)
+                .forEach(authCodeRepository::delete);
+    }
+    //생성한 메일을 전송
     public int sendMail(String request){
         MimeMessage message = CreateMail(request);
         javaMailSender.send(message);
-
         return number;
     }
-
+    //이메일 인증번호 체크
     public boolean checkCode(AuthCodeDTO authCodeDTO) {
         Optional<AuthCode> optionalAuthCode = authCodeRepository.findByEmailAndCode(authCodeDTO.getEmail(), authCodeDTO.getCode());
 
@@ -78,6 +86,7 @@ public class MailService {
             LocalDateTime expirationTime = authCode.getTime().plusMinutes(5);
             if (LocalDateTime.now().isBefore(expirationTime)) {
                 // 인증 코드 일치 및 유효 시간 내
+                authCodeRepository.delete(authCode);
                 return true;
             } else {
                 // 인증 코드 만료
@@ -89,8 +98,6 @@ public class MailService {
             return false;
         }
     }
-
-
 
 }
 

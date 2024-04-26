@@ -20,4 +20,5 @@ public class AuthCode {
     String email;
     int code;
     LocalDateTime time;
+    LocalDateTime expirationTime;
 }

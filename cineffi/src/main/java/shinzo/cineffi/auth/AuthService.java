@@ -22,11 +22,18 @@ public class AuthService {
 
     public boolean authUser(AuthRequestDTO request) {
         boolean isEmailDuplicate = userAccountRepository.existsByEmail(request.getEmail());
+        boolean isNickNameDuplicate = userRepository.existsByNickname(request.getNickname());
         if (isEmailDuplicate) {
+            System.out.println("isEmailDuplicate");
             return false; // 이메일 중복 시 false 반환
         }
-        //isNickName 설정해야함
+        if(isNickNameDuplicate){
+            System.out.println("isNickNameDuplicate");
+            return false; // 이메일 중복 시 false 반환
+        }
+
         User user = User.builder()
+                .nickname(request.getNickname())
                 .build();
         userRepository.save(user);
 
@@ -34,6 +41,7 @@ public class AuthService {
                 .password(BCrypt.hashpw(request.getPassword(),BCrypt.gensalt()))
                 .email(request.getEmail())
                 .user(user)
+                .isAuthentication(request.getIsauthentication())
                 .build();
 
         userAccountRepository.save(userAccount);

@@ -22,21 +22,28 @@ public class AuthController {
 
     @PostMapping("/api/auth/signup")
     public ResponseEntity<ResponseDTO<String>> signup(@RequestBody AuthRequestDTO request) {
-        boolean AuthSuccess = authService.authUser(request);
-        if(AuthSuccess) {
-            System.out.println("signup success");
-            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
-                    .isSuccess(true)
-                    .message(SuccessMsg.SUCCESS.getDetail())
-                    .build();
-            return ResponseEntity.ok(responseDTO);
+        if(request.getIsauthentication()) {
+            boolean AuthSuccess = authService.authUser(request);
+            if (AuthSuccess) {
+                ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                        .isSuccess(true)
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .build();
+                return ResponseEntity.ok(responseDTO);
+            } else {
+                return ResponseEntity.status(ErrorMsg.DUPLICATE_USER.getHttpStatus())
+                        .body(ResponseDTO.<String>builder()
+                                .isSuccess(false)
+                                .message(ErrorMsg.DUPLICATE_USER.getDetail())
+                                .build());
+            }
         }
         else{
-            return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+            return ResponseEntity.status(ErrorMsg.UNAUTHORIZED_MEMBER.getHttpStatus())
                     .body(ResponseDTO.<String>builder()
-                    .isSuccess(false)
-                    .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
-                    .build());
+                            .isSuccess(false)
+                            .message(ErrorMsg.UNAUTHORIZED_MEMBER.getDetail())
+                            .build());
         }
     }
 }
