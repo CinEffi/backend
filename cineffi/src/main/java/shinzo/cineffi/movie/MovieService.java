@@ -61,9 +61,9 @@ public class MovieService {
 
         for (int year = startYear; year <= endYear; year++) {
             for (int month = 1; month <= 1; month++) {
-                String startDate = String.format("%d-%02d-01", year, month);
+                String startDate = String.format("%d-%02d-16", year, month);
 //                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-05", year, month); //5일치만 테스트
+                String endDate = String.format("%d-%02d-18", year, month); //테스트
 
                 List<Movie> movies = requestTMDBIds(startDate, endDate);
                 initMovieData(movies);
@@ -105,7 +105,7 @@ public class MovieService {
                 .block();
     }
 
-    public Map<String, Object> requestPeople(int personId){
+    private Map<String, Object> requestPeople(int personId){
         return wc.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(pathMovie + "/person/" + personId)
@@ -130,7 +130,7 @@ public class MovieService {
     }
 
     //영화 상세정보 요청하기 for initMovieData()
-    public Map<String, Object> requestMovieDetailData(int tmdbId){
+    private Map<String, Object> requestMovieDetailData(int tmdbId){
         return wc.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(pathMovie + "/movie/" + tmdbId)
@@ -148,17 +148,16 @@ public class MovieService {
 
     //이미지 데이터 요청하기 for makeMovieData()
     public byte[] requestImg(String imagePath) {
-        try {
-            return wc.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(pathImage + imagePath)
-                            .build())
-                    .retrieve()
-                    .bodyToMono(byte[].class)
-                    .block();
-        } catch (Exception e) {
-            return new byte[1];
-        }
+        return wc.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(pathImage + imagePath)
+                        .build())
+                .retrieve()
+                .bodyToMono(byte[].class)
+                .onErrorResume(e -> {
+                    return Mono.just(new byte[1]);
+                })
+                .block();
     }
 
     //한국어 문자열 장르를 이넘값으로
@@ -167,7 +166,6 @@ public class MovieService {
                 Map.entry("액션", ACTION),
                 Map.entry("모험", ADVENTURE),
                 Map.entry("애니메이션", ANIMATION),
-
                 Map.entry("코미디", COMEDY),
                 Map.entry("범죄", CRIME),
                 Map.entry("다큐멘터리", DOCUMENTARY),
@@ -190,15 +188,13 @@ public class MovieService {
     }
 
     private List<MovieGenre> makeMovieGenre(List<String> genreStrs, Movie movie) {
-        if( genreStrs.size() > 0 ) {
-            return genreStrs.stream()
-                    .map(genreStr -> MovieGenre.builder().movie(movie).genre(genreKorToEnum(genreStr)).build())
-                    .map(movieGenreRepo::save)
-                    .collect(Collectors.toList());
-        }
-        else {
-            return new ArrayList<>();
-        }
+        if( genreStrs.size() <= 0 ) return new ArrayList<>();
+
+        return genreStrs.stream()
+                .map(genreStr -> MovieGenre.builder().movie(movie).genre(genreKorToEnum(genreStr)).build())
+                .map(movieGenreRepo::save)
+                .collect(Collectors.toList());
+
     }
 
     private Director saveDirector(List<Map<String, Object>> crews){
@@ -232,10 +228,10 @@ public class MovieService {
     }
 
     private String nameToKor(int tmdbId) {
-        Map<String, Object> people = requestPeople(tmdbId);  // 제네릭 타입 명확히
+        Map<String, Object> people = requestPeople(tmdbId);
         if (people == null || people.isEmpty()) return "이름없음";
 
-        String defaultName = (String) people.get("name");  // 기본 이름 설정
+        String defaultName = (String) people.get("name");
         if (defaultName == null) return "이름없음";
 
         List<String> also_known_as = (List<String>) people.get("also_known_as");
@@ -251,8 +247,7 @@ public class MovieService {
     }
 
     //응답 받은 데이터 가공 및 저장 for initMovieData()
-    @Transactional
-    public Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
+    private Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
         //데이터 가공
         String newTitle = (String) movieDetailData.get("title");
         LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
