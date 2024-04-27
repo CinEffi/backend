@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 
 import static shinzo.cineffi.exception.message.ErrorMsg.*;
+import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
 
 @RequiredArgsConstructor
@@ -26,54 +28,49 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        System.out.println("request.getCookies");
-        System.out.println("Request URI: " + request.getRequestURI());
-        System.out.println("Request Method: " + request.getMethod());
-        System.out.println("Request Headers:");
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            System.out.println(headerName + ": " + request.getHeader(headerName));
-        }
-        try {
-            System.out.println("start JWTFilter");
-            if (request.getRequestURI().equals("/api/auth/signup")||request.getRequestURI().equals("/api/verify/email/check")||request.getRequestURI().equals("/api/auth/login/email")) {//회원가입,로그인페이지,메인페이지 건너뛰기
+                 if (
+                    request.getRequestURI().equals("/api/auth/signup")||
+                    request.getRequestURI().equals("/api/auth/nickname/check")||
+                    request.getRequestURI().equals("/api/auth/email/check")||
+                    request.getRequestURI().equals("/api/auth/nickname/check")||
+                    request.getRequestURI().equals("/api/auth/login/email")) {
                 filterChain.doFilter(request, response);
-                return;
-            }
-
+                return;}
+    try{
             String access = JWTUtil.resolveAccessToken(request);
             String refresh = JWTUtil.resolveRefreshToken(request);
 
             if (JWTUtil.isValidToken(access)) { // ACCESS 토큰 유효기간 안지남.
-
                 Authentication authentication = jwtProvider.getAuthentication(access); // 정상 토큰이면 SecurityContext 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else if (refresh == null) {// ACCESS 토큰 유효기간 지남.+ REFRESH 없으면 -> 토큰 만료 되었습니다.
-                throw new CustomException(ACCESS_TOKEN_EXPIRED);
+                throw new CustomException(ErrorMsg.ACCESS_TOKEN_EXPIRED);
             } else { // ACCESS 토큰 유효기간 지남.+ REFRESH 있음
+
                 if (!JWTUtil.isValidToken(refresh))
-                    throw new CustomException(REFRESH_TOKEN_EXPIRED);
+                    throw new CustomException(ErrorMsg.REFRESH_TOKEN_EXPIRED);
 
                 String userSequence = JWTUtil.getClaimAttribute(refresh, "sequence");
                 Long userSequenceValue = Long.parseLong(userSequence);
 
-                String dbToken = String.valueOf(userAccountRepository.findByIdAndFetchUserToken(userSequenceValue)
-                        .orElseThrow(() -> new CustomException(USER_NOT_FOUND)));//검증 필요
+
+                String dbToken = userAccountRepository.selectTokenBymemberNo(userSequenceValue)
+                        .orElseThrow(()-> new CustomException(ErrorMsg.USER_NOT_FOUND));
 
                 if (dbToken.equals(refresh)) {
                     String newAccessToken = JWTUtil.changeAccessToken(userSequenceValue, "ROLE_USER");
-                    // User user = userRepository.findBySequence(userSequenceValue);
-                    Cookie acessCookie = new Cookie("Access", newAccessToken);
-                    acessCookie.setMaxAge((int) REFRESH_PERIOD);
-                    acessCookie.setPath("/");
-                    response.addCookie(acessCookie);
+
+                    Cookie accessCookie = new Cookie("access", newAccessToken);
+                    accessCookie.setMaxAge((int) ACCESS_PERIOD);
+                    accessCookie.setPath("/");
+                    accessCookie.setHttpOnly(true);
+                    response.addCookie(accessCookie);
 
                     Authentication authentication = jwtProvider.getAuthentication(newAccessToken); // 정상 토큰이면 SecurityContext 저장
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    throw new CustomException(REFRESH_TOKEN_INCORRECT);
+                    throw new CustomException(ErrorMsg.REFRESH_TOKEN_INCORRECT);
                 }
             }
 
@@ -85,3 +82,4 @@ public class JWTFilter extends OncePerRequestFilter {
 
 
 }
+

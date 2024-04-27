@@ -1,16 +1,17 @@
 spring:
   datasource:
-     #    H2
-#         url: jdbc:h2:tcp://localhost/~/login
-#         username: sa
-#         password: 123
-#         driver-class-name: org.h2.Driver
+    #    H2
+    #         url: jdbc:h2:tcp://localhost/~/login
+    #         username: sa
+    #         password: 123
+    #         driver-class-name: org.h2.Driver
+    #
+    # local postgres
+    url: jdbc:postgresql://localhost:5432/cineffi
+    username: postgres
+    password: wpdnr2
+    driver-class-name: org.postgresql.Driver
 
-        # local postgres
-        url: jdbc:postgresql://localhost:5432/cineffi
-        username: minn
-        password: #n1234
-        driver-class-name: org.postgresql.Driver
 
 
   jpa:
@@ -20,6 +21,24 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: skwd1012@gmail.com
+    password: tboxbeusjvbysajd
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          connectiontimeout: 5000
+          writetimeout: 5000
+          starttls:
+            enable: true
+    auth-code-expiration-millis: 300000 //5분
+#  jwt:
+#    expiration_time : 300,000
 
 logging:
   level:

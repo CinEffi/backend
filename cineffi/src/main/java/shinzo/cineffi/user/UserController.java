@@ -33,14 +33,14 @@ public class UserController {
     if(LoginSuccess) {
         JWToken jwToken = JWTUtil.allocateToken(userId,"ROLE_USER");//액세스 토큰 발급
         //Access 토큰 쿠키
-        ResponseCookie accessCookie = ResponseCookie.from("Access",jwToken.getAccessToken())
+        ResponseCookie accessCookie = ResponseCookie.from("access",jwToken.getAccessToken())
                 .sameSite("None")
                 .maxAge(ACCESS_PERIOD)
                 .path("/")
                 .httpOnly(true)
                 .build();
         //Refresh 토큰 쿠키
-        ResponseCookie refreshCookie = ResponseCookie.from("Refresh",jwToken.getRefreshToken())
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
                 .sameSite("None")
                 .maxAge(REFRESH_PERIOD)
                 .path("/")
@@ -50,7 +50,6 @@ public class UserController {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        headers.add("Authorization", jwToken.getAccessToken());
 
         userService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()

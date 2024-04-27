@@ -48,4 +48,9 @@ public enum ErrorMsg {
 
         private final HttpStatus httpStatus;
         private final String detail;
-    }
+
+
+        }
+
+
+

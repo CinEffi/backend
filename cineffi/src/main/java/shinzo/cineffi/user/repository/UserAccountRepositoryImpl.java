@@ -27,4 +27,16 @@ public class UserAccountRepositoryImpl implements UserAccountRepositoryCustom{
             return Optional.empty();
         }
     }
+
+    @Override
+    public Optional<String> selectTokenBymemberNo(Long userSequenceValue) {
+        String jpql = "SELECT ua.userToken FROM UserAccount ua WHERE ua.id = :userId";
+        return entityManager.createQuery(jpql, String.class)
+                .setParameter("userId", userSequenceValue)
+                .getResultList()
+                .stream()
+                .findFirst();
+    }
+
+
 }

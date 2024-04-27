@@ -3,14 +3,14 @@ package shinzo.cineffi.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.domain.dto.AuthRequestDTO;
+import shinzo.cineffi.domain.dto.EmailRequestDTO;
+import shinzo.cineffi.domain.dto.NickNameDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
-
+@RequestMapping("/api/auth")
 @RestController
 public class AuthController {
     private final AuthService authService;
@@ -20,7 +20,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/api/auth/signup")
+    @PostMapping("/signup")
     public ResponseEntity<ResponseDTO<String>> signup(@RequestBody AuthRequestDTO request) {
         if(request.getIsauthentication()) {
             boolean AuthSuccess = authService.authUser(request);
@@ -45,5 +45,42 @@ public class AuthController {
                             .message(ErrorMsg.UNAUTHORIZED_MEMBER.getDetail())
                             .build());
         }
+    }
+    //이메일 중복 검사
+    @GetMapping("/email/check")
+    public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
+       boolean MailDupCheck =authService.dupmail(request);
+       if(!MailDupCheck){
+           ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                   .isSuccess(true)
+                   .message(SuccessMsg.SUCCESS.getDetail())
+                   .build();
+           return ResponseEntity.ok(responseDTO);
+       }else{
+           return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+                   .body(ResponseDTO.<String>builder()
+                           .isSuccess(false)
+                           .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                           .build());
+       }
+
+    }
+    @GetMapping("/nickname/check")
+    public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
+        boolean NickDupCheck =authService.dupnickname(request);
+        if(!NickDupCheck){
+            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                    .isSuccess(true)
+                    .message(SuccessMsg.SUCCESS.getDetail())
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        }else{
+            return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+                    .body(ResponseDTO.<String>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                            .build());
+        }
+
     }
 }

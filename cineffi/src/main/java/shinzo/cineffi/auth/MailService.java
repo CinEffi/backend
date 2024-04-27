@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import shinzo.cineffi.auth.repository.AuthCodeRepository;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
+@EnableScheduling
 @RequiredArgsConstructor
 public class MailService {
     private final AuthCodeRepository authCodeRepository;
@@ -26,7 +28,6 @@ public class MailService {
         number = (int)(Math.random() * (90000)) + 100000;// (int) Math.random() * (최댓값-최소값+1) + 최소값
     }
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
-
 
 
     public MimeMessage CreateMail(String request){
@@ -52,6 +53,10 @@ public class MailService {
         return message;
     }
     public void saveAuthCode(String email,int code, LocalDateTime expirationTime) {
+        AuthCode authCode1 = authCodeRepository.findByEmail(email);
+        if(authCode1 != null){
+            authCodeRepository.delete(authCode1);
+        }
         AuthCode authCode = AuthCode.builder()
                 .email(email)
                 .time(LocalDateTime.now())

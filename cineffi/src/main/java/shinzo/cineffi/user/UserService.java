@@ -31,7 +31,10 @@ public class UserService {
     }
 
     public void normalLoginRefreshToken(Long memberNo, String refreshToken) {
-        UserAccount userAccount = userAccountRepository.getReferenceById(memberNo);
-        userAccount.changeToken(refreshToken);
+        UserAccount userAccount = userAccountRepository.getReferenceById(memberNo);//userAccount객체
+        userAccount.setUserToken(refreshToken);
+        userAccountRepository.save(userAccount);
+
+
     }
 }

@@ -11,4 +11,6 @@ public interface AuthCodeRepository extends JpaRepository<AuthCode, Long>  {
     Optional<AuthCode> findByEmailAndCode(String email, int code);
 
     List<AuthCode> findByExpirationTimeBefore(LocalDateTime expirationTime);
+
+    AuthCode findByEmail(String email);
 }

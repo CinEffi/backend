@@ -6,4 +6,7 @@ import java.util.Optional;
 
 public interface UserAccountRepositoryCustom {
     Optional<UserAccount> findByIdAndFetchUserToken(Long id);
+
+
+    Optional<String> selectTokenBymemberNo(Long userSequenceValue);
 }

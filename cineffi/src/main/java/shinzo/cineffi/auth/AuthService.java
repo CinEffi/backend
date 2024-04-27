@@ -6,6 +6,8 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseBody;
 import shinzo.cineffi.domain.dto.AuthRequestDTO;
+import shinzo.cineffi.domain.dto.EmailRequestDTO;
+import shinzo.cineffi.domain.dto.NickNameDTO;
 import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.domain.entity.user.User;
 
@@ -24,11 +26,11 @@ public class AuthService {
         boolean isEmailDuplicate = userAccountRepository.existsByEmail(request.getEmail());
         boolean isNickNameDuplicate = userRepository.existsByNickname(request.getNickname());
         if (isEmailDuplicate) {
-            System.out.println("isEmailDuplicate");
+
             return false; // 이메일 중복 시 false 반환
         }
         if(isNickNameDuplicate){
-            System.out.println("isNickNameDuplicate");
+
             return false; // 이메일 중복 시 false 반환
         }
 
@@ -49,4 +51,15 @@ public class AuthService {
         return true; //이메일 중복 없을 때는 true
     }
 
+    public boolean dupmail(EmailRequestDTO request) {
+        boolean isdup = userAccountRepository.existsByEmail(request.getEmail());
+
+        return isdup;
+    }
+
+    public boolean dupnickname(NickNameDTO request) {
+        boolean isdup = userRepository.existsByNickname(request.getNickname());
+
+        return isdup;
+    }
 }
