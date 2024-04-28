@@ -21,10 +21,6 @@ public class RedisChatController {
     public ResponseEntity<ResponseDTO<?>> createChatroom(
             @RequestBody CreateRedisChatroomDTO createRedisChatroomDTO) {
         RedisChatroom redisChatroom = redisChatService.createChatroom(createRedisChatroomDTO.getTitle());
-        System.out.println("createRedisChatroomDTO = " + createRedisChatroomDTO);
-        System.out.println("title : " + createRedisChatroomDTO.getTitle());
-        System.out.println("title : " + createRedisChatroomDTO.getOwnerId());
-        System.out.println("title : " + createRedisChatroomDTO.getOwnerNickname());
         redisChatService.joinChatroom(redisChatroom.getId()
                 , createRedisChatroomDTO.getOwnerId()
                 , createRedisChatroomDTO.getOwnerNickname());

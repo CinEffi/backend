@@ -30,6 +30,7 @@ public class RedisChatService {
         // 이것도 사실.. 좋은방법이 아닙니다 (서버 확장 시 각 BE 노드마다 id를 생성할 것임)
         // chatroom_id를 잘 가져오려면
         // redis에 요청해서 (key : nextChatroomId를 관리합니다 하나씩 높여주면 됩니다.)
+            // 이거 chatroomList의 size로 하면 안돼요!
         // redis가 막 (다시)켜졌을떄는 db에서 최상위 id(없으면 0) + 1을 가져오고요
         RedisChatroom redisChatroom = RedisChatroom.builder().id(id).title(title).build();
 
@@ -115,7 +116,7 @@ public class RedisChatService {
                 = RedisChatMessageList.builder().userId(userId).data(data).ms(epochMilli).build();
 //        redisTemplate.opsForZSet().add("chatlog:" + chatroomId, redisChatMessage, (double) epochMilli);
         redisTemplate.opsForList().rightPush("chatlog:" + chatroomId, redisChatMessageList);
-        redisTemplate.convertAndSend("chatroom:*", data);
+        redisTemplate.convertAndSend("chatroom:" + chatroomId, data);
         return redisChatMessage;
     /*  2안) chatMessage에 timeStamp 저장하고, list에 저장하기
      ***********************************************************************************
