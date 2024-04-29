@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
@@ -24,9 +27,13 @@ public class DailyMovie {
     //DB 저장 일자
     private String targetDt;
 
-    private String movieNm;
+    private String title;
 
     //나머지 상세 데이터들은 TMDB에서 받아오는 걸로!!!!(기억)
+    private LocalDate releaseDate;
+
+    @Lob
+    private byte[] poster;
 
 
 
