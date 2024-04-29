@@ -21,9 +21,6 @@ public class UserAccount {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    private LoginType loginType;
-
     private String email;
 
     private String password;

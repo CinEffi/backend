@@ -1,11 +1,11 @@
 package shinzo.cineffi.domain.dto;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import shinzo.cineffi.domain.enums.LoginType;
 
 @Getter
 @Setter
+@SuperBuilder(toBuilder = true)
 @RequiredArgsConstructor
 public class AuthRequestDTO {
     private String email;
