@@ -2,26 +2,16 @@ package shinzo.cineffi.auth;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.security.web.header.Header;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import shinzo.cineffi.domain.dto.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
 import shinzo.cineffi.jwt.JWToken;
 
-import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
-import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
-
-@RequestMapping("/api/auth")
-@RestController
-import shinzo.cineffi.jwt.JWToken;
 
 
 @RequestMapping("/api/auth")
