@@ -13,9 +13,11 @@ import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserActivityNum;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.user.repository.UserAccountRepository;
+import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.Optional;
@@ -31,7 +33,7 @@ import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
 public class AuthService {
     private final UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
-
+    private final UserActivityNumRepository userActivityNumRepository;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
@@ -250,6 +252,11 @@ public class AuthService {
                 .build();
 
         userAccountRepository.save(userAccount);
+        UserActivityNum userActivityNum = UserActivityNum.builder()
+                .user(user)
+                .build();
+        userActivityNumRepository.save(userActivityNum);
+
     }
 
     public boolean dupMail(EmailRequestDTO request) {
