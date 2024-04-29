@@ -3,16 +3,10 @@ spring:
 
     # local postgres
     url: jdbc:postgresql://localhost:5432/cineffi
-    username: postgres
-    password: wpdnr2
-    driver-class-name: org.postgresql.Driver
-
-
-    # Local postgres
-    url: jdbc:postgresql://localhost:5432/cineffi
-    username: minn
+    username:
     password:
     driver-class-name: org.postgresql.Driver
+
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -39,7 +33,12 @@ spring:
     auth-code-expiration-millis: 300000 //5분
 #  jwt:
 #    expiration_time : 300,000
-
+tmdb:
+  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMmY4YjA2ZTIxYzhkYTJiZGQ3NmZjMDVjZWU3ZmMyZCIsInN1YiI6IjY2MGQwNjM0OTVjZTI0MDE2NDZlNjRiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.wXKroToQPTplaBr8TBaH-yV38zsQB35IfIj115nqdF8
+  api_key: 12f8b06e21c8da2bdd76fc05cee7fc2d
+  base_url: https://
+  path_image: image.tmdb.org/t/p/w500
+  path_movie: api.themoviedb.org/3
 logging:
   level:
     org.hibernate.SQL: debug
@@ -49,6 +48,7 @@ logging:
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
   redirect_url: http://localhost:3000/auth
+---
 ## dev profile (Docker 용)
 spring:
   config:
