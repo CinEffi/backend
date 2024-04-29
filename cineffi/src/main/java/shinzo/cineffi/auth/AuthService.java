@@ -17,8 +17,6 @@ import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.domain.entity.user.UserActivityNum;
-import shinzo.cineffi.jwt.JWTUtil;
-import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
@@ -41,6 +39,24 @@ public class AuthService {
     @Value("${kakao.redirect_url}")
     private String redirectUrl;
     private EmailRequestDTO request;
+
+    //필요하다면 카카오 회원가입, 유저아이디 반환
+    public Long loginByKakao(String accessToken){
+        String email = requestKakaoEmail(accessToken);
+        boolean isEmailDuplicate = userAccountRepository.existsByEmail(email);
+
+        //회원가입 전적 없으면 회원가입
+        if(!isEmailDuplicate) {
+            AuthRequestDTO dto = AuthRequestDTO.builder()
+                    .email(email)
+                    .nickname(generateNickname())
+                    .isauthentication(true) //카카오는 이미 겅즘된 이메일이므로 그냥 true
+                    .build();
+            joinUser(dto);
+        }
+
+        return getUserIdByEmail(email);
+    }
 
     public KakaoToken requestKakaoToken(String code){
         RestTemplate rt = new RestTemplate();
