@@ -95,7 +95,7 @@ public class AuthService {
     }
 
     //카카오 토큰으로 카카오 이메일 가져오기
-    public String requestKakaoEmail(String accessToken){
+    private String requestKakaoEmail(String accessToken){
         RestTemplate rt = new RestTemplate();
 
         //헤더 생성
@@ -233,7 +233,6 @@ public class AuthService {
         }
 
         userAccountRepository.save(userAccount);
-
         UserActivityNum userActivityNum = UserActivityNum.builder()
                 .user(user)
                 .build();
@@ -242,7 +241,6 @@ public class AuthService {
     }
 
     public boolean dupMail(EmailRequestDTO request) {
-        this.request = request;
         boolean isdup = userAccountRepository.existsByEmail(request.getEmail());
 
         return isdup;
