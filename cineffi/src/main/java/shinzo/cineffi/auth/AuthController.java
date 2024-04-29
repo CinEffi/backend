@@ -11,9 +11,9 @@ import shinzo.cineffi.domain.dto.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
-import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
@@ -30,8 +30,6 @@ import shinzo.cineffi.jwt.JWToken;
 public class AuthController {
     private final AuthService authService;
 
-    @GetMapping("/login/kakao")
-    public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
     @PostMapping("/login/kakao")
     public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
         //인가코드로 카카오 토큰 발급
