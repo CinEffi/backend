@@ -13,28 +13,7 @@ import java.util.Optional;
 @Controller
 @RequiredArgsConstructor
 public class UserService {
-
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-
-    public boolean emailLogin(LoginRequestDTO request) {
-        UserAccount userAccount = userAccountRepository.findByEmail(request.getEmail());
-        return BCrypt.checkpw(request.getPassword(), userAccount.getPassword());
-    }
-
-
-
-    public Long getUserIdByEmail(String email) {
-        Optional<UserAccount> user = Optional.ofNullable(userAccountRepository.findByEmail(email));
-        return user.map(UserAccount::getId).orElse(null);
-    }
-
-    public void normalLoginRefreshToken(Long memberNo, String refreshToken) {
-        UserAccount userAccount = userAccountRepository.getReferenceById(memberNo);//userAccount객체
-        userAccount.setUserToken(refreshToken);
-        userAccountRepository.save(userAccount);
-
-
-    }
 }

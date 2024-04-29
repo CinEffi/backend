@@ -1,23 +1,38 @@
 package shinzo.cineffi.auth;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.security.web.header.Header;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import shinzo.cineffi.domain.dto.*;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import shinzo.cineffi.domain.dto.AuthRequestDTO;
-import shinzo.cineffi.domain.dto.EmailRequestDTO;
-import shinzo.cineffi.domain.dto.NickNameDTO;
-import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
+import shinzo.cineffi.jwt.JWTUtil;
+import shinzo.cineffi.jwt.JWToken;
+
+import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
+import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
+
 @RequestMapping("/api/auth")
 @RestController
+@RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
 
-    @Autowired
-    public AuthController(AuthService authService) {
-        this.authService = authService;
+    @GetMapping("/login/kakao")
+    public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
+        //인가코드로 카카오 토큰 발급
+        KakaoToken kakaoToken = authService.requestKakaoToken(code);
+
+        //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
+        Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+
+        return authLogin(userId);
     }
 
     @PostMapping("/signup")
@@ -46,10 +61,41 @@ public class AuthController {
                             .build());
         }
     }
+
+    @PostMapping("/login/email")
+    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
+        Long userId = authService.getUserIdByEmail(request.getEmail());
+        boolean LoginSuccess = authService.emailLogin(request);
+
+        if(LoginSuccess) {
+            return authLogin(userId);
+        }
+        else {
+            return ResponseEntity.status(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getHttpStatus())
+                    .body(ResponseDTO.<String>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getDetail())
+                            .build());
+        }
+    }
+
+    private ResponseEntity<ResponseDTO<String>> authLogin(Long userId){
+        Object[] result = authService.makeCookie(userId);
+        JWToken jwToken = (JWToken) result[0];
+        HttpHeaders headers = (HttpHeaders) result[1];
+
+        authService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
+        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                .isSuccess(true)
+                .message(SuccessMsg.SUCCESS.getDetail())
+                .build();
+        return ResponseEntity.ok().headers(headers).body(responseDTO);
+    }
+
     //이메일 중복 검사
     @GetMapping("/email/check")
     public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
-       boolean MailDupCheck =authService.dupmail(request);
+       boolean MailDupCheck =authService.dupMail(request);
        if(!MailDupCheck){
            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                    .isSuccess(true)
@@ -67,7 +113,7 @@ public class AuthController {
     }
     @GetMapping("/nickname/check")
     public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
-        boolean NickDupCheck =authService.dupnickname(request);
+        boolean NickDupCheck =authService.dupNickname(request);
         if(!NickDupCheck){
             ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                     .isSuccess(true)
@@ -82,5 +128,15 @@ public class AuthController {
                             .build());
         }
 
+    }
+
+    //테스트용 나중에 지울것
+    @PostMapping("/test")
+    public ResponseEntity<ResponseDTO<?>> test(){
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(authService.generateNickname())
+                        .build());
     }
 }
