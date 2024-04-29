@@ -127,3 +127,52 @@ public class AuthController {
     }
 
 }
+
+    //이메일 중복 검사
+    @GetMapping("/email/check")
+    public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
+       boolean MailDupCheck =authService.dupMail(request);
+       if(!MailDupCheck){
+           ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                   .isSuccess(true)
+                   .message(SuccessMsg.SUCCESS.getDetail())
+                   .build();
+           return ResponseEntity.ok(responseDTO);
+       }else{
+           return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+                   .body(ResponseDTO.<String>builder()
+                           .isSuccess(false)
+                           .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                           .build());
+       }
+
+    }
+    @GetMapping("/nickname/check")
+    public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
+        boolean NickDupCheck =authService.dupNickname(request);
+        if(!NickDupCheck){
+            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+                    .isSuccess(true)
+                    .message(SuccessMsg.SUCCESS.getDetail())
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        }else{
+            return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+                    .body(ResponseDTO.<String>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                            .build());
+        }
+
+    }
+
+    //테스트용 나중에 지울것
+    @PostMapping("/test")
+    public ResponseEntity<ResponseDTO<?>> test(){
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(authService.generateNickname())
+                        .build());
+    }
+}
