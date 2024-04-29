@@ -6,7 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
 import java.util.Base64;
@@ -27,6 +26,8 @@ public class Actor {
 
     @Lob
     private byte[] profileImage;
+
+    private int tmdbId;
 
     @PrePersist
     private void setDefaultProfileImage() {

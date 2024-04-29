@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
+//	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 //	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	compileOnly 'org.projectlombok:lombok'
@@ -32,7 +32,17 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+//	testImplementation 'org.springframework.security:spring-security-test'
+
+	//잭슨 라이브러리
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	//통신을 위한 웹 클라이언트
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation 'io.netty:netty-all:4.1.109.Final'
+
+	//컬렉션을 서브 리스트로 나눔(분할저장을 간단하게 처리하기 위해서)
+	implementation("com.google.guava:guava:33.1.0-jre")
 }
 
 tasks.named('test') {

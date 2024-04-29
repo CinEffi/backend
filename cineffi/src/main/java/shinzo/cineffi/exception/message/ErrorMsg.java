@@ -31,9 +31,11 @@ public enum ErrorMsg {
         DUPLICATE_EMAIL(CONFLICT,"중복된 이메일입니다."),
 
 
+
         /* 500 INTERNAL SERVER ERROR : 그 외 서버 에러 (컴파일 관련) */
         FAILED_TO_EXECUTE_FILE(INTERNAL_SERVER_ERROR, "파일 실행에 실패했습니다."),
-        FAILED_TO_COMPILE_FILE(INTERNAL_SERVER_ERROR, "파일 컴파일에 실패했습니다.");
+        FAILED_TO_COMPILE_FILE(INTERNAL_SERVER_ERROR, "파일 컴파일에 실패했습니다."),
+        FAILED_TO_MOVIE_PROCESS(INTERNAL_SERVER_ERROR, "영화 데이터 가공에 실패했습니다.");
 
 
 
