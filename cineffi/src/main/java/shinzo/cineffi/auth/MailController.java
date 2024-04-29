@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
@@ -30,8 +31,10 @@ public class MailController {
 
     }
 
-
-
+    @GetMapping("/error")
+    public RedirectView handleError() {
+        return new RedirectView("/signin");
+    }
 
 
 

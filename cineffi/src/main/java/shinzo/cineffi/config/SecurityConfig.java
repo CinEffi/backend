@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,7 +34,6 @@ public class SecurityConfig {
     private final UserAccountRepository userAccountRepository;
     private final JWTProvider jwtProvider;
     private final AuthenticationConfiguration authenticationConfiguration;
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
 
@@ -73,6 +73,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));//JWT 방식에서는 스프링시큐리티가 세션을 만들 이유가 없다.
         http
                 .addFilterBefore(new JWTFilter(jwtProvider, userAccountRepository), SecurityContextHolderAwareRequestFilter.class);
+
+
         return http.build();
 
 
