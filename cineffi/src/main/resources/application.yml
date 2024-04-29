@@ -1,11 +1,18 @@
 spring:
   datasource:
+
     # local postgres
     url: jdbc:postgresql://localhost:5432/cineffi
     username: postgres
     password: wpdnr2
     driver-class-name: org.postgresql.Driver
 
+
+    # Local postgres
+    url: jdbc:postgresql://localhost:5432/cineffi
+    username: minn
+    password:
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -38,6 +45,21 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
 
+
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
   redirect_url: http://localhost:3000/auth
+## dev profile (Docker 용)
+spring:
+  config:
+    activate:
+      on-profile:
+        - dev
+  datasource:
+    url: jdbc:postgresql://db:5432/cineffi
+    username: root
+    password: n1234
+    driver-class-name: org.postgresql.Driver
+server:
+  port: 4000
+

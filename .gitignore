@@ -232,3 +232,5 @@ gradle-app.setting
 
 # 민희 추가(임시)
 ./src/test/*
+# 재영이 추가
+.idea/*
