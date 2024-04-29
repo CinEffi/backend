@@ -1,29 +1,32 @@
 package shinzo.cineffi.movie;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.entity.movie.DailyMovie;
-import shinzo.cineffi.movie.repository.DailyBoxOfficeRepository;
+import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.movie.repository.DailyMovieRepository;
+import shinzo.cineffi.movie.repository.MovieRepository;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.springframework.beans.factory.annotation.Value;
-
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Transactional
-public class BoxOfficeApi {
+public class BoxOfficeDataHandler {
 
-    private final DailyBoxOfficeRepository dailyBoxOfficeRepository;
+    private final DailyMovieRepository dailyMovieRepository;
+    private final MovieRepository movieRepository;
 
     @Value("${kobis.api_key}")
     private String apiKey;
@@ -47,8 +50,8 @@ public class BoxOfficeApi {
 
 
         try {
-            //해당날의 데이터를 삭제하고 시작
-            dailyBoxOfficeRepository.deleteByTargetDt(targetDt);
+            dailyMovieRepository.deleteByTargetDt(targetDt);  //해당날의 데이터를 삭제하고 시작
+
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JSONParser jsonParser = new JSONParser();
@@ -64,14 +67,42 @@ public class BoxOfficeApi {
                 //JSON obiject -> java Object(Entity) 변환
                 DailyMovie dailyMovie = DailyMovie.builder()
                         .rank(dailyBoxOffice.get("rank").toString())
-                        .movieNm(dailyBoxOffice.get("movieNm").toString())
+                        .title(dailyBoxOffice.get("movieNm").toString())
                         .targetDt(targetDt)
                         .build();
 
-                dailyBoxOfficeRepository.save(dailyMovie);
+                dailyMovieRepository.save(dailyMovie);
             }
+
+            processDailyBoxOfficeData(); //데이터 병합 메서드 호출
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+
+
+    //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
+    public void processDailyBoxOfficeData() {
+        List<DailyMovie> dailyMovies = dailyMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
+        for (DailyMovie dailyMovie : dailyMovies) {
+            List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(dailyMovie.getTitle());
+            if (!movies.isEmpty()) {
+                Movie movie = movies.get(0); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
+                DailyMovie updateDailyMovie = DailyMovie.builder()
+                        .id(dailyMovie.getId()) //기존 DailyMovie의 id 유지
+                        .rank(dailyMovie.getRank())
+                        .title(dailyMovie.getTitle())
+                        .targetDt(dailyMovie.getTargetDt())
+                        .releaseDate(movie.getReleaseDate())
+                        .poster(movie.getPoster())
+                        .build();
+
+                dailyMovieRepository.save(updateDailyMovie);
+            }
+
+        }
+    }
+
 }

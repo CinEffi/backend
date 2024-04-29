@@ -61,10 +61,10 @@ public class MovieService {
 //        int endYear =  2024; //원하는 년도까지(수동수정)
 
         for (int year = startYear; year <= endYear; year++) {
-            for (int month = 1; month <= 1; month++) {
+            for (int month = 4; month <= 4; month++) {
                 String startDate = String.format("%d-%02d-01", year, month);
-//                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-05", year, month); //5일치만 테스트
+                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
+//                String endDate = String.format("%d-%02d-02", year, month); //5일치만 테스트
 
                 List<Movie> movies = requestTMDBIds(startDate, endDate);
                 initMovieData(movies);
@@ -108,7 +108,7 @@ public class MovieService {
 
     //영화 데이터 init 하기
     public void initMovieData(List<Movie> movieEmptys) {
-        for (Movie movieEmpty : movieEmptys){
+        for (Movie movieEmpty : movieEmptys) {
             Map<String, Object> detailData = getMovieDetailData(movieEmpty.getTmdbId());
             Movie movie = null;
             if (detailData != null) movie = makeMovieData(detailData, movieEmpty);
@@ -117,7 +117,7 @@ public class MovieService {
     }
 
     //영화 상세정보 요청하기 for initMovieData()
-    public Map<String, Object> getMovieDetailData (int tmdbId){
+    public Map<String, Object> getMovieDetailData(int tmdbId) {
         try {
             return wc.get()
                     .uri(uriBuilder -> uriBuilder
@@ -141,12 +141,12 @@ public class MovieService {
                 .uri(pathImage + imagePath)
                 .retrieve()
                 .bodyToMono(byte[].class);
-        // 이미지를 byte[]로 변환하여 반환
+//         이미지를 byte[]로 변환하여 반환
         return poster.block();
     }
 
     //한국어 문자열 장르를 이넘값으로
-    private Genre genreKorToEnum(String genreStr){
+    private Genre genreKorToEnum(String genreStr) {
         Map<String, Genre> genreMap = Map.ofEntries(
                 Map.entry("액션", ACTION),
                 Map.entry("모험", ADVENTURE),
@@ -168,27 +168,26 @@ public class MovieService {
                 Map.entry("전쟁", WAR),
                 Map.entry("서부", WESTERN)
         );
-        if(genreMap.containsKey(genreStr)) return genreMap.get(genreStr);
+        if (genreMap.containsKey(genreStr)) return genreMap.get(genreStr);
         else throw new CustomException(ErrorMsg.FAILED_TO_MOVIE_PROCESS);
     }
 
     private List<MovieGenre> makeMovieGenre(List<String> genreStrs, Movie movie) {
-        if( genreStrs.size() > 0 ) {
+        if (genreStrs.size() > 0) {
             return genreStrs.stream()
                     .map(genreStr -> MovieGenre.builder().movie(movie).genre(genreKorToEnum(genreStr)).build())
                     .map(movieGenreRepo::save)
                     .collect(Collectors.toList());
-        }
-        else {
+        } else {
             return new ArrayList<>();
         }
     }
 
 
-    private Director saveDirector(List<Map<String, Object>> crews){
+    private Director saveDirector(List<Map<String, Object>> crews) {
         Map<String, Object> crew = new HashMap<>();
-        for (Map<String, Object> crewInMap : crews){
-            if(crewInMap.get("job").equals("Director")) {
+        for (Map<String, Object> crewInMap : crews) {
+            if (crewInMap.get("job").equals("Director")) {
                 crew = crewInMap;
                 break;
             }
@@ -197,29 +196,29 @@ public class MovieService {
         Optional<Director> directorOpt = directorRepo.findByName((String) crew.get("name"));
 
         if (directorOpt.isPresent()) return directorOpt.get();
-        else{
+        else {
             Director director = null;
             director = Director.builder()
                     .name((String) crew.get("name"))
                     .build();
-            if ((String) crew.get("profile_path") != null){
-                director = director.toBuilder()
-                        .profileImage(getImg((String) crew.get("profile_path")))
-                        .build();
-            }
+//            if ((String) crew.get("profile_path") != null){
+//                director = director.toBuilder()
+//                        .profileImage(getImg((String) crew.get("profile_path")))
+//                        .build();
+//            }
             return directorRepo.save(director);
         }
     }
 
     //응답 받은 데이터 가공 및 저장 for initMovieData()
     @Transactional
-    public Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
+    public Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie) {
         //데이터 가공
         String newTitle = (String) movieDetailData.get("title");
         LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
         List<String> newOriginCountrys = (List<String>) movieDetailData.get("origin_country");
         List<Map<String, Object>> genres = (List<Map<String, Object>>) movieDetailData.get("genres");
-        List<String> genreStrs = genres.stream().map(obj-> (String) obj.get("name")).collect(Collectors.toList());
+        List<String> genreStrs = genres.stream().map(obj -> (String) obj.get("name")).collect(Collectors.toList());
         int newRuntime = (int) movieDetailData.get("runtime");
         String newIntroduction = (String) movieDetailData.get("overview");
         List<Map<String, Object>> crews = (List<Map<String, Object>>) ((Map<String, Object>) movieDetailData.get("credits")).get("crew");
@@ -238,12 +237,12 @@ public class MovieService {
                 .avgScore(avgScore)
                 .build();
 
-        if((String) movieDetailData.get("poster_path") != null){
-            byte[] newPoster = getImg((String) movieDetailData.get("poster_path"));
-            newMovie = newMovie.toBuilder()
-                    .poster(newPoster)
-                    .build();
-        }
+//        if((String) movieDetailData.get("poster_path") != null){
+//            byte[] newPoster = getImg((String) movieDetailData.get("poster_path"));
+//            newMovie = newMovie.toBuilder()
+//                    .poster(newPoster)
+//                    .build();
+//        }
 
         newMovie = newMovie.toBuilder()
                 .genreList(makeMovieGenre(genreStrs, newMovie))
@@ -256,22 +255,22 @@ public class MovieService {
         return newMovie;
     }
 
-    private void saveActor(List<Map<String, Object>> casts, Movie movie){
-        for (Map<String, Object> cast : casts){
-            if((int) cast.get("order") < 8){
+    private void saveActor(List<Map<String, Object>> casts, Movie movie) {
+        for (Map<String, Object> cast : casts) {
+            if ((int) cast.get("order") < 8) {
                 Optional<Actor> present = actorRepo.findByName((String) cast.get("name"));
                 Actor actor;
-                if(present.isPresent()) actor = present.get();
-                else{
+                if (present.isPresent()) actor = present.get();
+                else {
                     actor = Actor.builder()
                             .name((String) cast.get("name"))
                             .build();
 
-                    if ((String) cast.get("profile_path") != null) {
-                        actor = actor.toBuilder()
-                                .profileImage(getImg((String) cast.get("profile_path")))
-                                .build();
-                    }
+//                    if ((String) cast.get("profile_path") != null) {
+//                        actor = actor.toBuilder()
+//                                .profileImage(getImg((String) cast.get("profile_path")))
+//                                .build();
+//                    }
                     actorRepo.save(actor);
                 }
 
@@ -286,11 +285,20 @@ public class MovieService {
         }
     }
 
-
-
-    private final BoxOfficeApi boxOfficeApi;
+    private final BoxOfficeDataHandler boxOfficeDataHandler;
+    private final MovieRepository movieRepository;
+    private final DailyMovieRepository dailyMovieRepository;
 
     public void insertDailyBoxOffice() {
-        boxOfficeApi.dailyBoxOffice();
+        boxOfficeDataHandler.dailyBoxOffice();
+
     }
+
+    public List<DailyMovie> getEnhancedDailyMovies() {
+        return dailyMovieRepository.findAll();
+    }
+
 }
+
+
+
