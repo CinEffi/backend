@@ -24,46 +24,4 @@ import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
 public class UserController {
     private final UserService userService;
 
-
-    @PostMapping("/api/auth/login/email")
-    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
-    Long userId = userService.getUserIdByEmail(request.getEmail());
-    boolean LoginSuccess = userService.emailLogin(request);
-
-    if(LoginSuccess) {
-        JWToken jwToken = JWTUtil.allocateToken(userId,"ROLE_USER");//액세스 토큰 발급
-        //Access 토큰 쿠키
-        ResponseCookie accessCookie = ResponseCookie.from("access",jwToken.getAccessToken())
-                .sameSite("None")
-                .maxAge(ACCESS_PERIOD)
-                .path("/")
-                .httpOnly(true)
-                .build();
-        //Refresh 토큰 쿠키
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
-                .sameSite("None")
-                .maxAge(REFRESH_PERIOD)
-                .path("/")
-                .httpOnly(true)
-                .build();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
-        headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-
-        userService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
-                .isSuccess(true)
-                .message(SuccessMsg.SUCCESS.getDetail())
-                .build();
-        return ResponseEntity.ok().headers(headers).body(responseDTO);
-    }
-    else {
-        return ResponseEntity.status(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getHttpStatus())
-                .body(ResponseDTO.<String>builder()
-                .isSuccess(false)
-                .message(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getDetail())
-                .build());
-    }
-    }
 }
