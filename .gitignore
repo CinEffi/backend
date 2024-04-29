@@ -226,6 +226,8 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+*.yml
+
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,gradle,macos,windows
 
 # 민희 추가(임시)
