@@ -2,8 +2,8 @@ spring:
   datasource:
     # local postgres
     url: jdbc:postgresql://localhost:5432/cineffi
-    username: yeji
-    password: 1234
+    username: postgres
+    password: wpdnr2
     driver-class-name: org.postgresql.Driver
 
 
