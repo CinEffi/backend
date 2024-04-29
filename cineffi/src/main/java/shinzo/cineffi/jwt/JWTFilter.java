@@ -15,13 +15,6 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Enumeration;
-
-import static shinzo.cineffi.exception.message.ErrorMsg.*;
-import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
-import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
-
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTProvider jwtProvider;
@@ -29,6 +22,7 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
                  if (
+                    request.getRequestURI().equals("/api/auth/login/kakao")||
                     request.getRequestURI().equals("/api/auth/signup")||
                     request.getRequestURI().equals("/api/auth/nickname/check")||
                     request.getRequestURI().equals("/api/auth/email/check")||

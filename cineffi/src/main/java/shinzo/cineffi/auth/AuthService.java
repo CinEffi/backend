@@ -5,14 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.domain.entity.user.UserActivityNum;
@@ -24,7 +25,6 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.Optional;
 import java.util.Random;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
@@ -40,6 +40,7 @@ public class AuthService {
     private String restApiKey;
     @Value("${kakao.redirect_url}")
     private String redirectUrl;
+    private EmailRequestDTO request;
 
     public KakaoToken requestKakaoToken(String code){
         RestTemplate rt = new RestTemplate();
@@ -198,12 +199,22 @@ public class AuthService {
                 .build();
         userRepository.save(user);
 
-        UserAccount userAccount = UserAccount.builder()
-                .password(BCrypt.hashpw(request.getPassword(),BCrypt.gensalt()))
-                .email(request.getEmail())
-                .user(user)
-                .isAuthentication(request.getIsauthentication())
-                .build();
+        UserAccount userAccount = null;
+        if(request.getPassword() != null) {
+            userAccount = UserAccount.builder()
+                    .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
+                    .email(request.getEmail())
+                    .user(user)
+                    .isAuthentication(request.getIsauthentication())
+                    .build();
+        }
+        else{
+            userAccount = UserAccount.builder()
+                    .email(request.getEmail())
+                    .user(user)
+                    .isAuthentication(request.getIsauthentication())
+                    .build();
+        }
 
         userAccountRepository.save(userAccount);
 
@@ -215,6 +226,7 @@ public class AuthService {
     }
 
     public boolean dupMail(EmailRequestDTO request) {
+        this.request = request;
         boolean isdup = userAccountRepository.existsByEmail(request.getEmail());
 
         return isdup;

@@ -10,9 +10,6 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Date;
-
-import static shinzo.cineffi.exception.message.ErrorMsg.*;
-
 public class JWTUtil {
 
     //jwt 키 발급

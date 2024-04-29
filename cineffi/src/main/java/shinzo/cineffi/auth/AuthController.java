@@ -20,7 +20,7 @@ import shinzo.cineffi.jwt.JWToken;
 public class AuthController {
     private final AuthService authService;
 
-    @GetMapping("/login/kakao")
+    @PostMapping("/login/kakao")
     public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
@@ -87,46 +87,6 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok().headers(headers).body(responseDTO);
     }
-
-    //이메일 중복 검사
-    @GetMapping("/email/check")
-    public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
-       boolean MailDupCheck =authService.dupMail(request);
-       if(!MailDupCheck){
-           ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
-                   .isSuccess(true)
-                   .message(SuccessMsg.SUCCESS.getDetail())
-                   .build();
-           return ResponseEntity.ok(responseDTO);
-       }else{
-           return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
-                   .body(ResponseDTO.<String>builder()
-                           .isSuccess(false)
-                           .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
-                           .build());
-       }
-
-    }
-    @GetMapping("/nickname/check")
-    public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
-        boolean NickDupCheck =authService.dupNickname(request);
-        if(!NickDupCheck){
-            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
-                    .isSuccess(true)
-                    .message(SuccessMsg.SUCCESS.getDetail())
-                    .build();
-            return ResponseEntity.ok(responseDTO);
-        }else{
-            return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
-                    .body(ResponseDTO.<String>builder()
-                            .isSuccess(false)
-                            .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
-                            .build());
-        }
-
-    }
-
-}
 
     //이메일 중복 검사
     @GetMapping("/email/check")
