@@ -68,3 +68,11 @@ server:
 kobis:
   api_key: 5b5979d8f9822605465799f4de0d864a
   base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
+
+
+tmdb:
+  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjZTc0MjdlODU0YzU2ZjFlMmI0OWE2NWRmNDVjZDNiZSIsInN1YiI6IjY2MGUwN2QwMzU4MThmMDE3YzNjZGI5ZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.744tSvIVxntYL4eGwbl6UZLNEq4yJ4YUgDaUkuTZ4fQ
+  api_key: ce7427e854c56f1e2b49a65df45cd3be
+  base_url: https://
+  path_image: image.tmdb.org/t/p/w500
+  path_data: api.themoviedb.org/3

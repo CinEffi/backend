@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import shinzo.cineffi.domain.dto.ResponseDTO;
+import shinzo.cineffi.domain.entity.movie.DailyMovie;
+import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
 @RestController
@@ -31,17 +33,15 @@ public class MovieController {
 
 
 
-    private final MovieService movieService;
-
-    @GetMapping("/api/movie/updateBoxOffice")
-    public ResponseEntity<ResponseDTO<?>> updateBoxOffice() {
-        movieService.insertDailyBoxOffice();
-
+    @GetMapping("/api/movies/boxOffice")
+    public ResponseEntity<ResponseDTO<List<DailyMovie>>> getDailyBoxOffice() {
+        List<DailyMovie> dailyMovies = movieService.getEnhancedDailyMovies();
         return ResponseEntity.ok(
-                ResponseDTO.builder()
+                ResponseDTO.<List<DailyMovie>>builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result("영화진흥원 일별박스오피스 불러오기 완료")
-                        .build()
-        );
+                        .result(dailyMovies)
+                        .build());
     }
+
+
 }
