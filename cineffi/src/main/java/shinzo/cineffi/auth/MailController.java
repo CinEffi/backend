@@ -26,7 +26,7 @@ public class MailController {
     }
 
     // 인증번호 일치여부 확인
-    @GetMapping("/api/verify/email/check")
+    @PostMapping("/api/auth/verify/email/check")
     public ResponseEntity<ResponseDTO<Boolean>> mailCheck(@RequestParam("code") int code, @RequestParam("email") String email) {
         AuthCodeDTO request = new AuthCodeDTO();
         request.setCode(code);
