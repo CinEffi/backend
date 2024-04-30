@@ -1,18 +1,13 @@
 package shinzo.cineffi.auth;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,8 +24,6 @@ public class MailController {
         return ResponseEntity.ok(responseDTO);
 
     }
-
-
 
     // 인증번호 일치여부 확인
     @GetMapping("/api/verify/email/check")

@@ -7,9 +7,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter@Setter
 public class CustomAuthenticatedUser extends AbstractAuthenticationToken {

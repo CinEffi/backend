@@ -10,8 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
-
 import shinzo.cineffi.jwt.JWToken;
+
 
 
 @RequestMapping("/api/auth")
@@ -20,7 +20,7 @@ import shinzo.cineffi.jwt.JWToken;
 public class AuthController {
     private final AuthService authService;
 
-    @GetMapping("/login/kakao")
+    @PostMapping("/login/kakao")
     public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
@@ -91,7 +91,7 @@ public class AuthController {
     //이메일 중복 검사
     @PostMapping("/email/check")
     public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
-       boolean MailDupCheck =authService.dupMail(request);
+       boolean MailDupCheck = authService.dupMail(request);
        if(!MailDupCheck){
            ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                    .isSuccess(true)
@@ -109,7 +109,7 @@ public class AuthController {
     }
     @PostMapping("/nickname/check")
     public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
-        boolean NickDupCheck =authService.dupNickname(request);
+        boolean NickDupCheck = authService.dupNickname(request);
         if(!NickDupCheck){
             ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                     .isSuccess(true)
@@ -125,5 +125,4 @@ public class AuthController {
         }
 
     }
-
 }

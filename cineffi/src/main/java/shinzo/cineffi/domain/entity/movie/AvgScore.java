@@ -24,13 +24,13 @@ public class AvgScore extends BaseEntity {
 
     @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private float allAvgScore;
+    private Float allAvgScore;
 
     @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private float cinephileAvgScore;
+    private Float cinephileAvgScore;
 
     @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private float levelAvgScore;
+    private Float levelAvgScore;
 }

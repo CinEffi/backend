@@ -5,24 +5,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.domain.entity.user.User;
-import shinzo.cineffi.domain.entity.user.UserActivityNum;
+import shinzo.cineffi.domain.entity.user.UserAccount;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
+import shinzo.cineffi.domain.entity.user.UserActivityNum;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.Optional;
 import java.util.Random;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
@@ -38,8 +38,27 @@ public class AuthService {
     private String restApiKey;
     @Value("${kakao.redirect_url}")
     private String redirectUrl;
+    private EmailRequestDTO request;
 
-    public KakaoToken requestKakaoToken(String code) {
+    //필요하다면 카카오 회원가입, 유저아이디 반환
+    public Long loginByKakao(String accessToken){
+        String email = requestKakaoEmail(accessToken);
+        boolean isEmailDuplicate = userAccountRepository.existsByEmail(email);
+
+        //회원가입 전적 없으면 회원가입
+        if(!isEmailDuplicate) {
+            AuthRequestDTO dto = AuthRequestDTO.builder()
+                    .email(email)
+                    .nickname(generateNickname())
+                    .isauthentication(true) //카카오는 이미 겅즘된 이메일이므로 그냥 true
+                    .build();
+            joinUser(dto);
+        }
+
+        return getUserIdByEmail(email);
+    }
+
+    public KakaoToken requestKakaoToken(String code){
         RestTemplate rt = new RestTemplate();
         //요청보낼 헤더 생성
         HttpHeaders headers = new HttpHeaders();
@@ -75,55 +94,8 @@ public class AuthService {
 
     }
 
-    public KakaoProfile findKakaoProfile(String accessToken) {
-        RestTemplate rt = new RestTemplate();
-
-        //헤더 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        HttpEntity<MultiValueMap<String, String>> kakaoProfileRequest = new HttpEntity<>(headers);
-
-        //요청을 만들어 보내고, 그걸 응답에 받기
-        ResponseEntity<String> kakaoProfileResponse = rt.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                kakaoProfileRequest,
-                String.class
-        );
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        KakaoProfile kakaoProfile = null;
-        try {
-            kakaoProfile = objectMapper.readValue(kakaoProfileResponse.getBody(), KakaoProfile.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        System.out.println(kakaoProfile);
-        return kakaoProfile;
-    }
-
-    //필요하다면 카카오 회원가입, 유저아이디 반환
-    public Long loginByKakao(String accessToken) {
-        String email = requestKakaoEmail(accessToken);
-        boolean isEmailDuplicate = userAccountRepository.existsByEmail(email);
-
-        //회원가입 전적 없으면 회원가입
-        if (!isEmailDuplicate) {
-            AuthRequestDTO dto = AuthRequestDTO.builder()
-                    .email(email)
-                    .nickname(generateNickname())
-                    .isauthentication(true) //카카오는 이미 겅즘된 이메일이므로 그냥 true
-                    .build();
-            joinUser(dto);
-        }
-
-        return getUserIdByEmail(email);
-    }
-
     //카카오 토큰으로 카카오 이메일 가져오기
-    private String requestKakaoEmail(String accessToken) {
+    private String requestKakaoEmail(String accessToken){
         RestTemplate rt = new RestTemplate();
 
         //헤더 생성
@@ -151,16 +123,15 @@ public class AuthService {
 
         return kakaoProfile.getKakaoAccount().getEmail();
     }
-
     //랜덤 비중복 닉네임 생성기
-    public String generateNickname() {
+    public String generateNickname(){
         boolean isDup = true;
         String newNickname = "";
-        while (isDup) {
+        while(isDup){
             Random random = new Random();
             int randomNum = random.nextInt(100000);
             String randomStr = "";
-            switch (randomNum % 4) {
+            switch(randomNum%4){
                 case 0:
                     randomStr = "강아지";
                     break;
@@ -188,7 +159,7 @@ public class AuthService {
         if (isEmailDuplicate) {
             return false; // 이메일 중복 시 false 반환
         }
-        if (isNickNameDuplicate) {
+        if(isNickNameDuplicate){
             return false; // 이메일 중복 시 false 반환
         }
         joinUser(request);
@@ -214,17 +185,17 @@ public class AuthService {
 
     }
 
-    public Object[] makeCookie(Long userId) {
-        JWToken jwToken = JWTUtil.allocateToken(userId, "ROLE_USER");//액세스 토큰 발급
+    public Object[] makeCookie(Long userId){
+        JWToken jwToken = JWTUtil.allocateToken(userId,"ROLE_USER");//액세스 토큰 발급
         //Access 토큰 쿠키
-        ResponseCookie accessCookie = ResponseCookie.from("access", jwToken.getAccessToken())
+        ResponseCookie accessCookie = ResponseCookie.from("access",jwToken.getAccessToken())
                 .sameSite("None")
                 .maxAge(ACCESS_PERIOD)
                 .path("/")
                 .httpOnly(true)
                 .build();
         //Refresh 토큰 쿠키
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh", jwToken.getRefreshToken())
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
                 .sameSite("None")
                 .maxAge(REFRESH_PERIOD)
                 .path("/")
@@ -235,21 +206,31 @@ public class AuthService {
         headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        return new Object[]{jwToken, headers};
+        return new Object[] {jwToken, headers};
     }
 
-    private void joinUser(AuthRequestDTO request) {
+    private void joinUser(AuthRequestDTO request){
         User user = User.builder()
                 .nickname(request.getNickname())
                 .build();
         userRepository.save(user);
 
-        UserAccount userAccount = UserAccount.builder()
-                .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
-                .email(request.getEmail())
-                .user(user)
-                .isAuthentication(request.getIsauthentication())
-                .build();
+        UserAccount userAccount = null;
+        if(request.getPassword() != null) {
+            userAccount = UserAccount.builder()
+                    .password(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()))
+                    .email(request.getEmail())
+                    .user(user)
+                    .isAuthentication(request.getIsauthentication())
+                    .build();
+        }
+        else{
+            userAccount = UserAccount.builder()
+                    .email(request.getEmail())
+                    .user(user)
+                    .isAuthentication(request.getIsauthentication())
+                    .build();
+        }
 
         userAccountRepository.save(userAccount);
         UserActivityNum userActivityNum = UserActivityNum.builder()
@@ -270,5 +251,4 @@ public class AuthService {
 
         return isdup;
     }
-
 }

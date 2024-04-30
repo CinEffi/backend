@@ -27,7 +27,7 @@ public class Actor {
     @Lob
     private byte[] profileImage;
 
-    private int tmdbId;
+    private Integer tmdbId;
 
     @PrePersist
     private void setDefaultProfileImage() {
