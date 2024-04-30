@@ -161,7 +161,7 @@ public class MovieService {
 
     //이미지 데이터 요청하기
     private byte[] requestImg(String imagePath, ImageType type) {
-        if(type == ImageType.POSTER) {
+        if(type == POSTER) {
             if(imagePath != null) {
                 return wc.get()
                         .uri(uriBuilder -> uriBuilder
