@@ -28,19 +28,19 @@ public class User extends BaseEntity {
 
 
     @ColumnDefault("1")
-    private int level;
+    private Integer level;
 
     @Lob
     private byte[] profileImage;
 
     @ColumnDefault("false")
-    private boolean isBad;
+    private Boolean isBad;
 
     @ColumnDefault("false")
-    private boolean isCertified;
+    private Boolean isCertified;
 
     @ColumnDefault("0")
-    private int exp;
+    private Integer exp;
 
 
 

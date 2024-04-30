@@ -23,16 +23,16 @@ public class UserActivityNum {
     private User user;
 
     @ColumnDefault("0")
-    private int collectionNum;
+    private Integer collectionNum;
 
     @ColumnDefault("0")
-    private int scrapNum;
+    private Integer scrapNum;
 
     @ColumnDefault("0")
-    private int followingsNum;
+    private Integer followingsNum;
 
     @ColumnDefault("0")
-    private int followersNum;
+    private Integer followersNum;
 
 
 }
