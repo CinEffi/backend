@@ -62,7 +62,15 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable);//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/auth/login/kakao","/api/auth/signup","/api/auth/verify/email","/api/auth/verify/email/check","/api/auth/nickname/check","/api/auth/login/email").permitAll()//토큰 없이 동작해야하는 사이트
+                        .requestMatchers(
+                                "/api/auth/login/kakao",
+                                "/api/auth/signup",
+                                "/api/auth/email/check",
+                                "api/auth/login/email",
+                                "/api/auth/verify/email",
+                                "/api/auth/verify/email/check",
+                                "/api/auth/nickname/check"
+                                ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
 //                        .anyRequest().permitAll());
         http
