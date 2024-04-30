@@ -3,7 +3,6 @@ package shinzo.cineffi.domain.entity.user;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import shinzo.cineffi.domain.enums.LoginType;
 
 @Entity
 @Getter

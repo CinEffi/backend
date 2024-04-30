@@ -89,7 +89,7 @@ public class AuthController {
     }
 
     //이메일 중복 검사
-    @GetMapping("/email/check")
+    @PostMapping("/email/check")
     public ResponseEntity<ResponseDTO<String>> maildupcheck(@RequestBody EmailRequestDTO request){
        boolean MailDupCheck = authService.dupMail(request);
        if(!MailDupCheck){
@@ -107,7 +107,7 @@ public class AuthController {
        }
 
     }
-    @GetMapping("/nickname/check")
+    @PostMapping("/nickname/check")
     public ResponseEntity<ResponseDTO<String>> nicknamedupcheck(@RequestBody NickNameDTO request){
         boolean NickDupCheck = authService.dupNickname(request);
         if(!NickDupCheck){

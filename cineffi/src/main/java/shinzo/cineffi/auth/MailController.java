@@ -26,11 +26,10 @@ public class MailController {
     }
 
     // 인증번호 일치여부 확인
-    @GetMapping("/api/verify/email/check")
-    public ResponseEntity<ResponseDTO<Boolean>> mailCheck(@RequestParam("code") int code, @RequestParam("email") String email) {
-        AuthCodeDTO request = new AuthCodeDTO();
-        request.setCode(code);
-        request.setEmail(email);
+    @PostMapping("/api/auth/verify/email/check")
+    public ResponseEntity<ResponseDTO<Boolean>> mailCheck(@RequestBody AuthCodeDTO request) {
+        request.setCode(request.getCode());
+        request.setEmail(request.getEmail());
         boolean ischecked = mailService.checkCode(request);
         if(ischecked) {
             ResponseDTO<Boolean> responseDTO = ResponseDTO.<Boolean>builder()
