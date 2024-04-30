@@ -28,10 +28,10 @@ public class Review extends BaseEntity {
     private String content;
 
     @ColumnDefault("5")
-    private float score;
+    private Float score;
 
     @ColumnDefault("0")
-    private int likeNum;
+    private Integer likeNum;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

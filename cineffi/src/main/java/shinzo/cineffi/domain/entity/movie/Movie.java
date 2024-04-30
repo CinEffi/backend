@@ -34,7 +34,7 @@ public class Movie extends BaseEntity {
     @OneToMany(mappedBy = "movie")
     private List<MovieGenre> genreList;
 
-    private int runtime;
+    private Integer runtime;
     @Lob
     private String introduction;
 
