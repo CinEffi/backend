@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import shinzo.cineffi.domain.dto.GenreMovieListDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
 import shinzo.cineffi.exception.message.SuccessMsg;
@@ -39,8 +40,19 @@ public class MovieController {
         List<UpcomingMovieDTO> upcomingList = movieService.findUpcomingList();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
-                        .message((SuccessMsg.SUCCESS.getDetail()))
+                        .message(SuccessMsg.SUCCESS.getDetail())
                         .result(upcomingList)
+                        .build()
+        );
+    }
+
+    @GetMapping("/genre")
+    public ResponseEntity<ResponseDTO<?>> findRandomGenreList(){
+        GenreMovieListDTO movieList = movieService.findGenreList();
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(movieList)
                         .build()
         );
     }
