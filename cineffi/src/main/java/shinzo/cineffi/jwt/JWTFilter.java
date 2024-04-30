@@ -27,6 +27,7 @@ public class JWTFilter extends OncePerRequestFilter {
                  if (
                     request.getRequestURI().equals("/api/auth/login/kakao")||
                     request.getRequestURI().equals("/api/auth/signup")||
+                    request.getRequestURI().equals("/api/auth/verify/email")||
                     request.getRequestURI().equals("/api/auth/nickname/check")||
                     request.getRequestURI().equals("/api/auth/email/check")||
                     request.getRequestURI().equals("/api/auth/nickname/check")||
