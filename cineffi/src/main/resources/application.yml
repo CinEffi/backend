@@ -1,16 +1,10 @@
 spring:
   datasource:
-     #    H2
-#         url: jdbc:h2:tcp://localhost/~/login
-#         username: sa
-#         password: 123
-#         driver-class-name: org.h2.Driver
-
-        # local postgres
-        url: jdbc:postgresql://localhost:5432/cineffi
-        username:
-        password:
-        driver-class-name: org.postgresql.Driver
+    # local postgres
+    url: jdbc:postgresql://localhost:5432/cineffi
+    username:
+    password:
+    driver-class-name: org.postgresql.Driver
 
 
   jpa:
@@ -21,10 +15,54 @@ spring:
       hibernate:
         format_sql: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: skwd1012@gmail.com
+    password: tboxbeusjvbysajd
+    properties:
+      mail:
+        smtp:
+          auth: true
+          timeout: 5000
+          connectiontimeout: 5000
+          writetimeout: 5000
+          starttls:
+            enable: true
+    auth-code-expiration-millis: 300000 //5분
+#  jwt:
+#    expiration_time : 300,000
+tmdb:
+  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMmY4YjA2ZTIxYzhkYTJiZGQ3NmZjMDVjZWU3ZmMyZCIsInN1YiI6IjY2MGQwNjM0OTVjZTI0MDE2NDZlNjRiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.wXKroToQPTplaBr8TBaH-yV38zsQB35IfIj115nqdF8
+  api_key: 12f8b06e21c8da2bdd76fc05cee7fc2d
+  base_url: https://
+  path_image: image.tmdb.org/t/p/w500
+  path_movie: api.themoviedb.org/3
+
 logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+
+kakao:
+  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
+  redirect_url: http://localhost:8080/api/auth/login/kakao
+---
+## dev profile (Docker 용)
+spring:
+  config:
+    activate:
+      on-profile:
+        - dev
+  datasource:
+    url: jdbc:postgresql://db:5432/cineffi
+    username: root
+    password: n1234
+    driver-class-name: org.postgresql.Driver
+server:
+  port: 4000
+
+
 
 
 kobis:

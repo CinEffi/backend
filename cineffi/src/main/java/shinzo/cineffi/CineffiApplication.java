@@ -12,5 +12,4 @@ public class CineffiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CineffiApplication.class, args);
 	}
-
 }

@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import shinzo.cineffi.exception.message.ErrorMsg;
-import shinzo.cineffi.exception.message.SuccessMsg;
 
 @Getter
 @Builder

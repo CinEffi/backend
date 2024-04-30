@@ -21,7 +21,7 @@ public class ActorMovie extends BaseEntity {
     @Column(nullable = false)
     private String character;
 
-    private int orders;
+    private Integer orders;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "actor_id")

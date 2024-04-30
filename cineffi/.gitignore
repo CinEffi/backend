@@ -54,7 +54,7 @@ cmake-build-*/
 *.iws
 
 # IntelliJ
-cineffi/out/
+out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -201,7 +201,7 @@ $RECYCLE.BIN/
 
 ### Gradle ###
 .gradle
-build/
+**/build/
 !src/**/build/
 
 # Ignore Gradle GUI config
@@ -226,11 +226,11 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-*.yml
-
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,gradle,macos,windows
 
 # 민희 추가(임시)
 ./src/test/*
 # 재영이 추가
 .idea/*
+
+*.yml
