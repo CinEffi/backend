@@ -30,7 +30,8 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().equals("/api/auth/nickname/check")||
                     request.getRequestURI().equals("/api/auth/email/check")||
                     request.getRequestURI().equals("/api/auth/nickname/check")||
-                    request.getRequestURI().equals("/api/auth/login/email")) {
+                    request.getRequestURI().equals("/api/auth/login/email") ||
+                 request.getRequestURI().equals("/api/users/{user-id}/followers")) {
                 filterChain.doFilter(request, response);
                 return;}
     try{
