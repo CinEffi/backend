@@ -20,8 +20,7 @@ import java.util.Optional;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.pow;
-import static shinzo.cineffi.exception.message.ErrorMsg.EMPTY_USER;
-import static shinzo.cineffi.exception.message.ErrorMsg.FAIDED_TO_CONVERT_IMAGE;
+import static shinzo.cineffi.exception.message.ErrorMsg.*;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Controller
@@ -72,6 +71,8 @@ public class UserService {
     }
 
     public void editUserProfile(Long userId, String nickname, String password, MultipartFile profileImage) {
+        // 중복 닉네임 검사
+        if (userRepository.existsByNickname(nickname)) throw new CustomException(DUPLICATE_NICKNAME);
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) throw new CustomException(EMPTY_USER);
 
