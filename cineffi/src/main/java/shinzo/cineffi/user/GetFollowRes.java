@@ -3,15 +3,11 @@ package shinzo.cineffi.user;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class GetFollowRes {
-    private Long followId;
-    private Long userId;
-    private String nickname;
-    private String profileImage;
-    private int level;
-    private boolean isCertified;
-    private boolean isBad;
-    private boolean isFollowed;
+    private int totalPageNum;
+    private List<FollowDto> followList;
 }

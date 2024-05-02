@@ -1,6 +1,9 @@
 package shinzo.cineffi.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.entity.user.Follow;
@@ -63,10 +66,10 @@ public class FollowService {
 
     // targetUser 를 팔로우하고 있는 유저 목록 조회
     @Transactional
-    public List<GetFollowRes> getFollowerList(Long targetUserId, Long loginUserId) {
-        List<GetFollowRes> GetFollowerResList = new ArrayList<>();
+    public GetFollowRes getFollowerList(Long targetUserId, Long loginUserId, Pageable pageable) {
+        List<FollowDto> FollowerResList = new ArrayList<>();
 
-        List<Follow> followList = followRepository.findAllByFollowingId(targetUserId);
+        Page<Follow> followList = followRepository.findAllByFollowingId(targetUserId, pageable);
         for (Follow f : followList) {
             User follower = f.getFollower();
             Boolean isFollowed = Boolean.FALSE;
@@ -79,7 +82,7 @@ public class FollowService {
                     }
                 }
             }
-            GetFollowerResList.add(GetFollowRes.builder()
+            FollowerResList.add(FollowDto.builder()
                     .followId(f.getId())
                     .userId(follower.getId())
                     .nickname(follower.getNickname())
@@ -91,28 +94,29 @@ public class FollowService {
                     .build());
         }
 
-        return GetFollowerResList;
+        return GetFollowRes.builder()
+                .followList(FollowerResList)
+                .totalPageNum(followList.getTotalPages())
+                .build();
     }
 
     // targetUser 가 팔로우하고 있는 유저 목록 조회
     @Transactional
-    public List<GetFollowRes> getFollowingList(Long targetUserId, Long loginUserId) {
+    public GetFollowRes getFollowingList(Long targetUserId, Long loginUserId, Pageable pageable) {
+        List<FollowDto> FollowingResList = new ArrayList<>();
 
+        Page<Follow> followList = followRepository.findAllByFollowerId(targetUserId, pageable);
 
-        List<GetFollowRes> GetFollowingResList = new ArrayList<>();
-
-        List<Follow> followList = followRepository.findAllByFollowerId(targetUserId);
         for (Follow f : followList) {
             User following = f.getFollowing();
             Boolean isFollowed = Boolean.FALSE;
             List<Follow> followingList = followRepository.findAllByFollowerId(loginUserId); // 내가 팔로우하는 사람 목록 조회
 
             for (Follow follow : followingList) {
-                if (follow.getFollowing().getId().equals(following.getId())) { // 내가 팔로우하는 사람 목록에 있으면
+                if (follow.getFollowing().getId().equals(following.getId()))  // 내가 팔로우하는 사람 목록에 있으면
                     isFollowed = true;
-                }
             }
-            GetFollowingResList.add(GetFollowRes.builder()
+            FollowingResList.add(FollowDto.builder()
                     .followId(f.getId())
                     .userId(following.getId())
                     .nickname(following.getNickname())
@@ -124,7 +128,10 @@ public class FollowService {
                     .build());
         }
 
-        return GetFollowingResList;
+        return GetFollowRes.builder()
+                .followList(FollowingResList)
+                .totalPageNum(followList.getTotalPages())
+                .build();
     }
 
 
