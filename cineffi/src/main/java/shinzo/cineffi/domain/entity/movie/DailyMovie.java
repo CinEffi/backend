@@ -35,6 +35,9 @@ public class DailyMovie {
     @Lob
     private byte[] poster;
 
+    private Float cinephileAvgScore;
+    private Float levelAvgScore;
+
 
 
 }
