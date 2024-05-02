@@ -52,25 +52,13 @@ public class FollowService {
                 .build());
 
         // UserActivityNum 업데이트
-        // 팔로우 하는 사람의 팔로잉 숫자를 +1
-        uanRepository.findByUserId(followerUserId).ifPresent(
-                uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followingsNum(uan.getFollowingsNum() + 1)
-                            .build());
-                }
-        );
-
-        // 팔로우 당하는 사람의 팔로워 숫자를 +1
-        uanRepository.findByUserId(followingUserId).ifPresent(
-                uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followersNum(uan.getFollowersNum() + 1)
-                            .build());
-                }
-        );
+        increaseUserFollowNum(followingUserId, followerUserId);
 
     }
+
+
+
+
 
     // 유저 언팔로우
     public void unfollowUser(Long followingUserId, Long followerUserId) {
@@ -87,6 +75,9 @@ public class FollowService {
                     throw new CustomException(EMPTY_FOLLOW);
                 }
         );
+
+        // UserActivityNum 업데이트
+        decreaseUserFollowNum(followingUserId, followerUserId);
 
     }
 
@@ -160,6 +151,44 @@ public class FollowService {
                 .build();
     }
 
+    private void increaseUserFollowNum(Long followingUserId, Long followerUserId) {
+        // 팔로우 하는 사람의 팔로잉 숫자를 +1
+        uanRepository.findByUserId(followerUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followingsNum(uan.getFollowingsNum() + 1)
+                            .build());
+                }
+        );
 
+        // 팔로우 당하는 사람의 팔로워 숫자를 +1
+        uanRepository.findByUserId(followingUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followersNum(uan.getFollowersNum() + 1)
+                            .build());
+                }
+        );
+    }
+
+    private void decreaseUserFollowNum(Long followingUserId, Long followerUserId) {
+        // 팔로우 하는 사람의 팔로잉 숫자를 -1
+        uanRepository.findByUserId(followerUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followingsNum(uan.getFollowingsNum() -1)
+                            .build());
+                }
+        );
+
+        // 팔로우 당하는 사람의 팔로워 숫자를 -1
+        uanRepository.findByUserId(followingUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followersNum(uan.getFollowersNum() -1)
+                            .build());
+                }
+        );
+    }
 
 }
