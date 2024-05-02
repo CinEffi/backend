@@ -2,10 +2,14 @@ package shinzo.cineffi.review;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import shinzo.cineffi.domain.dto.GetCollectionRes;
 import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.domain.entity.review.Review;
 import shinzo.cineffi.review.repository.ReviewRepository;
-import shinzo.cineffi.user.GetReviewRes;
+import shinzo.cineffi.domain.dto.ReviewDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +22,16 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
 
-    public List<GetReviewRes> getUserReviewList(Long userId) {
-        List<GetReviewRes> getReviewResList = new ArrayList<>();
-        reviewRepository.findAllByUserId(userId).forEach(review -> {
+    public GetCollectionRes getUserReviewList(Long userId, Pageable pageable) {
+        Page<Review> userCollection = reviewRepository.findAllByUserId(userId, pageable);
+        int totalPageNum = userCollection.getTotalPages();
 
+
+        List<ReviewDto> reviewList = new ArrayList<>();
+        userCollection.forEach(review -> {
                     Movie movie = review.getMovie();
-                    getReviewResList.add(GetReviewRes.builder()
+
+             reviewList.add(ReviewDto.builder()
                             .reviewId(review.getId())
                             .movieId(movie.getId())
                             .movieTitle(movie.getTitle())
@@ -33,6 +41,9 @@ public class ReviewService {
                             .likeNumber(review.getLikeNum())
                             .build());
         });
-        return getReviewResList;
+        return GetCollectionRes.builder()
+                .totalPageNum(totalPageNum)
+                .collection(reviewList)
+                .build();
     }
 }

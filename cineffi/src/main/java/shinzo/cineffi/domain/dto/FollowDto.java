@@ -1,4 +1,4 @@
-package shinzo.cineffi.user;
+package shinzo.cineffi.domain.dto;
 
 import lombok.Builder;
 import lombok.Data;

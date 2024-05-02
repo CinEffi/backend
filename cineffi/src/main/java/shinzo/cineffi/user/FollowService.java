@@ -2,10 +2,11 @@ package shinzo.cineffi.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.domain.dto.FollowDto;
+import shinzo.cineffi.domain.dto.GetFollowRes;
 import shinzo.cineffi.domain.entity.user.Follow;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.exception.CustomException;
@@ -18,7 +19,6 @@ import java.util.Optional;
 
 import static shinzo.cineffi.exception.message.ErrorMsg.*;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
-import static shinzo.cineffi.user.ImageConverter.encodeImage;
 
 @Service
 @RequiredArgsConstructor

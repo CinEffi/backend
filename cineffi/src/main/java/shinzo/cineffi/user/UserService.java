@@ -5,6 +5,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
 import shinzo.cineffi.domain.dto.GetMyPageRes;
+import shinzo.cineffi.domain.dto.GetProfileRes;
 import shinzo.cineffi.domain.entity.user.Follow;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserAccount;
@@ -14,7 +15,6 @@ import shinzo.cineffi.user.repository.UserAccountRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.io.IOException;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 

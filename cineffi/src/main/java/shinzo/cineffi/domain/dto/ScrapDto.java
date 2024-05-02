@@ -1,4 +1,4 @@
-package shinzo.cineffi.user;
+package shinzo.cineffi.domain.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class GetScrapRes {
+public class ScrapDto {
     private Long movieId;
     private String title;
     private String poster;

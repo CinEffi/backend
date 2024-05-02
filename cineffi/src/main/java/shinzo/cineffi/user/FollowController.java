@@ -6,10 +6,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import shinzo.cineffi.domain.dto.FollowReq;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.SuccessMsg;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
