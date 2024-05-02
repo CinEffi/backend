@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.domain.entity.movie.AvgScore;
 import shinzo.cineffi.domain.entity.movie.DailyMovie;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.movie.repository.DailyMovieRepository;
@@ -90,6 +91,8 @@ public class BoxOfficeDataHandler {
             List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(dailyMovie.getTitle());
             if (!movies.isEmpty()) {
                 Movie movie = movies.get(0); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
+                AvgScore avgScore = movie.getAvgScore();
+
                 DailyMovie updateDailyMovie = DailyMovie.builder()
                         .id(dailyMovie.getId()) //기존 DailyMovie의 id 유지
                         .rank(dailyMovie.getRank())
@@ -97,6 +100,8 @@ public class BoxOfficeDataHandler {
                         .targetDt(dailyMovie.getTargetDt())
                         .releaseDate(movie.getReleaseDate())
                         .poster(movie.getPoster())
+                        .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
+                        .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
                         .build();
 
                 dailyMovieRepository.save(updateDailyMovie);

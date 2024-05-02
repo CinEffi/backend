@@ -63,6 +63,8 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
+                                "/api/movies/updateBoxOffice",
+                                "/api/movies/boxOffice",
                                 "/api/movies/genre",
                                 "/api/movies/init",
                                 "/api/auth/login/kakao",

@@ -233,4 +233,4 @@ gradle-app.setting
 # 재영이 추가
 .idea/*
 
-*.yml
+#*.yml

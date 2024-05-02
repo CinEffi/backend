@@ -59,7 +59,7 @@ public class MovieController {
         );
     }
 
-    @GetMapping("/api/movie/updateBoxOffice")
+    @GetMapping("updateBoxOffice")
     public ResponseEntity<ResponseDTO<?>> updateBoxOffice() {
         movieService.insertDailyBoxOffice();
 
@@ -72,7 +72,7 @@ public class MovieController {
     }
 
 
-    @GetMapping("/api/movies/boxOffice")
+    @GetMapping("boxOffice")
     public ResponseEntity<ResponseDTO<List<DailyMovie>>> getDailyBoxOffice() {
         List<DailyMovie> dailyMovies = movieService.getEnhancedDailyMovies();
         return ResponseEntity.ok(

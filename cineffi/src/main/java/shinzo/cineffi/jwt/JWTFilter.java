@@ -25,6 +25,8 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
                  if (
+                    request.getRequestURI().equals("/api/movies/updateBoxOffice")||
+                    request.getRequestURI().equals("/api/movies/boxOffice")||
                     request.getRequestURI().equals("/api/movies/genre")||
                     request.getRequestURI().equals("/api/movies/init")||
                     request.getRequestURI().equals("/api/auth/signup")||
