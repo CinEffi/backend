@@ -1,5 +1,9 @@
 package shinzo.cineffi.auth;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +16,7 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
 import shinzo.cineffi.jwt.JWToken;
 
+import java.util.Arrays;
 
 
 @RequestMapping("/api/auth")
@@ -21,7 +26,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login/kakao")
-    public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
+    public ResponseEntity<ResponseDTO<Object>> loginByKakao(@RequestParam final String code) throws JsonProcessingException {
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
 
@@ -59,7 +64,7 @@ public class AuthController {
     }
 
     @PostMapping("/login/email")
-    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
+    public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestDTO request) throws JsonProcessingException {
         Long userId = authService.getUserIdByEmail(request.getEmail());
         boolean LoginSuccess = authService.emailLogin(request);
 
@@ -68,22 +73,26 @@ public class AuthController {
         }
         else {
             return ResponseEntity.status(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getHttpStatus())
-                    .body(ResponseDTO.<String>builder()
+                    .body(ResponseDTO.<Object>builder()
                             .isSuccess(false)
                             .message(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getDetail())
                             .build());
         }
     }
 
-    private ResponseEntity<ResponseDTO<String>> authLogin(Long userId){
+    private ResponseEntity<ResponseDTO<Object>> authLogin(Long userId) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
         JWToken jwToken = (JWToken) result[0];
         HttpHeaders headers = (HttpHeaders) result[1];
+        LoginResponseDTO response = (LoginResponseDTO) result[2];
 
         authService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
                 .isSuccess(true)
                 .message(SuccessMsg.SUCCESS.getDetail())
+                .result(response)
                 .build();
         return ResponseEntity.ok().headers(headers).body(responseDTO);
     }

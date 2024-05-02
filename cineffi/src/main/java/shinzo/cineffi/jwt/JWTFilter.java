@@ -15,6 +15,8 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 
@@ -24,19 +26,46 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-                 if (
-                    request.getRequestURI().equals("/api/auth/signup")||
-                    request.getRequestURI().equals("/api/auth/email/check")||
-                    request.getRequestURI().equals("/api/auth/login/email")||
-                    request.getRequestURI().equals("/api/auth/login/kakao")||
-                    request.getRequestURI().equals("/api/auth/verify/email")||
-                    request.getRequestURI().equals("/api/auth/verify/email/check")||
-                    request.getRequestURI().equals("/api/auth/nickname/check")
-                 )
-                     {
-                filterChain.doFilter(request, response);
-                return;}
+//        Pattern pattern;
+//        Matcher matcher;
+//
+//        System.out.println("filter enter!!!");
+//        String[] patterns = {
+//                  "^/api/users/\\d+$", // users/{user-id}
+//                "/users/\\d+/followers$",// users/{user-id}/follwers
+//                "/users/\\d+/followings$",// users/{user-id}/followings
+//                "/users/\\d+/reviews$",// users/{user-id}/reviews
+//                "/users/\\d+/scrap$",// users/{user-id}/scrap
+//                "/reviews/\\d+$",// riviews/{movie-id}
+//                "/api/movies+$",
+//                "/api/auth+$"
+//        };
+//        String requestURI = request.getRequestURI();
+//
+//
+//
+//        for(String p : patterns){
+//            pattern = Pattern.compile(p);
+//            matcher = pattern.matcher(requestURI);
+//            if (matcher.matches()) {
+//                System.out.println("find!!!!!!");
+//                filterChain.doFilter(request, response);
+//                return;
+//            }
+//
+//        }
+
+//        if (
+//                request.getRequestURI().startsWith("/api/auth")||//auth로 시작하는 모든 URL
+//                        request.getRequestURI().startsWith("/api/movies")||//movies로 시작하는 모든 URL
+//                        request.getRequestURI().equals("/api/reviews/hot")||
+//                        request.getRequestURI().equals("/api/reviews/new")
+//        )
+//        {
+//            filterChain.doFilter(request, response);
+//            return;}
     try{
+
             String access = JWTUtil.resolveAccessToken(request);
             String refresh = JWTUtil.resolveRefreshToken(request);
 
