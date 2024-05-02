@@ -24,6 +24,7 @@ public class Review extends BaseEntity {
     @Column(name = "review_id")
     private Long id;
 
+    @Column(length = 1000)
     @ColumnDefault("''")
     private String content;
 
