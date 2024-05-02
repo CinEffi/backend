@@ -8,6 +8,7 @@ import lombok.extern.java.Log;
 import org.hibernate.annotations.ColumnDefault;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import shinzo.cineffi.user.repository.UserAccountRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
+import java.security.Principal;
 import java.util.Optional;
 import java.util.Random;
 
@@ -269,4 +271,13 @@ public class AuthService {
 
         return isdup;
     }
+
+    // 로그인했으면 user id, 로그인 안했으면 null 반환
+    static public Long getLoginUserId(Object principal) {
+        Long loginUserId = null;
+        if(principal != "anonymousUser")
+            loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        return loginUserId;
+
+    };
 }
