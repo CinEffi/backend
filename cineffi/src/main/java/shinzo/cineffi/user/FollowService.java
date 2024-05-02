@@ -11,6 +11,7 @@ import shinzo.cineffi.domain.entity.user.Follow;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserActivityNum;
 import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.FollowRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
@@ -40,12 +41,9 @@ public class FollowService {
 
         // 중복 검사
         followRepository.findByFollowerIdAndFollowingId(followerUserId, followingUserId).ifPresent(
-                f -> {
-                    throw new CustomException(DUPLICATE_FOLLOW);
-                }
+                f -> { throw new CustomException(DUPLICATE_FOLLOW);}
         );
-
-        // 팔로우 정보 저장
+            // 팔로우 정보 저장
         followRepository.save(Follow.builder()
                 .follower(followerUser.get())
                 .following(followingUser.get())
