@@ -9,8 +9,10 @@ import shinzo.cineffi.domain.dto.FollowDto;
 import shinzo.cineffi.domain.dto.GetFollowRes;
 import shinzo.cineffi.domain.entity.user.Follow;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserActivityNum;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.user.repository.FollowRepository;
+import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
@@ -25,8 +27,10 @@ import static shinzo.cineffi.user.ImageConverter.decodeImage;
 public class FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
+    private final UserActivityNumRepository uanRepository;
 
 
+    @Transactional
     // 유저 팔로우
     public void followUser(Long followingUserId, Long followerUserId) {
         Optional<User> followerUser = userRepository.findById(followerUserId);
@@ -34,16 +38,38 @@ public class FollowService {
         Optional<User> followingUser = userRepository.findById(followingUserId);
         if (followingUser.isEmpty()) throw new CustomException(EMPTY_FOLLOWING_USER);
 
+        // 중복 검사
         followRepository.findByFollowerIdAndFollowingId(followerUserId, followingUserId).ifPresent(
                 f -> {
                     throw new CustomException(DUPLICATE_FOLLOW);
                 }
         );
 
+        // 팔로우 정보 저장
         followRepository.save(Follow.builder()
                 .follower(followerUser.get())
                 .following(followingUser.get())
                 .build());
+
+        // UserActivityNum 업데이트
+        // 팔로우 하는 사람의 팔로잉 숫자를 +1
+        uanRepository.findByUserId(followerUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followingsNum(uan.getFollowingsNum() + 1)
+                            .build());
+                }
+        );
+
+        // 팔로우 당하는 사람의 팔로워 숫자를 +1
+        uanRepository.findByUserId(followingUserId).ifPresent(
+                uan -> {
+                    uanRepository.save(uan.toBuilder()
+                            .followersNum(uan.getFollowersNum() + 1)
+                            .build());
+                }
+        );
+
     }
 
     // 유저 언팔로우
