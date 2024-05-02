@@ -224,7 +224,6 @@ public class AuthService {
         headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-
         return new Object[] {jwToken, headers,response};
     }
 

@@ -26,44 +26,6 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-//        Pattern pattern;
-//        Matcher matcher;
-//
-//        System.out.println("filter enter!!!");
-//        String[] patterns = {
-//                  "^/api/users/\\d+$", // users/{user-id}
-//                "/users/\\d+/followers$",// users/{user-id}/follwers
-//                "/users/\\d+/followings$",// users/{user-id}/followings
-//                "/users/\\d+/reviews$",// users/{user-id}/reviews
-//                "/users/\\d+/scrap$",// users/{user-id}/scrap
-//                "/reviews/\\d+$",// riviews/{movie-id}
-//                "/api/movies+$",
-//                "/api/auth+$"
-//        };
-//        String requestURI = request.getRequestURI();
-//
-//
-//
-//        for(String p : patterns){
-//            pattern = Pattern.compile(p);
-//            matcher = pattern.matcher(requestURI);
-//            if (matcher.matches()) {
-//                System.out.println("find!!!!!!");
-//                filterChain.doFilter(request, response);
-//                return;
-//            }
-//
-//        }
-
-//        if (
-//                request.getRequestURI().startsWith("/api/auth")||//auth로 시작하는 모든 URL
-//                        request.getRequestURI().startsWith("/api/movies")||//movies로 시작하는 모든 URL
-//                        request.getRequestURI().equals("/api/reviews/hot")||
-//                        request.getRequestURI().equals("/api/reviews/new")
-//        )
-//        {
-//            filterChain.doFilter(request, response);
-//            return;}
     try{
 
             String access = JWTUtil.resolveAccessToken(request);

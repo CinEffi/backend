@@ -1,12 +1,10 @@
 package shinzo.cineffi.auth;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import shinzo.cineffi.domain.dto.*;
 
@@ -16,7 +14,6 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
 import shinzo.cineffi.jwt.JWToken;
 
-import java.util.Arrays;
 
 
 @RequestMapping("/api/auth")

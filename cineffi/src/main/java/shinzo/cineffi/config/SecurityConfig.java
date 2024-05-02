@@ -55,28 +55,16 @@ public class SecurityConfig {
                         return configuration;
                     }
                 })));
-        //
+
         http
                 .csrf(AbstractHttpConfigurer::disable)//csrf 비활성화
                 .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable);//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
 
-//        http
-//                .authorizeHttpRequests((auth) -> auth
-//                        .requestMatchers("/api/auth/verify/email","/api/users/logout","/api/users/profile","/api/users/profile/edit","/api/users/follow","/api/users/report","/api/reviews/create")
-//                        .authenticated()
-//                        .requestMatchers(
-//                                "/api/auth/***","/api/movies/***","/api/reviews/new","/api/reviews/hot","/api/users/**"
-//
-//                                ).permitAll()//토큰 없이 동작해야하는 사이트
-//                        .anyRequest().authenticated());
-////                        .anyRequest().permitAll());
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
-//                                "/api/auth/**",
-                                "/api/auth/signup",
-                                "api/auth/login/email",
+                               "/api/auth/**",
                                 "/api/movies/**",
                                 "/api/reviews/hot",
                                 "/api/reviews/new",
@@ -89,7 +77,6 @@ public class SecurityConfig {
                         ).permitAll()//토큰 없이 동작해야하는 사이트
                         .requestMatchers("/api/auth/verify/email").authenticated()
                         .anyRequest().authenticated());
-//                        .anyRequest().permitAll());
         http
                 .requestCache(RequestCacheConfigurer::disable);
         http
