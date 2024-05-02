@@ -1,8 +1,7 @@
-package shinzo.cineffi.user;
+package shinzo.cineffi.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import shinzo.cineffi.domain.enums.LoginType;
 
 @Data
 @AllArgsConstructor

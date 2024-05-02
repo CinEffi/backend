@@ -1,9 +1,12 @@
 package shinzo.cineffi.user;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import shinzo.cineffi.domain.dto.FollowReq;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
@@ -57,14 +60,14 @@ public class FollowController {
      * @return
      */
     @GetMapping("/api/users/{user-id}/followers")
-    public ResponseEntity<ResponseDTO<?>> getFollowerList(@PathVariable("user-id") Long targetUserId) {
+    public ResponseEntity<ResponseDTO<?>> getFollowerList(@PathVariable("user-id") Long targetUserId,
+                                                          @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString()); // 쿠키가 없으면 null (필터에서 처리 필요)
-        System.out.println(loginUserId);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(followService.getFollowerList(targetUserId, loginUserId))
+                        .result(followService.getFollowerList(targetUserId, loginUserId, pageable))
                         .build());
 
     }
@@ -75,13 +78,14 @@ public class FollowController {
      * @return
      */
     @GetMapping("/api/users/{user-id}/followings")
-    public ResponseEntity<ResponseDTO<?>> getFollowingList(@PathVariable("user-id") Long targetUserId) {
+    public ResponseEntity<ResponseDTO<?>> getFollowingList(@PathVariable("user-id") Long targetUserId,
+                                                           @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(followService.getFollowingList(targetUserId, loginUserId))
+                        .result(followService.getFollowingList(targetUserId, loginUserId, pageable))
                         .build());
 
     }
