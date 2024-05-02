@@ -10,11 +10,13 @@ import shinzo.cineffi.domain.entity.movie.AvgScore;
 import shinzo.cineffi.domain.entity.movie.Director;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.review.Review;
+import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.movie.repository.AvgScoreRepository;
 import shinzo.cineffi.movie.repository.DirectorRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.review.repository.ReviewRepository;
+import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.FollowService;
 import shinzo.cineffi.user.repository.UserRepository;
 
@@ -31,6 +33,7 @@ public class InitService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final FollowService followService;
+    private final ScoreRepository scoreRepository;
 
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
@@ -108,7 +111,12 @@ public class InitService {
                 .user(첫째희석.get())
                 .movie(범죄도시4)
                 .content("인생 최고의 영화! 추천합니다")
+                //.score(2.0F) 밑의 코드로 수정했습니다.
+                .build());
+        scoreRepository.save(Score.builder()
                 .score(2.0F)
+                .user(첫째희석.get())
+                .movie(범죄도시4)
                 .build());
 
         // 둘째민희의 쿵푸팬더4 평론
@@ -116,7 +124,12 @@ public class InitService {
                 .user(둘째민희.get())
                 .movie(쿵푸팬더4)
                 .content("우웨에에에에에에에에ㅔ게")
-                .score(0.5F)
+//                .score(0.5F)
+                .build());
+        scoreRepository.save(Score.builder()
+                .score(2.0F)
+                .user(둘째민희.get())
+                .movie(쿵푸팬더4)
                 .build());
 
         // 셋째제욱의 쿵푸팬더4 평론
@@ -124,13 +137,17 @@ public class InitService {
                 .user(셋째제욱.get())
                 .movie(쿵푸팬더4)
                 .content("나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. ")
+//                .score(1.5F)
+                .build());
+        scoreRepository.save(Score.builder()
                 .score(1.5F)
+                .user(셋째제욱.get())
+                .movie(쿵푸팬더4)
                 .build());
 
         // 팔로우
         followService.followUser(1L, 2L);
         followService.followUser(1L, 3L);
         followService.followUser(2L, 1L);
-
     }
 }
