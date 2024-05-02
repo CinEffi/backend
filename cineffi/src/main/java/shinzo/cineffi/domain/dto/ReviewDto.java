@@ -1,11 +1,11 @@
-package shinzo.cineffi.user;
+package shinzo.cineffi.domain.dto;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class GetReviewRes {
+public class ReviewDto {
     private Long movieId;
     private String movieTitle;
     private String poster;
