@@ -15,6 +15,10 @@ public enum ErrorMsg {
         PASSWORD_INCORRECT(BAD_REQUEST,"비밀번호가 옳지 않습니다."),
         PASSWORD_INCORRECT_MISMATCH(BAD_REQUEST, "입력하신 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
         REFRESH_TOKEN_INCORRECT(BAD_REQUEST,"잘못된 리프레시 토큰입니다"),
+        EMPTY_USER(BAD_REQUEST, "없는 사용자입니다."),
+        EMPTY_FOLLOWING_USER(BAD_REQUEST, "팔로우 요청하신 유저는 없는 유저입니다."),
+        EMPTY_FOLLOW(BAD_REQUEST, "팔로우하고 있지 않습니다."),
+        FILE_NOT_IMAGE(BAD_REQUEST, "이미지 파일이 아닙니다."),
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),
@@ -30,7 +34,9 @@ public enum ErrorMsg {
         TOKEN_NOT_FOUND(NOT_FOUND,"토큰을 찾을 수 없습니다."),
         /* 409 CONFLICT : Resource 의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
         DUPLICATE_USER(CONFLICT,"이미 가입된 사용자입니다."),
+        DUPLICATE_NICKNAME(CONFLICT,"중복 닉네임입니다."),
         DUPLICATE_EMAIL(CONFLICT,"중복된 이메일입니다."),
+        DUPLICATE_FOLLOW(CONFLICT, "이미 팔로우하고 있습니다."),
 
         /*410*/
         ACCESS_TOKEN_EXPIRED(GONE,"액세스 토큰이 만료되었습니다."),
@@ -41,7 +47,10 @@ public enum ErrorMsg {
         /* 500 INTERNAL SERVER ERROR : 그 외 서버 에러 (컴파일 관련) */
         FAILED_TO_EXECUTE_FILE(INTERNAL_SERVER_ERROR, "파일 실행에 실패했습니다."),
         FAILED_TO_COMPILE_FILE(INTERNAL_SERVER_ERROR, "파일 컴파일에 실패했습니다."),
-        FAILED_TO_MOVIE_PROCESS(INTERNAL_SERVER_ERROR, "영화 데이터 가공에 실패했습니다.");
+        FAILED_TO_MOVIE_PROCESS(INTERNAL_SERVER_ERROR, "영화 데이터 가공에 실패했습니다."),
+
+        FAIDED_TO_CONVERT_IMAGE(INTERNAL_SERVER_ERROR, "이미지 파일 업로드에 실패했습니다.");
+
 
 
 

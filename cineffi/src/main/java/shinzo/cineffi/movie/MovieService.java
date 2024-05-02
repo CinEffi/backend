@@ -5,12 +5,16 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import shinzo.cineffi.domain.dto.GenreMovieListDTO;
+import shinzo.cineffi.domain.dto.InListMoviveDTO;
 import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
 import shinzo.cineffi.domain.entity.movie.*;
 import shinzo.cineffi.domain.enums.Genre;
@@ -67,9 +71,9 @@ public class MovieService {
 
         for (int year = startYear; year <= endYear; year++) {
             for (int month = 1; month <= 1; month++) {
-                String startDate = String.format("%d-%02d-01", year, 5);
+                String startDate = String.format("%d-%02d-15", year, 4);
 //                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-05", year, 5); //테스트
+                String endDate = String.format("%d-%02d-20", year, 4); //테스트
 
                 List<Movie> movies = requestTMDBIdsDates(startDate, endDate);
                 initMovieData(movies);
@@ -359,6 +363,29 @@ public class MovieService {
             result.add(dto);
         }
         return result;
+    }
+
+    public GenreMovieListDTO findGenreList(){
+        int randomPick = new Random().nextInt(values().length);
+        Genre genre = Genre.values()[randomPick];
+        Pageable pageable = (Pageable) PageRequest.of(0, 20);
+
+        List<InListMoviveDTO> dtoList = new ArrayList<>();
+
+        List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+        for (Movie movie : movieList){
+            InListMoviveDTO dto = InListMoviveDTO.builder()
+                    .movieId(movie.getId())
+                    .title(movie.getTitle())
+                    .releaseDate(movie.getReleaseDate())
+                    .poster(movie.getPoster())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                    .build();
+            dtoList.add(dto);
+        }
+
+        return new GenreMovieListDTO(genre, dtoList);
     }
 
     private final BoxOfficeDataHandler boxOfficeDataHandler;
