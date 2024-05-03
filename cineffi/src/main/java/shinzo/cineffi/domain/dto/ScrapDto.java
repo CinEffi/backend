@@ -13,5 +13,5 @@ public class ScrapDto {
     private String poster;
     private float userScore;
     private LocalDate releaseDate;
-    private boolean isScrap;
+    private Boolean isScrap;
 }
