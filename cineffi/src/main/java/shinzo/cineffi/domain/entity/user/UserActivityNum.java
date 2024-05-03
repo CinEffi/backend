@@ -39,5 +39,9 @@ public class UserActivityNum {
     public void subCollectionNum() { this.collectionNum --; }
     public void subScrapNum() { this.scrapNum --; }
 
+    public void addFollowingsNum() { this.followingsNum++; }
+    public void subFollowingsNum() { this.followingsNum--; }
+    public void addFollowersNum() { this.followersNum++; }
+    public void subFollowersNum() { this.followersNum--; }
 
 }
