@@ -14,6 +14,7 @@ public enum ErrorMsg {
         /* 400 BAD_REQUEST : 잘못된 요청 */
         PASSWORD_INCORRECT(BAD_REQUEST,"비밀번호가 옳지 않습니다."),
         PASSWORD_INCORRECT_MISMATCH(BAD_REQUEST, "입력하신 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
+        ACCOUNT_MISMATCH(BAD_REQUEST, "계정정보가 일치하지 않습니다."),
         REFRESH_TOKEN_INCORRECT(BAD_REQUEST,"잘못된 리프레시 토큰입니다"),
         EMPTY_USER(BAD_REQUEST, "없는 사용자입니다."),
         EMPTY_FOLLOWING_USER(BAD_REQUEST, "팔로우 요청하신 유저는 없는 유저입니다."),

@@ -30,7 +30,6 @@ import java.util.Collections;
 public class SecurityConfig {
     private final UserAccountRepository userAccountRepository;
     private final JWTProvider jwtProvider;
-    private final AuthenticationConfiguration authenticationConfiguration;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -59,12 +58,18 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)//csrf 비활성화
                 .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable);//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable)//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .logout(customizer -> customizer
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessUrl("/")
+                .permitAll()
+                );
 
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
                                "/api/auth/**",
+                                "/api/auth/*",
                                 "/api/movies/**",
                                 "/api/reviews/hot",
                                 "/api/reviews/new",
@@ -75,7 +80,6 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/reviews",
                                 "/api/users/{user-id}/scrap"
                         ).permitAll()//토큰 없이 동작해야하는 사이트
-                        .requestMatchers("/api/auth/verify/email").authenticated()
                         .anyRequest().authenticated());
         http
                 .requestCache(RequestCacheConfigurer::disable);

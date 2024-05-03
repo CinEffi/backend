@@ -42,7 +42,6 @@ public class UserController {
      * @return
      */
     @GetMapping("/api/users/{user-id}")
-
     public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") Long userId) {
         Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
         return ResponseEntity.ok(
