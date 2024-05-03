@@ -32,6 +32,11 @@ spring:
     auth-code-expiration-millis: 300000 //5분
 #  jwt:
 #    expiration_time : 300,000
+
+kobis:
+  api_key: 5b5979d8f9822605465799f4de0d864a
+  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
+
 tmdb:
   access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMmY4YjA2ZTIxYzhkYTJiZGQ3NmZjMDVjZWU3ZmMyZCIsInN1YiI6IjY2MGQwNjM0OTVjZTI0MDE2NDZlNjRiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.wXKroToQPTplaBr8TBaH-yV38zsQB35IfIj115nqdF8
   api_key: 12f8b06e21c8da2bdd76fc05cee7fc2d
@@ -55,7 +60,7 @@ spring:
       on-profile:
         - dev
   datasource:
-    url: jdbc:postgresql://db:5432/cineffi
+    url: jdbc:postgresql://db:5432/cineffi 
     username: root
     password: n1234
     driver-class-name: org.postgresql.Driver
