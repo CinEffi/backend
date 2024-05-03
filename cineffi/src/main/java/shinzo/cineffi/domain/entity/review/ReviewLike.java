@@ -5,14 +5,13 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ReviewLike extends BaseEntity {
+public class ReviewLike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,4 +26,3 @@ public class ReviewLike extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 }
-// 리뷰가 삭제되면 다 삭제되는 CASCADE 처리가 안되어있는것 같습니다.

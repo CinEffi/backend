@@ -35,5 +35,5 @@ public class Score extends BaseEntity {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    public void setScore(Float score) { this.score = score; }
+
 }

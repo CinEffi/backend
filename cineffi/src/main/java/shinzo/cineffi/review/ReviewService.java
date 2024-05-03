@@ -80,6 +80,11 @@ public class ReviewService {
                 .content(reviewCreateDTO.getContent())
                 .build();
         Review review = reviewRepository.save(createReview);
+
+        // userActivityNum 업데이트
+        user.getUserActivityNum().addCollectionNum();
+        userRepository.save(user);
+
         return review.getId();
     }
 
@@ -95,8 +100,11 @@ public class ReviewService {
         //리뷰 수정하는 유저찾기 + 권한
         if (!review.getUser().equals(user))
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
-        review.setContent(content);
-        reviewRepository.save(review);
+//        review.setContent(content);
+        reviewRepository.save(review.toBuilder()
+                .content(content)
+                .build());
+//        reviewRepository.save(review);
     }
 
     //평론 삭제
@@ -112,6 +120,8 @@ public class ReviewService {
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
         //리뷰 삭제
         reviewRepository.delete(review);
+        user.getUserActivityNum().subCollectionNum();
+        userRepository.save(user);
     }
 
     //해당 영화의 평론목록 조회
@@ -127,6 +137,7 @@ public class ReviewService {
         return reviewLike.getId();
     }
 
+    // 평론 좋아요 취소
     public Long unlikeReview(Long reviewId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
@@ -195,6 +206,7 @@ public class ReviewService {
                 .reviews(reviewLookupDTOList)
                 .totalPageNum(reviewPage.getTotalPages()).build();
     }
+
     public ReviewLookupListDTO sortReviewByNew(Pageable pageable, Long myUserId) {
         return lookupReviewList(reviewRepository.findAllByOrderByCreatedAtDesc(pageable));
     }

@@ -67,7 +67,7 @@ public class InitService {
         Optional<User> 셋째제욱 = userRepository.findById(3L);
 
         // 영화 1
-        AvgScore avgScore1 = avgScoreRepository.save(AvgScore.builder().allAvgScore(4.2f).cinephileAvgScore(3.8f).levelAvgScore(2.0f).build());
+        AvgScore avgScore1 = avgScoreRepository.save(AvgScore.builder().allScoreSum(4.2f).allScoreCount(1).cinephileScoreSum(3.8f).cinephileScoreCount(1).levelScoreSum(2.0f).levelScoreCount(1).build());
         Director director1 = directorRepository.save(Director.builder().name("허명행").build());
         Movie 범죄도시4 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore1)
@@ -80,7 +80,7 @@ public class InitService {
                 .tmdbId(1)
                 .build());
         // 영화 2
-        AvgScore avgScore2 = avgScoreRepository.save(AvgScore.builder().allAvgScore(2.0f).cinephileAvgScore(3.7f).levelAvgScore(5.0f).build());
+        AvgScore avgScore2 = avgScoreRepository.save(AvgScore.builder().allScoreSum(2.2f).allScoreCount(1).cinephileScoreSum(1.8f).cinephileScoreCount(1).levelScoreSum(4.0f).levelScoreCount(1).build());
         Director director2 = directorRepository.save(Director.builder().name("마이클 미첼").build());
         Movie 쿵푸팬더4 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore2)
@@ -93,7 +93,7 @@ public class InitService {
                 .tmdbId(2)
                 .build());
         // 영화 3
-        AvgScore avgScore3 = avgScoreRepository.save(AvgScore.builder().allAvgScore(1.0f).cinephileAvgScore(3.0f).levelAvgScore(2.0f).build());
+        AvgScore avgScore3 = avgScoreRepository.save(AvgScore.builder().allScoreSum(0.3f).allScoreCount(1).cinephileScoreSum(3.2f).cinephileScoreCount(1).levelScoreSum(3.1f).levelScoreCount(1).build());
         Director director3 = directorRepository.save(Director.builder().name("장재현").build());
         Movie 파묘 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore3)

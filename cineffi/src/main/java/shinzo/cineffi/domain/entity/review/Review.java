@@ -39,7 +39,6 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    public void setContent(String content) { this.content = content; }
     public Review addLikeNum() {likeNum++; return this;}
     public Review subLikeNum() {likeNum--; return this;}
 }
