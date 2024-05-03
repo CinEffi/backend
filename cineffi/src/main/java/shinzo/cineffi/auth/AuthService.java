@@ -6,6 +6,7 @@ import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -178,6 +179,14 @@ public class AuthService {
         Optional<UserAccount> user = Optional.ofNullable(userAccountRepository.findByEmail(email));
         return user.map(UserAccount::getId).orElse(null);
     }
+
+     static public Long getLoginUserId(Object principal) {
+        Long loginUserId = null;
+        if(principal != "anonymousUser")
+            loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        return loginUserId;
+
+    };
 
     public void normalLoginRefreshToken(Long memberNo, String refreshToken) {
         UserAccount userAccount = userAccountRepository.getReferenceById(memberNo);//userAccount객체
