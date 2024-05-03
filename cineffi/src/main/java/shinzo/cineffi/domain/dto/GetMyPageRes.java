@@ -21,7 +21,7 @@ public class GetMyPageRes {
     private int level;
     private int exp;
     private int expMax;
-    private boolean isCertified;
-    private boolean isBad;
-    private boolean isFollowed;
+    private Boolean isCertified;
+    private Boolean isBad;
+    private Boolean isFollowed;
 }

@@ -30,6 +30,8 @@ public class UserService {
     private UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
+
+
     public GetMyPageRes getMyPage(Long userId, Long loginUserId) {
         Optional<User> foundUser = userRepository.findById(userId);
         if (foundUser.isEmpty()) throw new CustomException(EMPTY_USER);

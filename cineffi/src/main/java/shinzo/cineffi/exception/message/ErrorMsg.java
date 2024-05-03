@@ -20,6 +20,8 @@ public enum ErrorMsg {
         EMPTY_FOLLOWING_USER(BAD_REQUEST, "팔로우 요청하신 유저는 없는 유저입니다."),
         EMPTY_FOLLOW(BAD_REQUEST, "팔로우하고 있지 않습니다."),
         FILE_NOT_IMAGE(BAD_REQUEST, "이미지 파일이 아닙니다."),
+        INVALID_SCORE_VALUE(BAD_REQUEST, "평점 값이 유효하지 않습니다."),
+
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),
@@ -38,7 +40,8 @@ public enum ErrorMsg {
         DUPLICATE_NICKNAME(CONFLICT,"중복 닉네임입니다."),
         DUPLICATE_EMAIL(CONFLICT,"중복된 이메일입니다."),
         DUPLICATE_FOLLOW(CONFLICT, "이미 팔로우하고 있습니다."),
-
+        REVIEW_LIKE_EXIST(CONFLICT, "이미 좋아요가 존재합니다."),
+        REVIEW_LIKE_NOT_EXIST(CONFLICT, "좋아요가 존재하지 않습니다."),
         /*410*/
         ACCESS_TOKEN_EXPIRED(GONE,"액세스 토큰이 만료되었습니다."),
         REFRESH_TOKEN_EXPIRED(GONE,"리프레쉬 토큰이 만료되었습니다."),
