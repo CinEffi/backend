@@ -1,13 +1,13 @@
 package shinzo.cineffi.review;
 
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.review.Review;
@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.security.crypto.codec.Utf8.decode;
+import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service
 @RequiredArgsConstructor
@@ -37,20 +38,31 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
 
+    @Transactional(readOnly = true)
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable) {
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
         int totalPageNum = userCollection.getTotalPages();
 
         List<ReviewDto> reviewList = new ArrayList<>();
         userCollection.forEach(review -> {
-                    Movie movie = review.getMovie();
-             reviewList.add(ReviewDto.builder()
+
+            // 평론에서 영화 객체 따로 빼놓기
+            Movie movie = review.getMovie();
+
+            // 해당 유저가 해당 영화에 준 평점 불러오기
+            Float userScore = null;
+            Score foundUserScore = scoreRepository.findByMovieAndUser(movie, review.getUser());
+            if (foundUserScore != null)
+                userScore = foundUserScore.getScore();
+
+            // Dto 꾸리기
+            reviewList.add(ReviewDto.builder()
                             .reviewId(review.getId())
                             .movieId(movie.getId())
                             .movieTitle(movie.getTitle())
-                            .poster(decode(movie.getPoster()))
+                            .poster(decodeImage(movie.getPoster()))
                             .content(review.getContent())
-                            .userScore(3) // score 엔티티 생성되면 수정 필요 음.. null이면 표시해주길 원한다고 하셨는데
+                            .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
                             .likeNumber(review.getLikeNum())
                             .build());
         });

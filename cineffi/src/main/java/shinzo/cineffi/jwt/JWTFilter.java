@@ -26,8 +26,23 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+                 if (
+                    request.getRequestURI().equals("/api/movies/updateBoxOffice")||
+                    request.getRequestURI().equals("/api/movies/boxOffice")||
+                    request.getRequestURI().equals("/api/movies/genre")||
+                    request.getRequestURI().equals("/api/movies/init")||
+                    request.getRequestURI().equals("/api/auth/signup")||
+                    request.getRequestURI().equals("/api/auth/email/check")||
+                    request.getRequestURI().equals("/api/auth/login/email")||
+                    request.getRequestURI().equals("/api/auth/login/kakao")||
+                    request.getRequestURI().equals("/api/auth/verify/email")||
+                    request.getRequestURI().equals("/api/auth/verify/email/check")||
+                    request.getRequestURI().equals("/api/auth/nickname/check")
+                 )
+                     {
+                filterChain.doFilter(request, response);
+                return;}
     try{
-
             String access = JWTUtil.resolveAccessToken(request);
             String refresh = JWTUtil.resolveRefreshToken(request);
 

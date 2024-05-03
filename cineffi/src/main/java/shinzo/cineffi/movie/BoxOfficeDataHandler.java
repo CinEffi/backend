@@ -6,12 +6,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.entity.movie.AvgScore;
-import shinzo.cineffi.domain.entity.movie.DailyMovie;
+import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.domain.entity.movie.Movie;
-import shinzo.cineffi.movie.repository.DailyMovieRepository;
+import shinzo.cineffi.movie.repository.BoxOfficeMovieRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 
 import java.net.URI;
@@ -26,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoxOfficeDataHandler {
 
-    private final DailyMovieRepository dailyMovieRepository;
+    private final BoxOfficeMovieRepository boxOfficeMovieRepository;
     private final MovieRepository movieRepository;
 
     @Value("${kobis.api_key}")
@@ -51,7 +49,7 @@ public class BoxOfficeDataHandler {
 
 
         try {
-            dailyMovieRepository.deleteByTargetDt(targetDt);  //해당날의 데이터를 삭제하고 시작
+            boxOfficeMovieRepository.deleteByTargetDt(targetDt);  //해당날의 데이터를 삭제하고 시작
 
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -66,13 +64,13 @@ public class BoxOfficeDataHandler {
                 JSONObject dailyBoxOffice = (JSONObject) dailyBoxOfficeList.get(i);
 
                 //JSON obiject -> java Object(Entity) 변환
-                DailyMovie dailyMovie = DailyMovie.builder()
+                BoxOfficeMovie boxOfficeMovie = BoxOfficeMovie.builder()
                         .rank(dailyBoxOffice.get("rank").toString())
                         .title(dailyBoxOffice.get("movieNm").toString())
                         .targetDt(targetDt)
                         .build();
 
-                dailyMovieRepository.save(dailyMovie);
+                boxOfficeMovieRepository.save(boxOfficeMovie);
             }
 
             processDailyBoxOfficeData(); //데이터 병합 메서드 호출
@@ -86,25 +84,25 @@ public class BoxOfficeDataHandler {
 
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
     public void processDailyBoxOfficeData() {
-        List<DailyMovie> dailyMovies = dailyMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
-        for (DailyMovie dailyMovie : dailyMovies) {
-            List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(dailyMovie.getTitle());
+        List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
+        for (BoxOfficeMovie boxOfficeMovie : boxOfficeMovies) {
+            List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(boxOfficeMovie.getTitle());
             if (!movies.isEmpty()) {
                 Movie movie = movies.get(0); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
                 AvgScore avgScore = movie.getAvgScore();
 
-                DailyMovie updateDailyMovie = DailyMovie.builder()
-                        .id(dailyMovie.getId()) //기존 DailyMovie의 id 유지
-                        .rank(dailyMovie.getRank())
-                        .title(dailyMovie.getTitle())
-                        .targetDt(dailyMovie.getTargetDt())
+                BoxOfficeMovie updateBoxOfficeMovie = BoxOfficeMovie.builder()
+                        .id(boxOfficeMovie.getId()) //기존 DailyMovie의 id 유지
+                        .rank(boxOfficeMovie.getRank())
+                        .title(boxOfficeMovie.getTitle())
+                        .targetDt(boxOfficeMovie.getTargetDt())
                         .releaseDate(movie.getReleaseDate())
                         .poster(movie.getPoster())
                         .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
                         .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
                         .build();
 
-                dailyMovieRepository.save(updateDailyMovie);
+                boxOfficeMovieRepository.save(updateBoxOfficeMovie);
             }
 
         }

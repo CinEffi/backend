@@ -75,4 +75,8 @@ public class User extends BaseEntity {
         refreshExpStatus();
         return this;
     }
+    // 유저의 Certified 상태를 바꾸는 메서드
+    public void changeUserCertifiedStatus(Boolean flag) {
+        this.isCertified = flag;
+    }
 }
