@@ -149,44 +149,33 @@ public class FollowService {
                 .build();
     }
 
+
     private void increaseUserFollowNum(Long followingUserId, Long followerUserId) {
         // 팔로우 하는 사람의 팔로잉 숫자를 +1
-        uanRepository.findByUserId(followerUserId).ifPresent(
-                uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followingsNum(uan.getFollowingsNum() + 1)
-                            .build());
-                }
-        );
+        uanRepository.findByUserId(followerUserId).ifPresent( uan -> uan.addFollowingsNum() );
 
         // 팔로우 당하는 사람의 팔로워 숫자를 +1
         uanRepository.findByUserId(followingUserId).ifPresent(
                 uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followersNum(uan.getFollowersNum() + 1)
-                            .build());
-                }
-        );
+                    uan.addFollowersNum();
+                    if (uan.getFollowersNum() >= 300 && uan.getUser().getIsCertified() == Boolean.FALSE) // 팔로워가 300명 이상이고, 인증마크가 없다면
+                        uan.getUser().changeUserCertifiedStatus(Boolean.TRUE); // isCertified를 true로
+                } );
+
     }
 
     private void decreaseUserFollowNum(Long followingUserId, Long followerUserId) {
         // 팔로우 하는 사람의 팔로잉 숫자를 -1
-        uanRepository.findByUserId(followerUserId).ifPresent(
-                uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followingsNum(uan.getFollowingsNum() -1)
-                            .build());
-                }
-        );
+        uanRepository.findByUserId(followerUserId).ifPresent( uan -> uan.subFollowingsNum() );
 
         // 팔로우 당하는 사람의 팔로워 숫자를 -1
         uanRepository.findByUserId(followingUserId).ifPresent(
                 uan -> {
-                    uanRepository.save(uan.toBuilder()
-                            .followersNum(uan.getFollowersNum() -1)
-                            .build());
-                }
-        );
+                    uan.subFollowersNum();
+                    if (uan.getFollowersNum() < 300 && uan.getUser().getIsCertified() == Boolean.TRUE) // 팔로워가 300명 미만이고, 인증마크가 있다면
+                        uan.getUser().changeUserCertifiedStatus(Boolean.FALSE); // isCertified를 false로
+                } );
+
     }
 
 }
