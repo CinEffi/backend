@@ -24,6 +24,7 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -386,6 +387,19 @@ public class MovieService {
         }
 
         return new GenreMovieListDTO(genre, dtoList);
+    }
+
+    private final BoxOfficeDataHandler boxOfficeDataHandler;
+    private final DailyMovieRepository dailyMovieRepository;
+
+    public void insertDailyBoxOffice() {
+        boxOfficeDataHandler.dailyBoxOffice();
+
+    }
+
+    public List<DailyMovie> getEnhancedDailyMovies() {
+        boxOfficeDataHandler.processDailyBoxOfficeData();
+        return dailyMovieRepository.findAll();
     }
 
 }
