@@ -22,15 +22,35 @@ public class AvgScore extends BaseEntity {
     @Column(name = "avg_score_id")
     private Long id;
 
-    @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private Float allAvgScore;
+    private Float allScoreSum;
+    @ColumnDefault("0")
+    private Integer allScoreCount;
 
-    @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private Float cinephileAvgScore;
+    private Float levelScoreSum;
+    @ColumnDefault("0")
+    private Integer levelScoreCount;
 
-    @Column(columnDefinition = "NUMERIC(2,1)")
     @ColumnDefault("0")
-    private Float levelAvgScore;
+    private Float cinephileScoreSum;
+    @ColumnDefault("0")
+    private Integer cinephileScoreCount;
+
+
+    public Float getAllAvgScore() {
+        return 0.0F;
+    }
+
+//    @Column(columnDefinition = "NUMERIC(2,1)")
+//    @ColumnDefault("0")
+    public Float getCinephileAvgScore() {
+        return 0.0F;
+    }
+
+    public Float getLevelAvgScore () {
+        return 0.0F;
+    }
+
+
 }
