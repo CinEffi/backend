@@ -23,16 +23,21 @@ public class UserActivityNum {
     private User user;
 
     @ColumnDefault("0")
-    private Integer collectionNum;
+    private Integer collectionNum; // 내가 쓴 평론 개수
 
     @ColumnDefault("0")
-    private Integer scrapNum;
+    private Integer scrapNum; // 내가 스크랩한 영화 개수
 
     @ColumnDefault("0")
     private Integer followingsNum;
 
     @ColumnDefault("0")
     private Integer followersNum;
+
+    public void addCollectionNum() { this.collectionNum ++; }
+    public void addScrapNum() { this.scrapNum ++; }
+    public void subCollectionNum() { this.collectionNum --; }
+    public void subScrapNum() { this.scrapNum --; }
 
 
 }
