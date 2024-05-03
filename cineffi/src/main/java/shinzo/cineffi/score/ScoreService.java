@@ -32,7 +32,11 @@ public class ScoreService {
 
         Score scoreData = scoreRepository.findByMovieAndUser(movie, user);
         if (scoreData == null) scoreData = Score.builder().score(score).user(user).movie(movie).build();
-        else scoreData.setScore(score);
+        else {
+            scoreRepository.save(scoreData.toBuilder()
+                    .score(score)
+                    .build());
+        }
         scoreRepository.save(scoreData);
         return scoreData.getId();
     }
