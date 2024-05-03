@@ -13,9 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import shinzo.cineffi.domain.dto.GenreMovieListDTO;
-import shinzo.cineffi.domain.dto.InListMoviveDTO;
-import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
+import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.*;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
@@ -24,7 +22,6 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,10 +68,10 @@ public class MovieService {
 //        int endYear =  2024; //원하는 년도까지(수동수정)
 
         for (int year = startYear; year <= endYear; year++) {
-            for (int month = 1; month <= 1; month++) {
-                String startDate = String.format("%d-%02d-15", year, 4);
+            for (int month = 4; month <= 4; month++) {
+                String startDate = String.format("%d-%02d-01", year, 4);
 //                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-20", year, 4); //테스트
+                String endDate = String.format("%d-%02d-31", year, 4); //테스트
 
                 List<Movie> movies = requestTMDBIdsDates(startDate, endDate);
                 initMovieData(movies);
@@ -390,16 +387,18 @@ public class MovieService {
     }
 
     private final BoxOfficeDataHandler boxOfficeDataHandler;
-    private final DailyMovieRepository dailyMovieRepository;
+    private final BoxOfficeMovieRepository boxOfficeMovieRepository;
+    private final ScrapRepository scrapRepo;
 
     public void insertDailyBoxOffice() {
         boxOfficeDataHandler.dailyBoxOffice();
 
     }
 
-    public List<DailyMovie> getEnhancedDailyMovies() {
+    public List<BoxOfficeMovie> getEnhancedDailyMovies() {
         boxOfficeDataHandler.processDailyBoxOfficeData();
-        return dailyMovieRepository.findAll();
+        return boxOfficeMovieRepository.findAll();
     }
 
 }
+
