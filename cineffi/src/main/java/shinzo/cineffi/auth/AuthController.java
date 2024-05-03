@@ -1,8 +1,10 @@
 package shinzo.cineffi.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestParam;
 import shinzo.cineffi.domain.dto.*;
 
@@ -12,6 +14,8 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
 import shinzo.cineffi.jwt.JWToken;
 
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RequestMapping("/api/auth")
@@ -21,7 +25,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login/kakao")
-    public ResponseEntity<ResponseDTO<String>> loginByKakao(@RequestParam final String code){
+    public ResponseEntity<ResponseDTO<Object>> loginByKakao(@RequestParam final String code) throws JsonProcessingException {
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
 
@@ -59,29 +63,37 @@ public class AuthController {
     }
 
     @PostMapping("/login/email")
-    public ResponseEntity<ResponseDTO<String>> emailLogin(@RequestBody LoginRequestDTO request){
+    public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestDTO request) throws JsonProcessingException {
         Long userId = authService.getUserIdByEmail(request.getEmail());
+        if(userId==null){
+            return ResponseEntity.status(ErrorMsg.ACCOUNT_MISMATCH.getHttpStatus())
+                    .body(ResponseDTO.<Object>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.ACCOUNT_MISMATCH.getDetail())
+                            .build());
+        }
         boolean LoginSuccess = authService.emailLogin(request);
 
         if(LoginSuccess) {
             return authLogin(userId);
         }
         else {
-            return ResponseEntity.status(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getHttpStatus())
-                    .body(ResponseDTO.<String>builder()
+            return ResponseEntity.status(ErrorMsg.ACCOUNT_MISMATCH.getHttpStatus())
+                    .body(ResponseDTO.<Object>builder()
                             .isSuccess(false)
-                            .message(ErrorMsg.PASSWORD_INCORRECT_MISMATCH.getDetail())
+                            .message(ErrorMsg.ACCOUNT_MISMATCH.getDetail())
                             .build());
         }
     }
 
-    private ResponseEntity<ResponseDTO<String>> authLogin(Long userId){
+    private ResponseEntity<ResponseDTO<Object>> authLogin(Long userId) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
         JWToken jwToken = (JWToken) result[0];
         HttpHeaders headers = (HttpHeaders) result[1];
 
         authService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+
+        ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
                 .isSuccess(true)
                 .message(SuccessMsg.SUCCESS.getDetail())
                 .build();
@@ -121,6 +133,72 @@ public class AuthController {
                     .body(ResponseDTO.<String>builder()
                             .isSuccess(false)
                             .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                            .build());
+        }
+
+    }
+
+    @GetMapping("userInfo")
+    public ResponseEntity<ResponseDTO<LoginResponseDTO>> userInfo(){
+        if(SecurityContextHolder.getContext().getAuthentication().getPrincipal()!= "anonymousUser") {
+            Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+            LoginResponseDTO userInfo = authService.userInfo(userId);
+            ResponseDTO<LoginResponseDTO> userInf = ResponseDTO.<LoginResponseDTO>builder()
+                    .isSuccess(true)
+                    .message(SuccessMsg.SUCCESS.getDetail())
+                    .result(userInfo)
+                    .build();
+            return ResponseEntity.ok(userInf);
+        }else{
+            return ResponseEntity.status(ErrorMsg.NOT_LOGGED_ID.getHttpStatus())
+                    .body(ResponseDTO.<LoginResponseDTO>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.NOT_LOGGED_ID.getDetail())
+                            .build());
+        }
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<ResponseDTO<?>> logout()  {
+        if(SecurityContextHolder.getContext().getAuthentication().getPrincipal()!= "anonymousUser") {
+            Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+                Object[] result = authService.logout(userId);
+                //텅빈 쿠키 담아서 쿠키 전달하기
+                HttpHeaders headers = (HttpHeaders) result[0];
+                ResponseDTO<?> responseDTO = ResponseDTO.builder()
+                        .isSuccess(true)
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .build();
+                return ResponseEntity.ok().headers(headers).body(responseDTO);
+        }
+    else{
+        return ResponseEntity.status(ErrorMsg.UNAUTHORIZED_MEMBER.getHttpStatus())
+                .body(ResponseDTO.builder()
+                        .isSuccess(false)
+                        .message(ErrorMsg.UNAUTHORIZED_MEMBER.getDetail())
+                        .build());
+            }
+    }
+
+
+    @GetMapping("/user/check")
+    public ResponseEntity<ResponseDTO<?>> usercheck(){
+        if(SecurityContextHolder.getContext().getAuthentication().getPrincipal()!= "anonymousUser") {
+            Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+            Map<String, Long> userJson = new HashMap<>();
+            userJson.put("userId", userId);
+
+            ResponseDTO<?> responseDTO = ResponseDTO.builder()
+                    .isSuccess(true)
+                    .message(SuccessMsg.SUCCESS.getDetail())
+                    .result(userJson)
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        }
+        else{
+            return ResponseEntity.status(ErrorMsg.NOT_LOGGED_ID.getHttpStatus())
+                    .body(ResponseDTO.<Object>builder()
+                            .isSuccess(false)
+                            .message(ErrorMsg.NOT_LOGGED_ID.getDetail())
                             .build());
         }
 

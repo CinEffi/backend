@@ -42,7 +42,7 @@ public class MovieController {
         List<UpcomingMovieDTO> upcomingList = movieService.findUpcomingList();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
-                        .message((SuccessMsg.SUCCESS.getDetail()))
+                        .message(SuccessMsg.SUCCESS.getDetail())
                         .result(upcomingList)
                         .build()
         );

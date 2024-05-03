@@ -24,11 +24,9 @@ public class Review extends BaseEntity {
     @Column(name = "review_id")
     private Long id;
 
+    @Column(length = 1000)
     @ColumnDefault("''")
     private String content;
-
-    @ColumnDefault("5")
-    private Float score;
 
     @ColumnDefault("0")
     private Integer likeNum;
@@ -41,4 +39,6 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
+    public Review addLikeNum() {likeNum++; return this;}
+    public Review subLikeNum() {likeNum--; return this;}
 }

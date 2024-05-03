@@ -30,7 +30,6 @@ import java.util.Collections;
 public class SecurityConfig {
     private final UserAccountRepository userAccountRepository;
     private final JWTProvider jwtProvider;
-    private final AuthenticationConfiguration authenticationConfiguration;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
@@ -55,28 +54,33 @@ public class SecurityConfig {
                         return configuration;
                     }
                 })));
-        //
+
         http
                 .csrf(AbstractHttpConfigurer::disable)//csrf 비활성화
                 .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable);//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable)//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .logout(customizer -> customizer
+                .logoutUrl("/api/auth/logout")
+                .logoutSuccessUrl("/")
+                .permitAll()
+                );
+
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
-                                "/api/movies/updateBoxOffice",
-                                "/api/movies/boxOffice",
-                                "/api/movies/genre",
-                                "/api/movies/init",
-                                "/api/auth/login/kakao",
-                                "/api/auth/signup",
-                                "/api/auth/email/check",
-                                "api/auth/login/email",
-                                "/api/auth/verify/email",
-                                "/api/auth/verify/email/check",
-                                "/api/auth/nickname/check"
-                                ).permitAll()//토큰 없이 동작해야하는 사이트
+                               "/api/auth/**",
+                                "/api/auth/*",
+                                "/api/movies/**",
+                                "/api/reviews/hot",
+                                "/api/reviews/new",
+                                "^/api/reviews/{movie-id}",
+                                "/api/users/{user-id}",
+                                "/api/users/{user-id}/followers",
+                                "/api/users/{user-id}/followings",
+                                "/api/users/{user-id}/reviews",
+                                "/api/users/{user-id}/scrap"
+                        ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
-//                        .anyRequest().permitAll());
         http
                 .requestCache(RequestCacheConfigurer::disable);
         http

@@ -34,6 +34,6 @@ public abstract class BaseEntity {
     private LocalDateTime modifiedAt;
 
     @ColumnDefault("false")
-    private boolean isDelete;
+    private Boolean isDelete;
 
 }
