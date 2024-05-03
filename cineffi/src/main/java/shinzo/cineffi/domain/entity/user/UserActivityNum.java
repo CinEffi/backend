@@ -38,6 +38,4 @@ public class UserActivityNum {
     public void addScrapNum() { this.scrapNum ++; }
     public void subCollectionNum() { this.collectionNum --; }
     public void subScrapNum() { this.scrapNum --; }
-
-
 }

@@ -38,14 +38,12 @@ public class ReviewService {
     private final ScoreRepository scoreRepository;
 
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable) {
-        Page<Review> userCollection = reviewRepository.findAllByUserId(userId, pageable);
+        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
         int totalPageNum = userCollection.getTotalPages();
-
 
         List<ReviewDto> reviewList = new ArrayList<>();
         userCollection.forEach(review -> {
                     Movie movie = review.getMovie();
-
              reviewList.add(ReviewDto.builder()
                             .reviewId(review.getId())
                             .movieId(movie.getId())
@@ -56,13 +54,8 @@ public class ReviewService {
                             .likeNumber(review.getLikeNum())
                             .build());
         });
-        return GetCollectionRes.builder()
-                .totalPageNum(totalPageNum)
-                .collection(reviewList)
-                .build();
+        return GetCollectionRes.builder().totalPageNum(totalPageNum).collection(reviewList).build();
     }
-
-
 
     //평론 작성
     public Long createReview(ReviewCreateDTO reviewCreateDTO, Long userId) {
@@ -73,21 +66,16 @@ public class ReviewService {
         Movie movie = movieRepository.findById(reviewCreateDTO.getMovieId())
                 .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
         // 평론 생성 + DB에 저장하기
-
         Review createReview = Review.builder()
                 .movie(movie)
                 .user(user)
                 .content(reviewCreateDTO.getContent())
                 .build();
-        Review review = reviewRepository.save(createReview);
-
-        // userActivityNum 업데이트
+        Review review = reviewRepository.save(createReview);// userActivityNum 업데이트
         user.getUserActivityNum().addCollectionNum();
         userRepository.save(user);
-
         return review.getId();
     }
-
     //평론 수정
     public void updateReview(ReviewUpdateDTO reviewUpdateDTO, Long reviewId, Long userId) {
         String content = reviewUpdateDTO.getContent();
@@ -100,16 +88,12 @@ public class ReviewService {
         //리뷰 수정하는 유저찾기 + 권한
         if (!review.getUser().equals(user))
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
-//        review.setContent(content);
-        reviewRepository.save(review.toBuilder()
-                .content(content)
-                .build());
-//        reviewRepository.save(review);
+        reviewRepository.save(review.toBuilder().content(content).build());
     }
 
     //평론 삭제
     public void deleteReview(Long reviewId, Long userId) {
-        //리뷰 삭제하는 유저찾기 + 권한 (추루 JWT 구현되면 추가)
+        //리뷰 삭제하는 유저찾기 + 권한
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
         //삭제할 리뷰 찾기
@@ -118,45 +102,46 @@ public class ReviewService {
         //리뷰 삭제하는 유저찾기 + 권한
         if (!review.getUser().equals(user))
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
-        //리뷰 삭제
-        reviewRepository.delete(review);
+        reviewRepository.delete(review.setDelete(true));//리뷰 삭제
+
+        List<ReviewLike> reviewLikeList = reviewLikeRepository.findByReview(review);
+        // 경험치도 뺏어가야함 // 레벨도 낮춰줘야함
+        userRepository.save(user.addExp(-reviewLikeList.size()));
+        reviewLikeRepository.deleteAll(reviewLikeList); // 리뷰에 딸린 모든 좋아요 삭제
         user.getUserActivityNum().subCollectionNum();
         userRepository.save(user);
     }
 
-    //해당 영화의 평론목록 조회
     public Long likeReview(Long reviewId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
-        Review review = reviewRepository.findById(reviewId)
+        Review review = reviewRepository.findByIdAndIsDeleteFalse(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorMsg.REVIEW_NOT_FOUND));
         if (reviewLikeRepository.findByReviewAndUser(review, user) != null)
             throw new CustomException(ErrorMsg.REVIEW_LIKE_EXIST);
         ReviewLike reviewLike = reviewLikeRepository.save(ReviewLike.builder().review(review).user(user).build());
         reviewRepository.save(review.addLikeNum());
+        review.getUser().addExp(1);
         return reviewLike.getId();
     }
-
     // 평론 좋아요 취소
     public Long unlikeReview(Long reviewId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
-        Review review = reviewRepository.findById(reviewId)
+        Review review = reviewRepository.findByIdAndIsDeleteFalse(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorMsg.REVIEW_NOT_FOUND));
         ReviewLike reviewLike = reviewLikeRepository.findByReviewAndUser(review, user);
         if (reviewLike == null) throw new CustomException(ErrorMsg.REVIEW_LIKE_NOT_EXIST);
         reviewLikeRepository.delete(reviewLike);
         reviewRepository.save(review.subLikeNum());
+        review.getUser().addExp(-1);
         return reviewLike.getId();
     }
 
-
-
     public ReviewByMovieListDTO lookupReviewByMovie(Long movieId, Pageable pageable, Long myUserId) {
-
         Movie movie = movieRepository.findById(movieId).orElseThrow(
                 () -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
-        Page<Review> reviewPage = reviewRepository.findByMovie(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsDeleteFalse(movie, pageable);
         List<ReviewByMovieDTO> reviewLookupDTOList = new ArrayList<>();
         for (Review review : reviewPage) {
             User user = review.getUser();
@@ -184,35 +169,12 @@ public class ReviewService {
                 .reviews(reviewLookupDTOList).build();
     }
 
-    public ReviewLookupListDTO sortReview(Pageable pageable, Long myUserId, Sort sort) {
-        Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
-        Page<Review> reviewPage = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
-        List<ReviewLookupDTO> reviewLookupDTOList = new ArrayList<>();
-        for (Review review : reviewPage) {
-            Movie movie = review.getMovie();
-            User user = review.getUser();
-            ReviewLookupDTO reviewLookupDTO = ReviewLookupDTO.builder()
-                    .movieId(movie.getId())
-                    .movieTitle(movie.getTitle())
-                    .moviePoster(movie.getPoster())
-                    .reviewId(review.getId())
-                    .reviewWriterId(user.getId())
-                    .reviewWriterNickname(user.getNickname())
-                    .reviewContent(review.getContent())
-                    .likeNumber(review.getLikeNum()).build();
-            reviewLookupDTOList.add(reviewLookupDTO);
-        }
-        return ReviewLookupListDTO.builder()
-                .reviews(reviewLookupDTOList)
-                .totalPageNum(reviewPage.getTotalPages()).build();
-    }
-
     public ReviewLookupListDTO sortReviewByNew(Pageable pageable, Long myUserId) {
-        return lookupReviewList(reviewRepository.findAllByOrderByCreatedAtDesc(pageable));
+        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc(pageable));
     }
 
     public ReviewLookupListDTO sortReviewByHot(Pageable pageable, Long myUserId) {
-        return lookupReviewList(reviewRepository.findAllByOrderByLikeNumDesc(pageable));
+        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByLikeNumDesc(pageable));
     }
 
     public ReviewLookupListDTO lookupReviewList(Page<Review> reviewPage) {
@@ -231,8 +193,7 @@ public class ReviewService {
                     .likeNumber(review.getLikeNum()).build();
             reviewLookupDTOList.add(reviewLookupDTO);
         }
-        return ReviewLookupListDTO.builder()
-                .reviews(reviewLookupDTOList)
+        return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)
                 .totalPageNum(reviewPage.getTotalPages()).build();
     }
 }
