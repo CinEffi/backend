@@ -2,21 +2,18 @@ package shinzo.cineffi.domain.entity.movie;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
-import shinzo.cineffi.domain.entity.BaseEntity;
 
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
-public class AvgScore extends BaseEntity {
-
+public class AvgScore {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "avg_score_id")
@@ -37,20 +34,23 @@ public class AvgScore extends BaseEntity {
     @ColumnDefault("0")
     private Integer cinephileScoreCount;
 
-
-    public Float getAllAvgScore() {
-        return 0.0F;
+    public void setAllAvgScore(Float deltaSum, Integer deltaCount) {
+        this.allScoreSum += deltaSum;
+        this.allScoreCount += deltaCount;
+    }
+    public void setLevelAvgScore(Float deltaSum, Integer deltaCount) {
+        this.levelScoreSum += deltaSum;
+        this.levelScoreCount += deltaCount;
+    }
+    public void setCinephileAvgScore(Float deltaSum, Integer deltaCount) {
+        this.cinephileScoreSum += deltaSum;
+        this.cinephileScoreCount += deltaCount;
+    }
+    private static Float averageScore(Float sum, Integer count) {
+        return 0 < count ? Math.round((sum / count) * 10.0f) / 10.0f : null;
     }
 
-//    @Column(columnDefinition = "NUMERIC(2,1)")
-//    @ColumnDefault("0")
-    public Float getCinephileAvgScore() {
-        return 0.0F;
-    }
-
-    public Float getLevelAvgScore () {
-        return 0.0F;
-    }
-
-
+    public Float getAllAvgScore() { return averageScore(allScoreSum, allScoreCount); }
+    public Float getLevelAvgScore () { return averageScore(levelScoreSum, levelScoreCount); }
+    public Float getCinephileAvgScore() { return averageScore(cinephileScoreSum, cinephileScoreCount); }
 }

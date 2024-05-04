@@ -38,7 +38,7 @@ public class Review extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "movie_id")
     private Movie movie;
-
+    public Review setDelete (boolean isDelete) { this.setIsDelete(isDelete); return this;}
     public Review addLikeNum() {likeNum++; return this;}
     public Review subLikeNum() {likeNum--; return this;}
 }

@@ -16,6 +16,7 @@ import shinzo.cineffi.movie.repository.AvgScoreRepository;
 import shinzo.cineffi.movie.repository.DirectorRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.review.repository.ReviewRepository;
+import shinzo.cineffi.score.ScoreService;
 import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.FollowService;
 import shinzo.cineffi.user.repository.UserRepository;
@@ -36,8 +37,7 @@ public class InitService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final FollowService followService;
-    private final ScoreRepository scoreRepository;
-
+    private final ScoreService scoreService;
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
     @PostConstruct
@@ -70,7 +70,7 @@ public class InitService {
         Optional<User> 셋째제욱 = userRepository.findById(3L);
 
         // 영화 1
-        AvgScore avgScore1 = avgScoreRepository.save(AvgScore.builder().allScoreSum(4.2f).allScoreCount(1).cinephileScoreSum(3.8f).cinephileScoreCount(1).levelScoreSum(2.0f).levelScoreCount(1).build());
+        AvgScore avgScore1 = avgScoreRepository.save(AvgScore.builder().build());
         Director director1 = directorRepository.save(Director.builder().name("허명행").build());
         Movie 범죄도시4 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore1)
@@ -84,7 +84,7 @@ public class InitService {
                 .tmdbId(1)
                 .build());
         // 영화 2
-        AvgScore avgScore2 = avgScoreRepository.save(AvgScore.builder().allScoreSum(2.2f).allScoreCount(1).cinephileScoreSum(1.8f).cinephileScoreCount(1).levelScoreSum(4.0f).levelScoreCount(1).build());
+        AvgScore avgScore2 = avgScoreRepository.save(AvgScore.builder().build());
         Director director2 = directorRepository.save(Director.builder().name("마이클 미첼").build());
         Movie 쿵푸팬더4 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore2)
@@ -98,7 +98,7 @@ public class InitService {
                 .tmdbId(2)
                 .build());
         // 영화 3
-        AvgScore avgScore3 = avgScoreRepository.save(AvgScore.builder().allScoreSum(0.3f).allScoreCount(1).cinephileScoreSum(3.2f).cinephileScoreCount(1).levelScoreSum(3.1f).levelScoreCount(1).build());
+        AvgScore avgScore3 = avgScoreRepository.save(AvgScore.builder().build());
         Director director3 = directorRepository.save(Director.builder().name("장재현").build());
         Movie 파묘 = movieRepository.save(Movie.builder()
                 .avgScore(avgScore3)
@@ -117,39 +117,22 @@ public class InitService {
                 .user(첫째희석.get())
                 .movie(범죄도시4)
                 .content("인생 최고의 영화! 추천합니다")
-                //.score(2.0F) 밑의 코드로 수정했습니다.
                 .build());
-        scoreRepository.save(Score.builder()
-                .score(2.0F)
-                .user(첫째희석.get())
-                .movie(범죄도시4)
-                .build());
-
+        scoreService.scoreMovie(2.0F, 범죄도시4.getId(), 첫째희석.get().getId());
         // 둘째민희의 쿵푸팬더4 평론
         reviewRepository.save(Review.builder()
                 .user(둘째민희.get())
                 .movie(쿵푸팬더4)
                 .content("우웨에에에에에에에에ㅔ게")
-//                .score(0.5F)
                 .build());
-        scoreRepository.save(Score.builder()
-                .score(2.0F)
-                .user(둘째민희.get())
-                .movie(쿵푸팬더4)
-                .build());
-
+        scoreService.scoreMovie(2.0F, 쿵푸팬더4.getId(), 둘째민희.get().getId());
         // 셋째제욱의 쿵푸팬더4 평론
         reviewRepository.save(Review.builder()
                 .user(셋째제욱.get())
                 .movie(쿵푸팬더4)
                 .content("나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. ")
-//                .score(1.5F)
                 .build());
-        scoreRepository.save(Score.builder()
-                .score(1.5F)
-                .user(셋째제욱.get())
-                .movie(쿵푸팬더4)
-                .build());
+        scoreService.scoreMovie(1.5F, 쿵푸팬더4.getId(), 셋째제욱.get().getId());
 
         // 팔로우
         followService.followUser(1L, 2L);
