@@ -88,11 +88,7 @@ public class AuthController {
 
     private ResponseEntity<ResponseDTO<Object>> authLogin(Long userId) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
-        JWToken jwToken = (JWToken) result[0];
-        HttpHeaders headers = (HttpHeaders) result[1];
-
-        authService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-
+        HttpHeaders headers = (HttpHeaders) result[0];
         ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
                 .isSuccess(true)
                 .message(SuccessMsg.SUCCESS.getDetail())
