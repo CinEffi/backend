@@ -114,7 +114,7 @@ public class ReviewService {
         //리뷰 삭제하는 유저찾기 + 권한
         if (!review.getUser().equals(user))
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
-        reviewRepository.delete(review.setDelete(true));//리뷰 삭제
+        reviewRepository.save(review.setDelete(true));//리뷰 삭제
 
         List<ReviewLike> reviewLikeList = reviewLikeRepository.findByReview(review);
         // 경험치도 뺏어가야함 // 레벨도 낮춰줘야함
@@ -202,7 +202,8 @@ public class ReviewService {
                     .reviewWriterId(user.getId())
                     .reviewWriterNickname(user.getNickname())
                     .reviewContent(review.getContent())
-                    .likeNumber(review.getLikeNum()).build();
+                    .likeNumber(review.getLikeNum())
+                    .createdAt(review.getCreatedAt()).build();
             reviewLookupDTOList.add(reviewLookupDTO);
         }
         return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)

@@ -3,6 +3,8 @@ package shinzo.cineffi.domain.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 public class ReviewLookupDTO {
@@ -14,4 +16,5 @@ public class ReviewLookupDTO {
     private String reviewWriterNickname;
     private String reviewContent;
     private Integer likeNumber;
+    private LocalDateTime createdAt;
 }
