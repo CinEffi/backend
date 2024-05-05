@@ -400,5 +400,58 @@ public class MovieService {
         return boxOfficeMovieRepository.findAll();
     }
 
+
+//    public MovieDetailDTO findMovieDetails(Long movieId) {
+//        Movie movie = movieRepo.findById(movieId)
+//                .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
+//        Scrap scrap = scrapRepo.existsByMovieIdAndUserId()
+//
+//        List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
+//        InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
+//                .movieId(movie.getId())
+//                .movieTitle(movie.getTitle())
+//                .releaseDate(movie.getReleaseDate())
+//                .poster(movie.getPoster())
+//                .originCountry(movie.getOriginCountry())
+//                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Enum::name).collect(Collectors.toList()))
+//                .build();
+//
+//        return MovieDetailDTO.builder()
+//                .movie(inMovieDetail)
+//                .runtime(movie.getRuntime())
+//                .introduction(movie.getIntroduction())
+//                .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+//                .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+//                .allAvgScore(movie.getAvgScore().getAllAvgScore())
+//                .myScore(null) //추후에 별점 가져오기 추가 (재영님 진행중)
+//                .isScrap(null) //추후 구현되고 가져오기
+//                .crewList(crewList)
+//                .build();
+//    }
+//
+//
+//    private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
+//        List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId)
+//                .stream()
+//                .map(am -> CrewListDTO.builder()
+//                        .name(am.getActor().getName())
+//                        .profile(am.getActor().getProfileImage())
+//                        .job("Actor")
+//                        .character(am.getCharacter())
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        Movie movie = movieRepo.findById(movieId).orElse(null);
+//        if (movie != null && movie.getDirector() != null) {
+//            actors.add(CrewListDTO.builder()
+//                    .name(movie.getDirector().getName())
+//                    .profile(movie.getDirector().getProfileImage())
+//                    .job("Director")
+//                    .character("")
+//                    .build());
+//        }
+//        return actors;
+//    }
 }
+
 
