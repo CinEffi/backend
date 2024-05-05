@@ -15,11 +15,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.*;
+import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
+import shinzo.cineffi.score.repository.ScoreRepository;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -389,6 +391,7 @@ public class MovieService {
     private final BoxOfficeDataHandler boxOfficeDataHandler;
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
     private final ScrapRepository scrapRepo;
+    private final ScoreRepository scoreRepo;
 
     public void insertDailyBoxOffice() {
         boxOfficeDataHandler.dailyBoxOffice();
@@ -407,6 +410,8 @@ public class MovieService {
         boolean isScrap = (userId != null) && scrapRepo.existsByMovieIdAndUserId(movieId, userId);
 
         List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
+        Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
+
         InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
@@ -423,7 +428,7 @@ public class MovieService {
                 .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                 .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                 .allAvgScore(movie.getAvgScore().getAllAvgScore())
-                .myScore(null) //추후에 별점 가져오기 추가 (재영님 진행중)
+                .myScore(myScore) //추후에 별점 가져오기 추가 (재영님 진행중)
                 .isScrap(isScrap)
                 .crewList(crewList)
                 .build();
@@ -451,6 +456,17 @@ public class MovieService {
                     .build());
         }
         return actors;
+    }
+
+
+    //내가 준 영화평점
+    @Transactional(readOnly = true)
+    public Float getUserScoreForMovie(Long movieId, Long userId) {
+        return scoreRepo.findByMovieIdAndUserId(movieId, userId)
+                .map(Score::getScore)
+                .orElse(null);
+
+
     }
 }
 
