@@ -22,6 +22,7 @@ import shinzo.cineffi.jwt.JWTProvider;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
 import java.util.Collections;
+import java.util.List;
 
 
 @Configuration
@@ -45,9 +46,8 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
-                        configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                        configuration.setAllowedOrigins(List.of("http://localhost:3000","https://9e54-180-70-193-179.ngrok-free.app"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
-                        configuration.setExposedHeaders(Collections.singletonList("Authorization"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);
 
@@ -73,7 +73,7 @@ public class SecurityConfig {
                                 "/api/movies/**",
                                 "/api/reviews/hot",
                                 "/api/reviews/new",
-                                "^/api/reviews/{movie-id}",
+                                "/api/reviews/{movie-id}",
                                 "/api/users/{user-id}",
                                 "/api/users/{user-id}/followers",
                                 "/api/users/{user-id}/followings",

@@ -99,7 +99,7 @@ public class JWTUtil {
     public static String resolveAccessToken(HttpServletRequest req) throws RuntimeException {
 
         Cookie[] cookies = req.getCookies();
-        if (null == cookies) throw new CustomException(ErrorMsg.NOT_LOGGED_ID);;
+        if ( cookies == null) throw new CustomException(ErrorMsg.NOT_LOGGED_ID);
         Cookie accessToken = Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("access"))
                 .findAny()
@@ -109,7 +109,7 @@ public class JWTUtil {
 
     public static String resolveRefreshToken(HttpServletRequest req) throws RuntimeException {
         Cookie[] cookies = req.getCookies();
-        if (null == cookies) return null;
+        if (cookies== null) throw new CustomException(ErrorMsg.NOT_LOGGED_ID);
         Cookie refreshToken = Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("refresh"))
                 .findAny()

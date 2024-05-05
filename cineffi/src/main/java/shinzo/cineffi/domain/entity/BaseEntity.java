@@ -3,10 +3,7 @@ package shinzo.cineffi.domain.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DialectOverride;
@@ -36,4 +33,5 @@ public abstract class BaseEntity {
     @ColumnDefault("false")
     private Boolean isDelete;
 
+    protected void setIsDelete(boolean isDelete) { this.isDelete = isDelete; }
 }

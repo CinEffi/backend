@@ -18,11 +18,8 @@ public class ScoreController {
     @PostMapping("/movie")
     public ResponseEntity<ResponseDTO<?>> scoreMovie (@RequestBody ScoreMovieDTO scoreMovieDTO) {
         Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
-        Long scoreId = scoreService.scoreMovie(scoreMovieDTO.getScore(), scoreMovieDTO.getMovieId(), userId);
-        ResponseDTO<Long> responseDto = ResponseDTO.<Long>builder()
-                .message(SuccessMsg.SUCCESS.getDetail())
-                .result(scoreId)
-                .build();
-        return ResponseEntity.ok(responseDto);
+        scoreService.scoreMovie(scoreMovieDTO.getScore(), scoreMovieDTO.getMovieId(), userId);
+        return ResponseEntity.ok(ResponseDTO.builder()
+                .message(SuccessMsg.SUCCESS.getDetail()).build());
     }
 }

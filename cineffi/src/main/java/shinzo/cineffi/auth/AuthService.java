@@ -204,24 +204,25 @@ public class AuthService {
                 .maxAge(ACCESS_PERIOD)
                 .path("/")
                 .httpOnly(true)
+                .secure(true)
                 .build();
         //Refresh 토큰 쿠키
+        normalLoginRefreshToken(userId, jwToken.getRefreshToken());
         ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
                 .sameSite("None")
                 .maxAge(REFRESH_PERIOD)
                 .path("/")
                 .httpOnly(true)
+                .secure(true)
                 .build();
-
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, accessCookie.toString());
-        headers.add(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+        headers.add(HttpHeaders.SET_COOKIE, String.valueOf(accessCookie));
+        headers.add(HttpHeaders.SET_COOKIE, String.valueOf(refreshCookie));
 
-        return new Object[] {jwToken, headers};
+        return new Object[] {headers};
     }
 
     public LoginResponseDTO userInfo(Long userId){
-
         Optional<User> user = userRepository.findById(userId);
         String nick = user.map(User::getNickname).orElse("NOt user");
         Integer level = user.map(User::getLevel).orElse(1);
@@ -284,22 +285,19 @@ public class AuthService {
     public Object[] logout(Long userId) {
 
         HttpHeaders headers = new HttpHeaders();
-        System.out.println("logout start");
         ResponseCookie cookie = ResponseCookie.from("access", "")
                 .maxAge(0)
                 .path("/")
-                .httpOnly(true)
+                .httpOnly(false)
                 .build();
 
         ResponseCookie cookie2 = ResponseCookie.from("refresh", "")
                 .maxAge(0)
                 .path("/")
-                .httpOnly(true)
+                .httpOnly(false)
                 .build();
 
-        System.out.println("access Cookie: " + cookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
-        System.out.println("access Cookie2: " + cookie2.toString());
         headers.add(HttpHeaders.SET_COOKIE, cookie2.toString());
         return new Object[] {headers};
     }
