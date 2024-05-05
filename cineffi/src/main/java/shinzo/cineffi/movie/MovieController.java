@@ -5,16 +5,21 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import shinzo.cineffi.domain.dto.GenreMovieListDTO;
+import shinzo.cineffi.domain.dto.MovieDetailDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
 import java.util.List;
+
+import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 
 @RestController
 @RequiredArgsConstructor
@@ -84,5 +89,18 @@ public class MovieController {
                         .build());
     }
 
+
+    @GetMapping("/{movieId}")
+    public ResponseEntity<ResponseDTO<MovieDetailDTO>> getMovieDetails(@PathVariable Long movieId) {
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        MovieDetailDTO movieDetail = movieService.findMovieDetails(movieId, loginUserId);
+
+        return ResponseEntity.ok(
+                ResponseDTO.<MovieDetailDTO>builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(movieDetail)
+                        .build()
+        );
+    }
 
 }

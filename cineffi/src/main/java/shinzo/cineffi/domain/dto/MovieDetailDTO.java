@@ -13,6 +13,7 @@ public class MovieDetailDTO {
     private InMovieDetailDTO movie;
     private int runtime;
     private String introduction;
+    private Float cinephileAvgScore;
     private Float levelAvgScore;
     private Float allAvgScore;
     private Float myScore;
