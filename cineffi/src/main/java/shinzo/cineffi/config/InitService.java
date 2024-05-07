@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.AuthRequestDTO;
+import shinzo.cineffi.domain.dto.ReviewCreateDTO;
 import shinzo.cineffi.domain.entity.movie.AvgScore;
 import shinzo.cineffi.domain.entity.movie.Director;
 import shinzo.cineffi.domain.entity.movie.Movie;
@@ -15,6 +16,7 @@ import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.movie.repository.AvgScoreRepository;
 import shinzo.cineffi.movie.repository.DirectorRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
+import shinzo.cineffi.review.ReviewService;
 import shinzo.cineffi.review.repository.ReviewRepository;
 import shinzo.cineffi.score.ScoreService;
 import shinzo.cineffi.score.repository.ScoreRepository;
@@ -35,7 +37,7 @@ public class InitService {
     private final DirectorRepository directorRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
-    private final ReviewRepository reviewRepository;
+    private final ReviewService reviewService;
     private final FollowService followService;
     private final ScoreService scoreService;
 
@@ -113,25 +115,16 @@ public class InitService {
                 .build());
 
         // 첫째희석의 범죄도시4 평론
-        reviewRepository.save(Review.builder()
-                .user(첫째희석.get())
-                .movie(범죄도시4)
-                .content("인생 최고의 영화! 추천합니다")
-                .build());
+        reviewService.createReview(ReviewCreateDTO.builder().movieId(범죄도시4.getId()).content("인생 최고의 영화! 추천합니다").build(), 첫째희석.get().getId());
         scoreService.scoreMovie(2.0F, 범죄도시4.getId(), 첫째희석.get().getId());
         // 둘째민희의 쿵푸팬더4 평론
-        reviewRepository.save(Review.builder()
-                .user(둘째민희.get())
-                .movie(쿵푸팬더4)
-                .content("우웨에에에에에에에에ㅔ게")
-                .build());
+        reviewService.createReview(ReviewCreateDTO.builder().movieId(쿵푸팬더4.getId()).content("우웨에에에에에에에에ㅔ게").build(), 둘째민희.get().getId());
         scoreService.scoreMovie(2.0F, 쿵푸팬더4.getId(), 둘째민희.get().getId());
         // 셋째제욱의 쿵푸팬더4 평론
-        reviewRepository.save(Review.builder()
-                .user(셋째제욱.get())
-                .movie(쿵푸팬더4)
-                .content("나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. ")
-                .build());
+        reviewService.createReview(ReviewCreateDTO.builder()
+                        .movieId(쿵푸팬더4.getId())
+                        .content("나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. 나쁘진 않은듯. ").build()
+                , 셋째제욱.get().getId());
         scoreService.scoreMovie(1.5F, 쿵푸팬더4.getId(), 셋째제욱.get().getId());
 
         // 팔로우
