@@ -6,10 +6,8 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import shinzo.cineffi.config.EncryptUtil;
 import shinzo.cineffi.domain.dto.GenreMovieListDTO;
 import shinzo.cineffi.domain.dto.MovieDetailDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
@@ -26,6 +24,9 @@ import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 @RequestMapping("/api/movies")
 public class MovieController {
     private final MovieService movieService;
+    private final ScrapService scrapService;
+    private final EncryptUtil encryptUtil;
+
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {
@@ -34,7 +35,7 @@ public class MovieController {
         movieService.fetchTMDBIdsByDate();
 
         long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+        long secDiffTime = (afterTime - beforeTime) / 1000; //두 시간에 차 계산
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -45,7 +46,7 @@ public class MovieController {
     }
 
     @GetMapping("/upcoming")
-    public ResponseEntity<ResponseDTO<?>> findUpcomingList(){
+    public ResponseEntity<ResponseDTO<?>> findUpcomingList() {
         List<UpcomingMovieDTO> upcomingList = movieService.findUpcomingList();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -56,7 +57,7 @@ public class MovieController {
     }
 
     @GetMapping("/genre")
-    public ResponseEntity<ResponseDTO<?>> findRandomGenreList(){
+    public ResponseEntity<ResponseDTO<?>> findRandomGenreList() {
         GenreMovieListDTO movieList = movieService.findGenreList();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -90,8 +91,12 @@ public class MovieController {
     }
 
 
-    @GetMapping("/{movieId}")
-    public ResponseEntity<ResponseDTO<MovieDetailDTO>> getMovieDetails(@PathVariable Long movieId) {
+    //영화 상세정보 조회
+    @GetMapping("/{encryptedMovieId}")
+    public ResponseEntity<ResponseDTO<MovieDetailDTO>> getMovieDetails(@PathVariable String encryptedMovieId) {
+        String decryptedMovieId = encryptUtil.decrypt(encryptedMovieId); //복호화
+        Long movieId = Long.parseLong(decryptedMovieId); //String을 Long으로 변환
+
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         MovieDetailDTO movieDetail = movieService.findMovieDetails(movieId, loginUserId);
 
@@ -103,4 +108,35 @@ public class MovieController {
         );
     }
 
+    //영화 스크랩
+    @PostMapping("/{movieId}/likes")
+    public ResponseEntity<ResponseDTO<?>> scrapMovie(@PathVariable Long movieId) {
+        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        scrapService.scrapMovie(movieId, userId);
+        return ResponseEntity.ok(ResponseDTO.builder()
+                .message(SuccessMsg.SUCCESS.getDetail())
+                .build());
+    }
+
+    //영화 스크랩 취소
+    @DeleteMapping("/{movieId}/likes")
+    public ResponseEntity<ResponseDTO<?>> unscrapMovie(@PathVariable Long movieId) {
+        Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        scrapService.unScrap(movieId, userId);
+        return ResponseEntity.ok(ResponseDTO.builder()
+                .message(SuccessMsg.SUCCESS.getDetail())
+                .build());
+    }
+
+
+    //테스트용 숫자를 넣으면 -> 암호회된 id로 만들어주는 메서드
+    @GetMapping("/encrypt-test/{id}")
+    public ResponseEntity<ResponseDTO> encryptTestId(@PathVariable("id") Long id) {
+
+        String encryptedId = encryptUtil.encrypt(String.valueOf(id));
+        return ResponseEntity.ok(ResponseDTO.builder()
+                .message(SuccessMsg.SUCCESS.getDetail())
+                .result(encryptedId)
+                .build());
+    }
 }
