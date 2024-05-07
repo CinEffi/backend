@@ -4,9 +4,9 @@ FROM openjdk:17.0.2-jdk-slim-buster as builder
 # 커맨드를 실행하는 디렉토리를 지정, -w:오버라이딩
 WORKDIR /app
 
-COPY gradlew build.gradle settings.gradle ./
-COPY gradle ./gradle
-COPY src/main ./src/main
+COPY cineffi/gradlew cineffi/build.gradle cineffi/settings.gradle ./
+COPY cineffi/gradle ./gradle
+COPY cineffi/src/main ./src/main
 RUN ./gradlew bootJar
 
 # app
