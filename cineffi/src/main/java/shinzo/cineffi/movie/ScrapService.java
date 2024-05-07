@@ -10,12 +10,17 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.movie.Scrap;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
+import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.movie.repository.ScrapRepository;
 import shinzo.cineffi.domain.dto.ScrapDto;
 import shinzo.cineffi.score.repository.ScoreRepository;
+import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
@@ -25,6 +30,8 @@ import static shinzo.cineffi.user.ImageConverter.decodeImage;
 public class ScrapService {
     private final ScrapRepository scrapRepository;
     private final ScoreRepository scoreRepository;
+    private final UserRepository userRepository;
+    private final MovieRepository movieRepository;
 
     @Transactional(readOnly = true)
     public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
@@ -64,4 +71,41 @@ public class ScrapService {
 
     }
 
+
+    //영화 스크랩
+    public void scrapMovie(Long movieId, Long userId) {
+
+        //유저 찾기
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
+
+        //영화 찾기
+        Movie movie = movieRepository.findById(movieId).orElseThrow(
+                () -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
+
+        scrapRepository.findByMovieAndUser(movie, user).ifPresent(s -> {
+            throw new CustomException(ErrorMsg.SCRAP_EXIST);
+        });
+
+        Scrap newScrap = scrapRepository.save(Scrap.builder()
+                .movie(movie)
+                .user(user)
+                .build());
+
+        scrapRepository.save(newScrap);
+    }
+
+    //영화 스크랩 취소
+    public void unScrap(Long movieId, Long userId) {
+
+        User user = userRepository.findById(userId).orElseThrow(
+                () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
+        Movie movie = movieRepository.findById(movieId).orElseThrow(
+                () -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
+
+        Scrap scrap = scrapRepository.findByMovieAndUser(movie, user).orElseThrow(
+                () -> new  CustomException(ErrorMsg.SCRAP_NOT_EXIST));
+
+        scrapRepository.delete(scrap);
+    }
 }
