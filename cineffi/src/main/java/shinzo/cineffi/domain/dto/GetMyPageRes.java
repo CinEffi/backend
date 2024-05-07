@@ -24,4 +24,6 @@ public class GetMyPageRes {
     private Boolean isCertified;
     private Boolean isBad;
     private Boolean isFollowed;
+    private String scoreLabel;
+    private String genreLabel;
 }

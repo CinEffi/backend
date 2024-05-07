@@ -10,10 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.review.Review;
 import shinzo.cineffi.domain.entity.review.ReviewLike;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserAnalysis;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.MovieRepository;
@@ -24,6 +26,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
@@ -39,11 +42,12 @@ public class ReviewService {
     private final ScoreRepository scoreRepository;
 
     @Transactional(readOnly = true)
-    public GetCollectionRes getUserReviewList(Long userId, Pageable pageable) {
+    public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
         int totalPageNum = userCollection.getTotalPages();
 
         List<ReviewDto> reviewList = new ArrayList<>();
+        User loginUser = loginUserId != null ? userRepository.findById(loginUserId).orElse(null) : null;
         userCollection.forEach(review -> {
 
             // 평론에서 영화 객체 따로 빼놓기
@@ -57,14 +61,15 @@ public class ReviewService {
 
             // Dto 꾸리기
             reviewList.add(ReviewDto.builder()
-                            .reviewId(review.getId())
-                            .movieId(movie.getId())
-                            .movieTitle(movie.getTitle())
-                            .poster(decodeImage(movie.getPoster()))
-                            .content(review.getContent())
-                            .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
-                            .likeNumber(review.getLikeNum())
-                            .build());
+                    .reviewId(review.getId())
+                    .movieId(movie.getId())
+                    .movieTitle(movie.getTitle())
+                    .poster(decodeImage(movie.getPoster()))
+                    .content(review.getContent())
+                    .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
+                    .likeNumber(review.getLikeNum())
+                    .isLiked(loginUser == null ? false : reviewLikeRepository.findByReviewAndUser(review, loginUser) != null)
+                    .build());
         });
         return GetCollectionRes.builder().totalPageNum(totalPageNum).collection(reviewList).build();
     }
@@ -84,7 +89,13 @@ public class ReviewService {
                 .content(reviewCreateDTO.getContent())
                 .build();
         Review review = reviewRepository.save(createReview);// userActivityNum 업데이트
+        // 유저 통계 갱신하기
+        for (MovieGenre genre : movie.getGenreList())
+            user.getUserAnalysis().updateGenreTendency(genre.getGenre(), UserAnalysis.reviewPoint);
+
         user.getUserActivityNum().addCollectionNum();
+        // 여기서 addCollectionNum() 한다고 collectionNum 갱신 안될것 같은데요. 근데 될것도 같습니다.. 아마 analysis도 갱신될것같네
+        // 다 되면 이 주석 지워버리자..
         userRepository.save(user);
         return review.getId();
     }
@@ -116,10 +127,15 @@ public class ReviewService {
             throw new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER);
         reviewRepository.save(review.setDelete(true));//리뷰 삭제
 
+        // review로 얻었던 통계 점수도 회수
+        for (MovieGenre genre : review.getMovie().getGenreList())
+            user.getUserAnalysis().updateGenreTendency(genre.getGenre(), -UserAnalysis.reviewPoint);
+
+        // 리뷰에 딸린 모든 좋아요 삭제
         List<ReviewLike> reviewLikeList = reviewLikeRepository.findByReview(review);
-        // 경험치도 뺏어가야함 // 레벨도 낮춰줘야함
+        // 경험치도 뺏어가고 // 레벨도 낮춰주고
         userRepository.save(user.addExp(-reviewLikeList.size()));
-        reviewLikeRepository.deleteAll(reviewLikeList); // 리뷰에 딸린 모든 좋아요 삭제
+        reviewLikeRepository.deleteAll(reviewLikeList);
         user.getUserActivityNum().subCollectionNum();
         userRepository.save(user);
     }

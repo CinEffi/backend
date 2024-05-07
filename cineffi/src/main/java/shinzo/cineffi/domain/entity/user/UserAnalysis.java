@@ -6,7 +6,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import shinzo.cineffi.Utils.CinEffiUtils;
-import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.enums.Genre;
 
 import java.util.ArrayList;
@@ -33,6 +32,11 @@ public class UserAnalysis {
             "SF", "TV 영화", "스릴러", "전쟁", "서부"
     };
 
+    public final static int reviewPoint = 15;
+    public final static float scorePoint = 2.0f;
+    public final static int scrapPoint = 4;
+
+
     @Id
     @Column(name = "user_id")
     private Long id;
@@ -43,14 +47,22 @@ public class UserAnalysis {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private Float scoreSum;
-    private Integer scoreNum;
+    @Builder.Default
+    @ColumnDefault("0.0")
+    private Float scoreSum = 0.0f;
 
+    @Builder.Default
     @ColumnDefault("0")
-    private Integer scoreLabelIndex;
+    private Integer scoreNum = 0;
 
+
+    @Builder.Default
     @ColumnDefault("0")
-    private Integer genreLabelIndex;
+    private Integer scoreLabelIndex = 0 ;
+
+    @Builder.Default
+    @ColumnDefault("0")
+    private Integer genreLabelIndex = 0;
 
     @ElementCollection
     @Column(name = "genre_record", columnDefinition = "INTEGER[]")
@@ -61,7 +73,9 @@ public class UserAnalysis {
         if (this.genreRecord == null) this.genreRecord = new ArrayList<>(Arrays.asList(new Integer[19]));
     }
     // 평점 5개 이상부터 생깁니다.
-    public void updateScoreTendency() {
+    public void updateScoreTendency(Float deltaScore, Integer deltaCount) {
+        this.scoreSum += deltaScore;
+        this.scoreNum += deltaCount;
         this.scoreLabelIndex = Math.round(CinEffiUtils.averageScore(scoreSum, scoreNum) * 2);
     }
 
@@ -78,9 +92,11 @@ public class UserAnalysis {
         }
     }
 
-    public String getScoreTendency() { return scoreTendency[scoreLabelIndex]; }
-    public String getGenreTendency() { return genreTendency[genreLabelIndex]; }
+    public String getScoreTendency() {
+        return this.scoreNum < 5 ? null : scoreTendency[this.scoreLabelIndex];
+    }
 
-
-
+    public String getGenreTendency() {
+        return 10 < genreRecord.get(this.genreLabelIndex) ? null : genreTendency[this.genreLabelIndex];
+    }
 }

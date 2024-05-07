@@ -2,7 +2,6 @@ package shinzo.cineffi.auth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,11 +15,13 @@ import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserAccount;
+import shinzo.cineffi.domain.entity.user.UserAnalysis;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.domain.entity.user.UserActivityNum;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
+import shinzo.cineffi.user.repository.UserAnalysisRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.Optional;
@@ -37,6 +38,7 @@ public class AuthService {
     private final UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
     private final UserActivityNumRepository userActivityNumRepository;
+    private final UserAnalysisRepository userAnalysisRepository;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
@@ -268,7 +270,7 @@ public class AuthService {
                 .user(user)
                 .build();
         userActivityNumRepository.save(userActivityNum);
-
+        userAnalysisRepository.save(UserAnalysis.builder().user(user).build());
     }
 
     public boolean dupMail(EmailRequestDTO request) {
