@@ -7,10 +7,9 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import shinzo.cineffi.domain.dto.GenreMovieListDTO;
-import shinzo.cineffi.domain.dto.ResponseDTO;
-import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
+import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
@@ -41,11 +40,11 @@ public class MovieController {
 
     @GetMapping("/upcoming")
     public ResponseEntity<ResponseDTO<?>> findUpcomingList(){
-        List<UpcomingMovieDTO> upcomingList = movieService.findUpcomingList();
+        List<UpcomingMovieDTO> result = movieService.findUpcomingList();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(upcomingList)
+                        .result(result)
                         .build()
         );
     }
@@ -69,6 +68,18 @@ public class MovieController {
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
                         .result("영화진흥원 일별박스오피스 불러오기 완료")
+                        .build()
+        );
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ResponseDTO<?>> findsearchMovieList(@RequestParam String q, @RequestParam int page, @RequestParam int size){
+        MovieSearchRespon response = movieService.findSearchList(q, page, size);
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(response)
                         .build()
         );
     }

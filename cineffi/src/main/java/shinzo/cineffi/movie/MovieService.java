@@ -1,10 +1,7 @@
 package shinzo.cineffi.movie;
-
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -17,15 +14,12 @@ import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.*;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
-import shinzo.cineffi.exception.CustomException;
-import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-
 import static shinzo.cineffi.domain.enums.Genre.*;
 import static shinzo.cineffi.domain.enums.ImageType.POSTER;
 import static shinzo.cineffi.domain.enums.ImageType.PROFILE;
@@ -53,8 +47,6 @@ public class MovieService {
     private String pathMovie;
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    @PersistenceContext
-    private EntityManager entityManager;
     private static final int MAX_PAGES = 500;
     private WebClient wc = WebClient.builder()
             .baseUrl(baseURL)
@@ -69,9 +61,9 @@ public class MovieService {
 
         for (int year = startYear; year <= endYear; year++) {
             for (int month = 4; month <= 4; month++) {
-                String startDate = String.format("%d-%02d-01", year, 4);
+                String startDate = String.format("%d-%02d-04", year, 5);
 //                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-31", year, 4); //테스트
+                String endDate = String.format("%d-%02d-08", year, 5); //테스트
 
                 List<Movie> movies = requestTMDBIdsDates(startDate, endDate);
                 initMovieData(movies);
@@ -203,38 +195,20 @@ public class MovieService {
         }
     }
 
-    //한국어 문자열 장르를 이넘값으로
-    private Genre genreKorToEnum(String genreStr){
-        Map<String, Genre> genreMap = Map.ofEntries(
-                Map.entry("액션", ACTION),
-                Map.entry("모험", ADVENTURE),
-                Map.entry("애니메이션", ANIMATION),
-                Map.entry("코미디", COMEDY),
-                Map.entry("범죄", CRIME),
-                Map.entry("다큐멘터리", DOCUMENTARY),
-                Map.entry("드라마", DRAMA),
-                Map.entry("가족", FAMILY),
-                Map.entry("판타지", FANTASY),
-                Map.entry("역사", HISTORY),
-                Map.entry("공포", HORROR),
-                Map.entry("음악", MUSIC),
-                Map.entry("미스터리", MYSTERY),
-                Map.entry("로맨스", ROMANCE),
-                Map.entry("SF", SCIENCE_FICTION),
-                Map.entry("TV 영화", TV_MOVIE),
-                Map.entry("스릴러", THRILLER),
-                Map.entry("전쟁", WAR),
-                Map.entry("서부", WESTERN)
-        );
-        if(genreMap.containsKey(genreStr)) return genreMap.get(genreStr);
-        else throw new CustomException(ErrorMsg.FAILED_TO_MOVIE_PROCESS);
+    public static Genre getGenreBykorName(String korName) {
+        for (Genre genre : Genre.values()) {
+            if (genre.getGenre().equals(korName)) {
+                return genre;
+            }
+        }
+        return null;
     }
 
     private List<MovieGenre> makeMovieGenre(List<String> genreStrs, Movie movie) {
         if( genreStrs.size() <= 0 ) return new ArrayList<>();
 
         return genreStrs.stream()
-                .map(genreStr -> MovieGenre.builder().movie(movie).genre(genreKorToEnum(genreStr)).build())
+                .map(genreStr -> MovieGenre.builder().movie(movie).genre(getGenreBykorName(genreStr)).build())
                 .map(movieGenreRepo::save)
                 .collect(Collectors.toList());
 
@@ -399,6 +373,31 @@ public class MovieService {
         boxOfficeDataHandler.processDailyBoxOfficeData();
         return boxOfficeMovieRepository.findAll();
     }
+    public MovieSearchRespon findSearchList(String q, int page, int size){
+        Pageable pageable = PageRequest.of(page, size);
+        q=q.trim();
+
+        Genre genre = getGenreBykorName(q);
+        if(genre != null) q = genre.toString();
+
+        Page<Movie> pageList = movieRepo.findSearchList(q, pageable);
+        List<MovieDTO> dtoList = pageList.getContent().stream().map(movie -> MovieDTO.builder()
+                        .movieId(movie.getId())
+                        .title(movie.getTitle())
+                        .releaseDate(movie.getReleaseDate())
+                        .poster(movie.getPoster())
+                        .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                        .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                        .build())
+                .collect(Collectors.toList());
+
+        return MovieSearchRespon.builder()
+                .movieList(dtoList)
+                .totalPageNum(pageList.getTotalPages())
+                .build();
+
+    }
 
 }
+
 

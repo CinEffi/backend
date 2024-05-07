@@ -1,10 +1,10 @@
 package shinzo.cineffi.movie.repository;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.jpa.repository.Query;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.enums.Genre;
 
@@ -30,5 +30,16 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     @Query("SELECT m FROM Movie m JOIN m.genreList g WHERE g.genre = :genre ORDER BY RANDOM()")
     List<Movie> findGenreList(Genre genre, Pageable pageable);
+
+    @Query("SELECT DISTINCT m FROM Movie m " +
+            "LEFT JOIN ActorMovie am ON m = am.movie " +
+            "LEFT JOIN MovieGenre g ON m = g.movie " +
+            "LEFT JOIN Director d ON m.director = d " +
+            "LEFT JOIN Actor a ON am.actor = a " +
+            "WHERE LOWER(m.title) LIKE CONCAT('%', LOWER(:q), '%') " +
+            "OR LOWER(g.genre) LIKE CONCAT('%', LOWER(:q), '%') " +
+            "OR LOWER(d.name) LIKE CONCAT('%', LOWER(:q), '%') " +
+            "OR LOWER(a.name) LIKE CONCAT('%', LOWER(:q), '%')")
+    Page<Movie> findSearchList(String q, Pageable pageable);
 
 }
