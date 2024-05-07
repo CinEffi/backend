@@ -28,7 +28,7 @@ public class BoxOfficeDataHandler {
     private final MovieRepository movieRepository;
 
     @Value("${kobis.api_key}")
-    private String apiKey;
+    private String API_KEY;
 
 
 
@@ -40,7 +40,7 @@ public class BoxOfficeDataHandler {
 
 
         HttpClient client = HttpClient.newHttpClient();
-        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", apiKey, targetDt);
+        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", API_KEY, targetDt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))

@@ -13,19 +13,18 @@ import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/movies")
 public class MovieController {
     private final MovieService movieService;
+    private final MovieInitService movieInitService;
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {
         long beforeTime = System.currentTimeMillis(); //코드 실행 전에 시간 받아오기
 
-        movieService.fetchTMDBIdsByDate();
+        movieInitService.fetchTMDBIdsByDate();
 
         long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
         long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
