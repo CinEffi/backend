@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.dto.GetScrapRes;
 import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.movie.Scrap;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserAnalysis;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.MovieRepository;
@@ -92,6 +94,12 @@ public class ScrapService {
                 .user(user)
                 .build());
 
+        // 통계 및 액티비티 값 변경
+        for (MovieGenre genre : movie.getGenreList())
+            user.getUserAnalysis().updateGenreTendency(genre.getGenre(), UserAnalysis.reviewPoint);
+        user.getUserActivityNum().addScrapNum();
+
+        userRepository.save(user);
         scrapRepository.save(newScrap);
     }
 
@@ -106,6 +114,12 @@ public class ScrapService {
         Scrap scrap = scrapRepository.findByMovieAndUser(movie, user).orElseThrow(
                 () -> new  CustomException(ErrorMsg.SCRAP_NOT_EXIST));
 
+        // 통계 및 액티비티 값 변경
+        for (MovieGenre genre : movie.getGenreList())
+            user.getUserAnalysis().updateGenreTendency(genre.getGenre(), -UserAnalysis.reviewPoint);
+        user.getUserActivityNum().subScrapNum();
+
+        userRepository.save(user);
         scrapRepository.delete(scrap);
     }
 }

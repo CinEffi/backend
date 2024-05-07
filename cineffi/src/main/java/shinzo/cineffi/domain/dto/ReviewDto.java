@@ -13,4 +13,5 @@ public class ReviewDto {
     private String content;
     private float userScore;
     private int likeNumber;
+    private boolean isLiked;
 }

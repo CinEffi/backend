@@ -100,11 +100,11 @@ public class UserController {
     @GetMapping("api/users/{user-id}/reviews")
     public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") Long userId,
                                                         @PageableDefault(page = 0, size=10) Pageable pageable) {
-
+        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(reviewService.getUserReviewList(userId, pageable))
+                        .result(reviewService.getUserReviewList(userId, pageable, loginUserId))
                         .build());
 
     }
@@ -166,10 +166,5 @@ public class UserController {
         } catch (IOException e) {
             throw new CustomException(ErrorMsg.FAIDED_TO_CONVERT_IMAGE);
         }
-
-
-
     }
-
-
 }
