@@ -66,6 +66,7 @@ public class AuthController {
     public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestDTO request) throws JsonProcessingException {
         System.out.println("Login Start");
         Long userId = authService.getUserIdByEmail(request.getEmail());
+        System.out.println(userId);
         if(userId==null){
             return ResponseEntity.status(ErrorMsg.ACCOUNT_MISMATCH.getHttpStatus())
                     .body(ResponseDTO.<Object>builder()
@@ -92,11 +93,7 @@ public class AuthController {
 
     private ResponseEntity<ResponseDTO<Object>> authLogin(Long userId) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
-        JWToken jwToken = (JWToken) result[0];
-        HttpHeaders headers = (HttpHeaders) result[1];
-
-        authService.normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-
+        HttpHeaders headers = (HttpHeaders) result[0];
         ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
                 .isSuccess(true)
                 .message(SuccessMsg.SUCCESS.getDetail())
