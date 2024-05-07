@@ -31,7 +31,8 @@ public abstract class BaseEntity {
     private LocalDateTime modifiedAt;
 
     @ColumnDefault("false")
-    private Boolean isDelete;
+    @Builder.Default
+    private Boolean isDelete = false;
 
     protected void setIsDelete(boolean isDelete) { this.isDelete = isDelete; }
 }

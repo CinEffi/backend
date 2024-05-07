@@ -231,6 +231,7 @@ public class AuthService {
         Boolean isCertified = user.map(User::getIsCertified).orElse(false);
 
         return LoginResponseDTO.builder()
+                .userId(userId)
                 .nickname(nick)
                 .level(level)
                 .profileImage(profileImage)

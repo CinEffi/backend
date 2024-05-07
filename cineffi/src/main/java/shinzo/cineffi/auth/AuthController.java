@@ -64,6 +64,7 @@ public class AuthController {
 
     @PostMapping("/login/email")
     public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestDTO request) throws JsonProcessingException {
+        System.out.println("Login Start");
         Long userId = authService.getUserIdByEmail(request.getEmail());
         if(userId==null){
             return ResponseEntity.status(ErrorMsg.ACCOUNT_MISMATCH.getHttpStatus())
@@ -72,12 +73,15 @@ public class AuthController {
                             .message(ErrorMsg.ACCOUNT_MISMATCH.getDetail())
                             .build());
         }
+
         boolean LoginSuccess = authService.emailLogin(request);
 
         if(LoginSuccess) {
+            System.out.println("Login Success");
             return authLogin(userId);
         }
         else {
+            System.out.println("Login Failed");
             return ResponseEntity.status(ErrorMsg.ACCOUNT_MISMATCH.getHttpStatus())
                     .body(ResponseDTO.<Object>builder()
                             .isSuccess(false)
@@ -138,9 +142,10 @@ public class AuthController {
 
     }
 
-    @GetMapping("userInfo")
+    @GetMapping("/userInfo")
     public ResponseEntity<ResponseDTO<LoginResponseDTO>> userInfo(){
         if(SecurityContextHolder.getContext().getAuthentication().getPrincipal()!= "anonymousUser") {
+
             Long userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
             LoginResponseDTO userInfo = authService.userInfo(userId);
             ResponseDTO<LoginResponseDTO> userInf = ResponseDTO.<LoginResponseDTO>builder()

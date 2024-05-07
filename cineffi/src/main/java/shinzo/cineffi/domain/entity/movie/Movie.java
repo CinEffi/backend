@@ -5,15 +5,15 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.springframework.format.annotation.DateTimeFormat;
+import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.List;
 
 @Entity
 @Getter
+@DynamicInsert
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Movie extends BaseEntity {
