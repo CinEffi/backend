@@ -10,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @RequiredArgsConstructor
 public class LoginResponseDTO {
+    private Long userId;
     private String nickname;
     private Integer level;
     private byte[] profileImage;

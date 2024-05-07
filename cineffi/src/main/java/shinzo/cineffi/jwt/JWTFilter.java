@@ -26,7 +26,17 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    try{
+//        if (
+//                request.getRequestURI().startsWith("/api/auth")
+//
+//        )
+//        {
+//            System.out.println("filter check!!!");
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+        try{
+
             String access = JWTUtil.resolveAccessToken(request);
             String refresh = JWTUtil.resolveRefreshToken(request);
 
@@ -53,7 +63,6 @@ public class JWTFilter extends OncePerRequestFilter {
                     Cookie accessCookie = new Cookie("access", newAccessToken);
                     accessCookie.setMaxAge((int) ACCESS_PERIOD);
                     accessCookie.setPath("/");
-                    accessCookie.setSecure(true);
                     accessCookie.setHttpOnly(true);
                     response.addCookie(accessCookie);
 
