@@ -8,18 +8,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestParam;
 import shinzo.cineffi.domain.dto.*;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
-import shinzo.cineffi.jwt.JWToken;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import static shinzo.cineffi.exception.message.ErrorMsg.*;
+import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
+import static shinzo.cineffi.exception.message.ErrorMsg.UNAUTHORIZED_MEMBER;
 
 
 @RequestMapping("/api")
@@ -32,8 +30,10 @@ public class AuthController {
     public ResponseEntity<ResponseDTO<Object>> loginByKakao(@RequestParam final String code) throws JsonProcessingException {
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
+
         //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+
         return authLogin(userId);
     }
 

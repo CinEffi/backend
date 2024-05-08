@@ -61,6 +61,8 @@ public class UserService {
                 .followerNum(targetUser.getUserActivityNum().getFollowersNum())
                 .followingNum(targetUser.getUserActivityNum().getFollowingsNum())
                 .isFollowed(isFollowed)
+                .genreLabel(targetUser.getUserAnalysis().getGenreTendency())
+                .scoreLabel(targetUser.getUserAnalysis().getScoreTendency())
                 .build();
         return getMyPageRes;
     }

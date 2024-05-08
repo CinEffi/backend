@@ -5,8 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import shinzo.cineffi.domain.entity.movie.AvgScore;
 import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.entity.user.UserAnalysis;
+import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.AvgScoreRepository;
@@ -41,6 +44,10 @@ public class ScoreService {
             scoreRepository.save(existingScoreData.toBuilder().score(score).build());
         }
         else scoreRepository.save(Score.builder().score(score).user(user).movie(movie).build());
+        // 유저 통계 갱신하기
+        user.getUserAnalysis().updateScoreTendency(deltaScoreSum, deltaScoreCount);
+        for (MovieGenre genre : movie.getGenreList())
+            user.getUserAnalysis().updateGenreTendency(genre.getGenre(), Math.round(deltaScoreSum * UserAnalysis.scorePoint));
         // 평균 평점 저장하기
         AvgScore avgScore = movie.getAvgScore();
         avgScore.setAllAvgScore(deltaScoreSum, deltaScoreCount);

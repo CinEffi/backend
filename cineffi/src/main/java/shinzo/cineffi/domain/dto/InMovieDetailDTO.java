@@ -5,13 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
-public class UpcomingMovieDTO {
+public class InMovieDetailDTO {
+
     private Long movieId;
-    private String title;
+    private String movieTitle;
     private LocalDate releaseDate;
     private String poster;
+    private String originCountry;
+    private List<String> genre;
 }

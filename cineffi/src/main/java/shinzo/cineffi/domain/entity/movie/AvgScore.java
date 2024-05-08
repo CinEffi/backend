@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
+import shinzo.cineffi.Utils.CinEffiUtils;
 
 @Entity
 @Getter
@@ -46,11 +47,8 @@ public class AvgScore {
         this.cinephileScoreSum += deltaSum;
         this.cinephileScoreCount += deltaCount;
     }
-    private static Float averageScore(Float sum, Integer count) {
-        return 0 < count ? Math.round((sum / count) * 10.0f) / 10.0f : null;
-    }
 
-    public Float getAllAvgScore() { return averageScore(allScoreSum, allScoreCount); }
-    public Float getLevelAvgScore () { return averageScore(levelScoreSum, levelScoreCount); }
-    public Float getCinephileAvgScore() { return averageScore(cinephileScoreSum, cinephileScoreCount); }
+    public Float getAllAvgScore() { return CinEffiUtils.averageScore(allScoreSum, allScoreCount); }
+    public Float getLevelAvgScore () { return CinEffiUtils.averageScore(levelScoreSum, levelScoreCount); }
+    public Float getCinephileAvgScore() { return CinEffiUtils.averageScore(cinephileScoreSum, cinephileScoreCount); }
 }

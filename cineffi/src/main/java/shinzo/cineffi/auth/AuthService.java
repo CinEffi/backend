@@ -2,7 +2,6 @@ package shinzo.cineffi.auth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -14,14 +13,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.user.User;
-import shinzo.cineffi.domain.entity.user.UserAccount;
+import shinzo.cineffi.domain.entity.user.*;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
-import shinzo.cineffi.domain.entity.user.UserActivityNum;
-import shinzo.cineffi.user.repository.UserAccountRepository;
-import shinzo.cineffi.user.repository.UserActivityNumRepository;
-import shinzo.cineffi.user.repository.UserRepository;
+import shinzo.cineffi.user.repository.*;
 
 import java.util.Optional;
 import java.util.Random;
@@ -37,6 +32,9 @@ public class AuthService {
     private final UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
     private final UserActivityNumRepository userActivityNumRepository;
+    private final UserAnalysisRepository userAnalysisRepository;
+    private final GenreRecordRepository genreRecordRepository;
+
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
@@ -279,6 +277,16 @@ public class AuthService {
                 .user(user)
                 .build();
         userActivityNumRepository.save(userActivityNum);
+        UserAnalysis userAnalysis = UserAnalysis.builder().user(user).build();
+        userAnalysisRepository.save(userAnalysis);
+
+        for (int i = 0; i < 19; i++) {
+            GenreRecord genreRecord = GenreRecord.builder()
+                    .userAnalysis(userAnalysis)
+                    .genreScore(0)
+                    .build();
+            genreRecordRepository.save(genreRecord);
+        }
 
     }
 
