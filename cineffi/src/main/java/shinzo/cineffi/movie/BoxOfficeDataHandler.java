@@ -18,6 +18,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 
 @Component
@@ -97,7 +98,7 @@ public class BoxOfficeDataHandler {
                         .title(boxOfficeMovie.getTitle())
                         .targetDt(boxOfficeMovie.getTargetDt())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(movie.getPoster())
+                        .poster(encodeImage(movie.getPoster()))
                         .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
                         .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
                         .build();
@@ -106,6 +107,10 @@ public class BoxOfficeDataHandler {
             }
 
         }
+    }
+
+    public String encodeImage(byte[] imageData) {
+        return Base64.getEncoder().encodeToString(imageData);
     }
 
 }

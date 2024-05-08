@@ -14,7 +14,7 @@ public class InListMoviveDTO {
     private Long movieId;
     private String title;
     private LocalDate releaseDate;
-    private byte[] poster;
+    private String poster;
     private Float levelAvgScore;
     private Float cinephileAvgScore;
 }

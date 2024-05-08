@@ -13,5 +13,5 @@ public class UpcomingMovieDTO {
     private Long movieId;
     private String title;
     private LocalDate releaseDate;
-    private byte[] poster;
+    private String poster;
 }
