@@ -43,6 +43,10 @@ tmdb:
   base_url: https://
   path_image: image.tmdb.org/t/p/w500
   path_movie: api.themoviedb.org/3
+  start-year: 2024
+  end-year: 2024
+  start-month: 4
+  end-month: 4
 
 logging:
   level:
@@ -86,6 +90,10 @@ tmdb:
   base_url: https://
   path_image: image.tmdb.org/t/p/w500
   path_data: api.themoviedb.org/3
+  start-year: 2024
+  end-year: 2024
+  start-month: 4
+  end-momth: 4
 
 
 app:
