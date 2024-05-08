@@ -55,9 +55,6 @@ public class FollowService {
     }
 
 
-
-
-
     // 유저 언팔로우
     @Transactional
     public void unfollowUser(Long followingUserId, Long followerUserId) {
