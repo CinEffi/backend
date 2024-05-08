@@ -10,7 +10,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
@@ -89,11 +89,11 @@ tmdb:
   api_key: ce7427e854c56f1e2b49a65df45cd3be
   base_url: https://
   path_image: image.tmdb.org/t/p/w500
-  path_data: api.themoviedb.org/3
+  path_movie: api.themoviedb.org/3
   start-year: 2024
   end-year: 2024
   start-month: 4
-  end-momth: 4
+  end-month: 4
 
 
 app:
