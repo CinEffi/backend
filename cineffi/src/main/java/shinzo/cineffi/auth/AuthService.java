@@ -303,20 +303,26 @@ public class AuthService {
     }
 
     public Object[] logout(Long userId) {
-
+        System.out.println("Cookie delete");
         HttpHeaders headers = new HttpHeaders();
         ResponseCookie cookie = ResponseCookie.from("access", "")
+                .sameSite("None")
+                .secure(true)
                 .maxAge(0)
                 .path("/")
-                .httpOnly(false)
+                .httpOnly(true)
                 .build();
 
         ResponseCookie cookie2 = ResponseCookie.from("refresh", "")
+                .sameSite("None")
+                .secure(true)
                 .maxAge(0)
                 .path("/")
-                .httpOnly(false)
+                .httpOnly(true)
                 .build();
 
+        System.out.println("first!!" + cookie.toString());
+        System.out.println("first!!" + cookie2.toString());
         headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
         headers.add(HttpHeaders.SET_COOKIE, cookie2.toString());
         return new Object[] {headers};
