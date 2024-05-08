@@ -16,9 +16,7 @@ import shinzo.cineffi.exception.message.SuccessMsg;
 import java.util.HashMap;
 import java.util.Map;
 
-import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
-import static shinzo.cineffi.exception.message.ErrorMsg.UNAUTHORIZED_MEMBER;
-
+import static shinzo.cineffi.exception.message.ErrorMsg.*;
 
 
 @RequestMapping("/api")
