@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import shinzo.cineffi.exception.message.ErrorMsg;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResponseDTO<T> {
