@@ -90,10 +90,8 @@ public class JWTUtil {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 
             return !Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getExpiration().before(new Date());
-        } catch (ExpiredJwtException e) {
-            return false;
         } catch (Exception e) {
-            throw new CustomException(ErrorMsg.Invalid_token);
+            return false;
         }
     }
     public static String resolveAccessToken(HttpServletRequest req) throws RuntimeException {

@@ -148,7 +148,7 @@ public class MovieService {
                 .stream()
                 .map(am -> CrewListDTO.builder()
                         .name(am.getActor().getName())
-                        .profile(am.getActor().getProfileImage())
+                        .profile(encodeImage(am.getActor().getProfileImage()))
                         .job("Actor")
                         .character(am.getCharacter())
                         .build())
@@ -158,7 +158,7 @@ public class MovieService {
         if (movie != null && movie.getDirector() != null) {
             actors.add(CrewListDTO.builder()
                     .name(movie.getDirector().getName())
-                    .profile(movie.getDirector().getProfileImage())
+                    .profile(encodeImage(movie.getDirector().getProfileImage()))
                     .job("Director")
                     .character("")
                     .build());

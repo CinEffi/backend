@@ -59,6 +59,7 @@ public class FollowService {
 
 
     // 유저 언팔로우
+    @Transactional
     public void unfollowUser(Long followingUserId, Long followerUserId) {
         Optional<User> followerUser = userRepository.findById(followerUserId);
         if (followerUser.isEmpty()) throw new CustomException(EMPTY_USER);
@@ -166,7 +167,7 @@ public class FollowService {
 
     private void decreaseUserFollowNum(Long followingUserId, Long followerUserId) {
         // 팔로우 하는 사람의 팔로잉 숫자를 -1
-        uanRepository.findByUserId(followerUserId).ifPresent( uan -> uan.subFollowingsNum() );
+        uanRepository.findByUserId(followerUserId).ifPresent(uan -> uan.subFollowingsNum());
 
         // 팔로우 당하는 사람의 팔로워 숫자를 -1
         uanRepository.findByUserId(followingUserId).ifPresent(

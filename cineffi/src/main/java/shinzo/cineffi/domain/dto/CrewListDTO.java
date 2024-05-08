@@ -9,7 +9,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class CrewListDTO {
     private String name;
-    private byte[] profile;
+    private String profile;
     private String job;
     private String character;
 }
