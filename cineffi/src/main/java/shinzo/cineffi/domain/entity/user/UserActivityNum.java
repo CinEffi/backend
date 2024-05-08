@@ -35,8 +35,8 @@ public class UserActivityNum {
     private Integer followersNum;
 
     public void addCollectionNum() { this.collectionNum ++; }
-    public void addScrapNum() { this.scrapNum ++; }
     public void subCollectionNum() { this.collectionNum --; }
+    public void addScrapNum() { this.scrapNum ++; }
     public void subScrapNum() { this.scrapNum --; }
 
     public void addFollowingsNum() { this.followingsNum++; }

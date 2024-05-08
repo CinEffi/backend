@@ -47,7 +47,7 @@ public class MovieService {
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(movie.getPoster())
+                    .poster(encodeImage(movie.getPoster()))
                     .build();
             result.add(dto);
         }
@@ -67,7 +67,7 @@ public class MovieService {
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(movie.getPoster())
+                    .poster(encodeImage(movie.getPoster()))
                     .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                     .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                     .build();
@@ -99,7 +99,7 @@ public class MovieService {
                         .movieId(movie.getId())
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(movie.getPoster())
+                        .poster(encodeImage(movie.getPoster()))
                         .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                         .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                         .build())
@@ -124,7 +124,7 @@ public class MovieService {
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
                 .releaseDate(movie.getReleaseDate())
-                .poster(movie.getPoster())
+                .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
                 .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Enum::name).collect(Collectors.toList()))
                 .build();
@@ -148,7 +148,7 @@ public class MovieService {
                 .stream()
                 .map(am -> CrewListDTO.builder()
                         .name(am.getActor().getName())
-                        .profile(am.getActor().getProfileImage())
+                        .profile(encodeImage(am.getActor().getProfileImage()))
                         .job("Actor")
                         .character(am.getCharacter())
                         .build())
@@ -158,7 +158,7 @@ public class MovieService {
         if (movie != null && movie.getDirector() != null) {
             actors.add(CrewListDTO.builder()
                     .name(movie.getDirector().getName())
-                    .profile(movie.getDirector().getProfileImage())
+                    .profile(encodeImage(movie.getDirector().getProfileImage()))
                     .job("Director")
                     .character("")
                     .build());
@@ -175,6 +175,10 @@ public class MovieService {
                 .orElse(null);
 
 
+    }
+
+    public String encodeImage(byte[] imageData) {
+        return Base64.getEncoder().encodeToString(imageData);
     }
 
 }
