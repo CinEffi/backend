@@ -85,6 +85,7 @@ public class UserAnalysis {
     private Integer genreLabelIndex;
 
     @OneToMany(mappedBy = "userAnalysis")
+    @OrderBy("id ASC")
     private List<GenreRecord> genreRecordList;
 
     @PrePersist
