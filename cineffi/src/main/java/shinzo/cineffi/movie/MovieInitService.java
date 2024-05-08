@@ -12,6 +12,7 @@ import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.movie.repository.*;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -27,6 +28,15 @@ public class MovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
+
+    @Value("${tmdb.start-year}")
+    private int startYear;
+    @Value("${tmdb.end-year}")
+    private int endYear;
+    @Value("${tmdb.start-month}")
+    private int startMonth;
+    @Value("${tmdb.end-month}")
+    private int endMonth;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -48,20 +58,17 @@ public class MovieInitService {
             .build();
 
     public void fetchTMDBIdsByDate() {
-        int startYear = 2024; // 예를 들어 2000년부터 시작
-        int endYear = LocalDate.now().getYear(); // 현재 연도까지
-
         for (int year = startYear; year <= endYear; year++) {
-            for (int month = 4; month <= 4; month++) {
-                String startDate = String.format("%d-%02d-25", year, 4);
-//                String endDate = String.format("%d-%02d-%02d", year, month, YearMonth.of(year, month).lengthOfMonth());
-                String endDate = String.format("%d-%02d-30", year, 4); //테스트
+            for (int month = startMonth; month <= endMonth; month++) {
+                String startDate = String.format("%d-%02d-01", year, month);
+                String endDate = String.format("$d-%02d-2d", year, month, YearMonth.of(year, month).lengthOfMonth());
 
                 List<Movie> movies = requestTMDBIds(startDate, endDate);
                 initMovieData(movies);
             }
         }
     }
+
 
     private List<Movie> requestTMDBIds(String startDate, String endDate) {
         return Flux.range(1, MAX_PAGES) // 최대 페이지 수까지 Flux 생성
