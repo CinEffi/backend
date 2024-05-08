@@ -13,16 +13,10 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.user.User;
-import shinzo.cineffi.domain.entity.user.UserAccount;
-import shinzo.cineffi.domain.entity.user.UserAnalysis;
+import shinzo.cineffi.domain.entity.user.*;
 import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
-import shinzo.cineffi.domain.entity.user.UserActivityNum;
-import shinzo.cineffi.user.repository.UserAccountRepository;
-import shinzo.cineffi.user.repository.UserActivityNumRepository;
-import shinzo.cineffi.user.repository.UserAnalysisRepository;
-import shinzo.cineffi.user.repository.UserRepository;
+import shinzo.cineffi.user.repository.*;
 
 import java.util.Optional;
 import java.util.Random;
@@ -39,6 +33,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final UserActivityNumRepository userActivityNumRepository;
     private final UserAnalysisRepository userAnalysisRepository;
+    private final GenreRecordRepository genreRecordRepository;
+
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_url}")
@@ -270,7 +266,17 @@ public class AuthService {
                 .user(user)
                 .build();
         userActivityNumRepository.save(userActivityNum);
-        userAnalysisRepository.save(UserAnalysis.builder().user(user).build());
+        UserAnalysis userAnalysis = UserAnalysis.builder().user(user).build();
+        userAnalysisRepository.save(userAnalysis);
+
+        for (int i = 0; i < 19; i++) {
+            GenreRecord genreRecord = GenreRecord.builder()
+                    .userAnalysis(userAnalysis)
+                    .genreScore(0)
+                    .build();
+            genreRecordRepository.save(genreRecord);
+        }
+
     }
 
     public boolean dupMail(EmailRequestDTO request) {

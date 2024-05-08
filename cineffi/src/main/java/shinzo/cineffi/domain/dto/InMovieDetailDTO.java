@@ -15,7 +15,7 @@ public class InMovieDetailDTO {
     private Long movieId;
     private String movieTitle;
     private LocalDate releaseDate;
-    private byte[] poster;
+    private String poster;
     private String originCountry;
     private List<String> genre;
 }
