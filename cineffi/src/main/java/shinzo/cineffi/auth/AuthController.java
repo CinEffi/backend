@@ -20,6 +20,7 @@ import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
 import static shinzo.cineffi.exception.message.ErrorMsg.UNAUTHORIZED_MEMBER;
 
 
+
 @RequestMapping("/api")
 @RestController
 @RequiredArgsConstructor
