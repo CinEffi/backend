@@ -7,6 +7,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.reactive.result.view.RedirectView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import shinzo.cineffi.domain.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,15 +27,34 @@ import static shinzo.cineffi.exception.message.ErrorMsg.*;
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/auth/login/kakao")
-    public ResponseEntity<ResponseDTO<Object>> loginByKakao(@RequestParam final String code) throws JsonProcessingException {
+    @GetMapping("/auth/login/kakao")
+    public RedirectView loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) {
+
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
 
         //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+        LoginResponseDTO userInfo = authService.userInfo(userId);
+        ResponseEntity<ResponseDTO<Object>> result = null;
 
-        return authLogin(userId);
+        try {
+            result = authLogin(userId);
+            ResponseDTO<Object> obj = result.getBody().toBuilder()
+                    .message(SuccessMsg.SUCCESS.getDetail())
+                    .result(userInfo)
+                    .build();
+            result.ok(obj);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        ResponseEntity<ResponseDTO<Object>> a = result;
+
+        redirectAttributes.addFlashAttribute("result", result);
+
+        // Redirect to another page
+        return new RedirectView("http://localhost:3000");
     }
 
 
