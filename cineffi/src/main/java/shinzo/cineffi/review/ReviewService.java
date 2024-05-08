@@ -68,7 +68,9 @@ public class ReviewService {
                     .content(review.getContent())
                     .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
                     .likeNumber(review.getLikeNum())
-                    .isLiked(loginUser == null ? false : reviewLikeRepository.findByReviewAndUser(review, loginUser) != null)
+                    .isLiked(loginUser == null ? false : reviewLikeRepository.findByReviewAndUser(review, loginUser) != null) // 로그인 안했으면 false, 로그인 했으면 유저가 평론에 좋아요 눌렀는지 아닌지
+                    .isMyReview(loginUser == null ? false : !reviewRepository.findByIdAndUserId(review.getId(), loginUserId).isEmpty())
+                    // 로그인 안했으면 false/ 로그인 했으면 로그인 유저와 평론으로 조회했을 비어있지 않으면 true
                     .build());
         });
         return GetCollectionRes.builder().totalPageNum(totalPageNum).collection(reviewList).build();
