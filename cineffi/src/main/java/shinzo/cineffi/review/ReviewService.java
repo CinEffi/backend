@@ -94,10 +94,7 @@ public class ReviewService {
         // 유저 통계 갱신하기
         for (MovieGenre genre : movie.getGenreList())
             user.getUserAnalysis().updateGenreTendency(genre.getGenre(), UserAnalysis.reviewPoint);
-
         user.getUserActivityNum().addCollectionNum();
-        // 여기서 addCollectionNum() 한다고 collectionNum 갱신 안될것 같은데요. 근데 될것도 같습니다.. 아마 analysis도 갱신될것같네
-        // 다 되면 이 주석 지워버리자..
         userRepository.save(user);
         return review.getId();
     }
