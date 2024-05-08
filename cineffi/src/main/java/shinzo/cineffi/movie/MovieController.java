@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 import shinzo.cineffi.domain.dto.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import shinzo.cineffi.domain.dto.MovieDetailDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
+import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
 import static shinzo.cineffi.auth.AuthService.getLoginUserId;
@@ -28,22 +30,30 @@ public class MovieController {
     private final MovieService movieService;
     private final ScrapService scrapService;
     private final MovieInitService movieInitService;
+    private final NewMovieInitService newMovieInitService;
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {
-        long beforeTime = System.currentTimeMillis(); //코드 실행 전에 시간 받아오기
+//        long beforeTime = System.currentTimeMillis(); //코드 실행 전에 시간 받아오기
+//
+//        movieInitService.fetchTMDBIdsByDate();
+//
+//        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+//        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
+//
+//        return ResponseEntity.ok(
+//                ResponseDTO.builder()
+//                        .message(SuccessMsg.SUCCESS.getDetail())
+//                        .result(secDiffTime)
+//                        .build()
+//        );
 
-        movieInitService.fetchTMDBIdsByDate();
-
-        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
-
+        newMovieInitService.initTMDBIdsByDate();
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(secDiffTime)
-                        .build()
-        );
+                        .result("")
+                        .build());
     }
 
     @GetMapping("/upcoming")
