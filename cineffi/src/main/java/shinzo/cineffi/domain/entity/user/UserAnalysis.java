@@ -64,14 +64,19 @@ public class UserAnalysis {
     @ColumnDefault("0")
     private Integer genreLabelIndex = 0;
 
-    @ElementCollection
-    @Column(name = "genre_record", columnDefinition = "INTEGER[]")
-    private List<Integer> genreRecord;
+    @OneToMany(mappedBy = "userAnalysis")
+    private List<GenreRecord> genreRecordList;
 
     @PrePersist
     private void initializeGenreRecord() {
-        if (this.genreRecord == null) this.genreRecord = new ArrayList<>(Arrays.asList(new Integer[19]));
+        if (genreRecordList == null) {
+            genreRecordList = new ArrayList<>();
+            for (int i = 0; i < 19; i++) {
+                genreRecordList.add(GenreRecord.builder().userAnalysis(this).genreScore(0).build());
+            }
+        }
     }
+
     // 평점 5개 이상부터 생깁니다.
     public void updateScoreTendency(Float deltaScore, Integer deltaCount) {
         this.scoreSum += deltaScore;
@@ -81,12 +86,15 @@ public class UserAnalysis {
 
     public void updateGenreTendency(Genre genre, int score) {
         int challenger = genre.ordinal();
-        int newRecord = this.genreRecord.get(challenger) + score;
-        this.genreRecord.set(challenger, newRecord);
+        GenreRecord genreRecord = this.genreRecordList.get(challenger);
+        int newRecord = genreRecord.getGenreScore() + score;
+        genreRecord.setGenreScore(newRecord);
+
+        this.genreRecordList.set(challenger, genreRecord);
 
         int champion = this.genreLabelIndex;
         if (champion != challenger) {
-            int oldRecord = this.genreRecord.get(champion);
+            int oldRecord = this.genreRecordList.get(champion).getGenreScore();
             if (oldRecord < newRecord)
                 this.genreLabelIndex = challenger;
         }
@@ -97,6 +105,7 @@ public class UserAnalysis {
     }
 
     public String getGenreTendency() {
-        return 10 < genreRecord.get(this.genreLabelIndex) ? null : genreTendency[this.genreLabelIndex];
+        int topScore = genreRecordList.get(this.genreLabelIndex).getGenreScore();
+        return 10 < topScore ? genreTendency[this.genreLabelIndex] : null;
     }
 }
