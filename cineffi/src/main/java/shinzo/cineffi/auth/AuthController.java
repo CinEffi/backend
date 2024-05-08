@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.view.RedirectView;
 import shinzo.cineffi.domain.dto.*;
 
 import org.springframework.http.ResponseEntity;
@@ -24,15 +25,16 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/login/kakao")
-    public ResponseEntity<ResponseDTO<Object>> loginByKakao(@RequestParam final String code) throws JsonProcessingException {
+    @GetMapping("/login/kakao")
+    public RedirectView loginByKakao(@RequestParam final String code) throws JsonProcessingException {
         //인가코드로 카카오 토큰 발급
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
-
+        System.out.println("kakao token check!!");
         //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
-
-        return authLogin(userId);
+        System.out.println("email get!!!");
+        authLogin(userId);
+        return new RedirectView("http://localhost:3000");
     }
 
     @PostMapping("/signup")
@@ -130,10 +132,10 @@ public class AuthController {
                     .build();
             return ResponseEntity.ok(responseDTO);
         }else{
-            return ResponseEntity.status(ErrorMsg.DUPLICATE_EMAIL.getHttpStatus())
+            return ResponseEntity.status(ErrorMsg.DUPLICATE_NICKNAME.getHttpStatus())
                     .body(ResponseDTO.<String>builder()
                             .isSuccess(false)
-                            .message(ErrorMsg.DUPLICATE_EMAIL.getDetail())
+                            .message(ErrorMsg.DUPLICATE_NICKNAME.getDetail())
                             .build());
         }
 
