@@ -170,7 +170,7 @@ public class ReviewService {
     public ReviewByMovieListDTO lookupReviewByMovie(Long movieId, Pageable pageable, Long myUserId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(
                 () -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
-        Page<Review> reviewPage = reviewRepository.findByMovieAndIsDeleteFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsDeleteFalseOrderById(movie, pageable);
         List<ReviewByMovieDTO> reviewLookupDTOList = new ArrayList<>();
         for (Review review : reviewPage) {
             User user = review.getUser();
@@ -187,7 +187,7 @@ public class ReviewService {
                     .content(review.getContent())
                     .score(score != null ? score.getScore() : null)
                     .likeNumber(review.getLikeNum())
-                    .createdAt(review.getCreatedAt())
+                    .createdAt(review.getCreatedAt().toLocalDate())
                     .isLiked(myUserId != null ? reviewLikeRepository.findByReviewAndUserId(review, myUserId) != null : false)
                     .build();
             reviewLookupDTOList.add(reviewByMovieDTO);
@@ -221,7 +221,7 @@ public class ReviewService {
                     .reviewWriterNickname(user.getNickname())
                     .reviewContent(review.getContent())
                     .likeNumber(review.getLikeNum())
-                    .createdAt(review.getCreatedAt()).build();
+                    .createdAt(review.getCreatedAt().toLocalDate()).build();
             reviewLookupDTOList.add(reviewLookupDTO);
         }
         return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)
