@@ -70,8 +70,8 @@ public class MovieService {
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
                     .poster(baseImgStr + encodeImage(movie.getPoster()))
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
-                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                    .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
                     .build();
             dtoList.add(dto);
         }
@@ -102,8 +102,8 @@ public class MovieService {
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
                         .poster(baseImgStr + encodeImage(movie.getPoster()))
-                        .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
-                        .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                        .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
+                        .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
                         .build())
                 .collect(Collectors.toList());
 
@@ -136,9 +136,9 @@ public class MovieService {
                 .movie(inMovieDetail)
                 .runtime(movie.getRuntime())
                 .introduction(movie.getIntroduction())
-                .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
-                .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
-                .allAvgScore(movie.getAvgScore().getAllAvgScore())
+                .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
+                .allAvgScore(movie.getAvgScore().getAllScoreSum())
                 .myScore(myScore)
                 .isScrap(isScrap)
                 .crewList(crewList)
