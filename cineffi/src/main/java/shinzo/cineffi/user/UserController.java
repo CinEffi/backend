@@ -24,6 +24,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 import java.io.IOException;
 import java.util.Optional;
 
+import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 import static shinzo.cineffi.exception.message.ErrorMsg.EMPTY_USER;
 import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
 
@@ -46,7 +47,7 @@ public class UserController {
     @GetMapping("/api/users/{user-id}")
     public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") String userId) {
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
@@ -61,7 +62,7 @@ public class UserController {
      */
     @GetMapping("/api/users/profile")
     public ResponseEntity<ResponseDTO<?>> getMyProfile() {
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -78,7 +79,7 @@ public class UserController {
      */
     @PostMapping("/api/users/profile/edit")
     public ResponseEntity<ResponseDTO<?>> editMyProfile(MultipartHttpServletRequest request) {
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
 
         String nickname = request.getParameter("nickname");
@@ -103,7 +104,7 @@ public class UserController {
     public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") String userId,
                                                         @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
@@ -122,7 +123,7 @@ public class UserController {
                                                        @PageableDefault(page = 0, size=10) Pageable pageable) {
 
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -139,7 +140,7 @@ public class UserController {
      */
     @PostMapping("/api/users/report")
     public ResponseEntity<ResponseDTO<?>> postReport(MultipartHttpServletRequest request) {
-        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
 
         Long reportedUserId = Long.parseLong(request.getParameter("userId"));

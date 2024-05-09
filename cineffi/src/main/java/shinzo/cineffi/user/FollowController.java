@@ -11,6 +11,8 @@ import shinzo.cineffi.domain.dto.FollowReq;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
+import static shinzo.cineffi.auth.AuthService.getLoginUserId;
+
 @RequiredArgsConstructor
 @RestController
 public class FollowController {
@@ -27,7 +29,7 @@ public class FollowController {
 
         String EncryptTargetUserId = followReq.getUserId();
         Long targetUserId = encryptUtil.LongDecrypt(EncryptTargetUserId);
-        Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         followService.followUser(targetUserId, loginUserId);
 
@@ -47,7 +49,7 @@ public class FollowController {
     public ResponseEntity<ResponseDTO<?>> deleteFollow(@RequestBody FollowReq followReq) {
         String EncryptTargetUserId = followReq.getUserId();
         Long targetUserId = encryptUtil.LongDecrypt(EncryptTargetUserId);
-        Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         followService.unfollowUser(targetUserId, loginUserId);
 
@@ -66,7 +68,7 @@ public class FollowController {
     @GetMapping("/api/users/{user-id}/followers")
     public ResponseEntity<ResponseDTO<?>> getFollowerList(@PathVariable("user-id") String targetUserId,
                                                           @PageableDefault(page = 0, size=10) Pageable pageable) {
-        Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString()); // 쿠키가 없으면 null (필터에서 처리 필요)
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         Long DecryptTargetUserId = encryptUtil.LongDecrypt(targetUserId);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -84,7 +86,7 @@ public class FollowController {
     @GetMapping("/api/users/{user-id}/followings")
     public ResponseEntity<ResponseDTO<?>> getFollowingList(@PathVariable("user-id") String targetUserId,
                                                            @PageableDefault(page = 0, size=10) Pageable pageable) {
-        Long loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         Long DecryptTargetUserId = encryptUtil.LongDecrypt(targetUserId);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
