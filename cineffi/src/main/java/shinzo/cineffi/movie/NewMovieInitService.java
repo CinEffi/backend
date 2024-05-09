@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.movie.repository.*;
@@ -15,14 +14,12 @@ import shinzo.cineffi.movie.repository.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static shinzo.cineffi.domain.enums.ImageType.POSTER;
 
@@ -132,7 +129,7 @@ public class NewMovieInitService {
 
     private Optional<Movie> requestMovieCode(Movie TMDBMovie){
         Movie result = null;
-        String TMDBTitle = BlankStrMakeURLStr(TMDBMovie.getEngTitle());
+        String TMDBTitle = makeURLStr(TMDBMovie.getEngTitle());
 
         try {
             URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
@@ -149,11 +146,12 @@ public class NewMovieInitService {
                 if (movieMapList.size() != 0) {
                     for (Map<String, Object> movieMap : movieMapList) {
                         Movie kobisMovie = kobisMapToMovie(movieMap);
+                        Movie movie = TMDBMovie.toBuilder().title((String) movieMap.get("movieNm")).kobisCode((String) movieMap.get("movieCd")).build();
 
-                        if (movieMapList.size() == 1 ||
-                                kobisMovie.getTitle().equals(TMDBMovie.getTitle()) ||
-                                kobisMovie.getReleaseDate() == TMDBMovie.getReleaseDate()) {
-                            result = TMDBMovie.toBuilder().title((String) movieMap.get("movieNm")).kobisCode((String) movieMap.get("movieCd")).build();
+                        if(makeNoBlankStr(kobisMovie.getEngTitle().toLowerCase(Locale.ROOT)).equals(makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase()) ||
+                                makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getTitle())) ||
+                                TMDBMovie.getReleaseDate() == kobisMovie.getReleaseDate()){
+                            result = movie;
                         }
                     }
                 }
@@ -166,11 +164,18 @@ public class NewMovieInitService {
         return Optional.ofNullable(result);
     }
 
-    private String BlankStrMakeURLStr(String blankStr){
+    private String makeURLStr(String blankStr){
         String result = "";
         for (int i = 0; i < blankStr.length(); i++) {
             if(blankStr.charAt(i) != ' ') result += blankStr.charAt(i);
             else result += "%20";
+        }
+        return result;
+    }
+    private String makeNoBlankStr(String blankStr){
+        String result = "";
+        for (int i = 0; i < blankStr.length(); i++) {
+            if(blankStr.charAt(i) != ' ') result += blankStr.charAt(i);
         }
         return result;
     }
@@ -183,13 +188,13 @@ public class NewMovieInitService {
     //요청으로 받은 데이터를 우리 영화 데이터로
     private Movie TMDBMapToMovie(Map<String, Object> map) {
         Integer id = (Integer) map.get("id");
-        String title = (String) map.get("title");
+        String engTitle = (String) map.get("title");
         byte[] poster = requestImg((String) map.get("poster"), POSTER);
         LocalDate releaseDate = LocalDate.parse((String) map.get("release_date"));
 
         return Movie.builder()
                 .tmdbId(id)
-                .engTitle(title)
+                .engTitle(engTitle)
                 .poster(poster)
                 .releaseDate(releaseDate).build();
 
@@ -197,11 +202,13 @@ public class NewMovieInitService {
     private Movie kobisMapToMovie(Map<String, Object> map) {
         String movieCode = (String) map.get("movieCd");
         String title = (String) map.get("movieNm");
+        String engtitle = (String) map.get("movieNmEn");
         LocalDate releaseDate = LocalDate.parse((String) map.get("openDt"), KOBIS_DATE_FORMATTER);
 
         return Movie.builder()
                 .kobisCode(movieCode)
                 .title(title)
+                .engTitle(engtitle)
                 .releaseDate(releaseDate).build();
 
     }
