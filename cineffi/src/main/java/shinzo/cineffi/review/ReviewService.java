@@ -50,17 +50,9 @@ public class ReviewService {
         int totalPageNum = userCollection.getTotalPages();
 
         List<ReviewDto> reviewList = new ArrayList<>();
-        User loginUser = loginUserId != null ? userRepository.findById(loginUserId).orElse(null) : null;
         userCollection.forEach(review -> {
-
             // 평론에서 영화 객체 따로 빼놓기
             Movie movie = review.getMovie();
-
-            // 해당 유저가 해당 영화에 준 평점 불러오기
-            Float userScore = null;
-            Score foundUserScore = scoreRepository.findByMovieAndUser(movie, review.getUser());
-            if (foundUserScore != null)
-                userScore = foundUserScore.getScore();
 
             // Dto 꾸리기
             reviewList.add(ReviewDto.builder()
@@ -69,14 +61,18 @@ public class ReviewService {
                     .movieTitle(movie.getTitle())
                     .poster(decodeImage(movie.getPoster()))
                     .content(review.getContent())
-                    .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
+                    .userScore(scoreRepository.findByMovieAndUser(movie, review.getUser()) == null ? null : scoreRepository.findByMovieAndUser(movie, review.getUser()).getScore()) // 타겟 유저가 해당 영화에 준 평점
                     .likeNumber(review.getLikeNum())
-                    .isLiked(loginUser == null ? false : reviewLikeRepository.findByReviewAndUser(review, loginUser) != null) // 로그인 안했으면 false, 로그인 했으면 유저가 평론에 좋아요 눌렀는지 아닌지
-                    .isMyReview(loginUser == null ? false : !reviewRepository.findByIdAndUserId(review.getId(), loginUserId).isEmpty())
-                    // 로그인 안했으면 false/ 로그인 했으면 로그인 유저와 평론으로 조회했을 비어있지 않으면 true
+                    .isLiked(loginUserId == null ? false : reviewLikeRepository.findByReviewAndUserId(review, loginUserId) != null)
+                    // 로그인 안했으면 false, 로그인 했으면 유저가 평론에 좋아요 눌렀는지 아닌지
+                    .isMyReview(loginUserId == null ? false : !reviewRepository.findByIdAndUserId(review.getId(), loginUserId).isEmpty())
+                    // 로그인 안했으면 false, 로그인 했으면 로그인 유저가 작성한 평론이 해당 평론이라면 true
                     .build());
         });
-        return GetCollectionRes.builder().totalPageNum(totalPageNum).collection(reviewList).build();
+        return GetCollectionRes.builder()
+                .totalPageNum(totalPageNum)
+                .collection(reviewList)
+                .build();
     }
 
     //평론 작성
