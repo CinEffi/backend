@@ -46,6 +46,9 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
+        // 존재하는 유저인지 검증
+        if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
+
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
         int totalPageNum = userCollection.getTotalPages();
 
