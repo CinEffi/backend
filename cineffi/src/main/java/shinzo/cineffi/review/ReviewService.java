@@ -42,6 +42,8 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
     private final EncryptUtil encryptUtil;
+
+
     @Transactional(readOnly = true)
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);

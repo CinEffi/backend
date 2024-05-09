@@ -84,6 +84,8 @@ public class FollowService {
         List<FollowDto> FollowerResList = new ArrayList<>();
 
         Page<Follow> followList = followRepository.findAllByFollowingId(targetUserId, pageable);
+        if (!userRepository.existsById(targetUserId)) throw new CustomException(EMPTY_USER); // 존재하지 않으면 에러 메시지 던지기
+
         for (Follow f : followList) {
             User follower = f.getFollower();
             Boolean isFollowed = Boolean.FALSE;
@@ -120,6 +122,7 @@ public class FollowService {
         List<FollowDto> FollowingResList = new ArrayList<>();
 
         Page<Follow> followList = followRepository.findAllByFollowerId(targetUserId, pageable);
+        if (!userRepository.existsById(targetUserId)) throw new CustomException(EMPTY_USER); // 존재하지 않으면 에러 메시지 던지기
 
         for (Follow f : followList) {
             User following = f.getFollowing();
