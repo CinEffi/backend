@@ -28,7 +28,6 @@ import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 public class MovieController {
     private final MovieService movieService;
     private final ScrapService scrapService;
-    private final EncryptUtil encryptUtil;
     private final MovieInitService movieInitService;
 
     @GetMapping("/init")
@@ -107,9 +106,8 @@ public class MovieController {
 
 
     //영화 상세정보 조회
-    @GetMapping("/{encryptedMovieId}")
+    @GetMapping("/{movieId}")
     public ResponseEntity<ResponseDTO<MovieDetailDTO>> getMovieDetails(@PathVariable Long movieId) {
-
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         MovieDetailDTO movieDetail = movieService.findMovieDetails(movieId, loginUserId);
 
@@ -142,14 +140,4 @@ public class MovieController {
     }
 
 
-    //테스트용 숫자를 넣으면 -> 암호회된 id로 만들어주는 메서드
-//    @GetMapping("/encrypt-test/{id}")
-//    public ResponseEntity<ResponseDTO> encryptTestId(@PathVariable("id") Long id) {
-//
-//        String encryptedId = encryptUtil.encrypt(String.valueOf(id));
-//        return ResponseEntity.ok(ResponseDTO.builder()
-//                .message(SuccessMsg.SUCCESS.getDetail())
-//                .result(encryptedId)
-//                .build());
-//    }
 }
