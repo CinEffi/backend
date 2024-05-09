@@ -99,7 +99,7 @@ public class NewMovieInitService {
         try {
             for (int page = 1; page <= maxPages; page++) {
                 URL url = new URL(TMDB_BASEURL + TMDB_PATH_MOVIE + "/discover/movie" +
-                        "?api_key=" + TMDB_API_KEY + "&language=ko-KR&include_adult=false" +
+                        "?api_key=" + TMDB_API_KEY + "&language=en-US&include_adult=false" +
                         "&page=" + page + "&release_date.gte=" + startDate + "&release_date.lte=" + endDate +
                         "&with_runtime.gte=40&region=KR");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -118,6 +118,7 @@ public class NewMovieInitService {
                         Movie movie = TMDBMapToMovie(result);
                         if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
                             movies.add(movie);
+                            movieRepo.save(movie);
                         }
                     }
                 }
@@ -131,7 +132,7 @@ public class NewMovieInitService {
 
     private Optional<Movie> requestMovieCode(Movie TMDBMovie){
         Movie result = null;
-        String TMDBTitle = BlankStrMakeURLStr(TMDBMovie.getTitle());
+        String TMDBTitle = BlankStrMakeURLStr(TMDBMovie.getEngTitle());
 
         try {
             URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
@@ -152,7 +153,7 @@ public class NewMovieInitService {
                         if (movieMapList.size() == 1 ||
                                 kobisMovie.getTitle().equals(TMDBMovie.getTitle()) ||
                                 kobisMovie.getReleaseDate() == TMDBMovie.getReleaseDate()) {
-                            result = TMDBMovie.toBuilder().kobisCode((String) movieMap.get("movieCd")).build();
+                            result = TMDBMovie.toBuilder().title((String) movieMap.get("movieNm")).kobisCode((String) movieMap.get("movieCd")).build();
                         }
                     }
                 }
@@ -188,7 +189,7 @@ public class NewMovieInitService {
 
         return Movie.builder()
                 .tmdbId(id)
-                .title(title)
+                .engTitle(title)
                 .poster(poster)
                 .releaseDate(releaseDate).build();
 
