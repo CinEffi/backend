@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.domain.dto.GetMyPageRes;
 import shinzo.cineffi.domain.dto.GetProfileRes;
 import shinzo.cineffi.domain.entity.user.Follow;
@@ -30,9 +31,10 @@ public class UserService {
     private UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
-
+    private final EncryptUtil encryptUtil;
 
     public GetMyPageRes getMyPage(Long userId, Long loginUserId) {
+
         Optional<User> foundUser = userRepository.findById(userId);
         if (foundUser.isEmpty()) throw new CustomException(EMPTY_USER);
         User targetUser = foundUser.get();
@@ -48,7 +50,7 @@ public class UserService {
         }
 
         GetMyPageRes getMyPageRes = GetMyPageRes.builder()
-                .userId(targetUser.getId())
+                .userId(encryptUtil.LongEncrypt(targetUser.getId()))
                 .nickname(targetUser.getNickname())
                 .userProfileImage(decodeImage(targetUser.getProfileImage()))
                 .exp(targetUser.getExp())

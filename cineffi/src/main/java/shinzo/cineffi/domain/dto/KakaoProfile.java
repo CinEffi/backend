@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonNaming(value = PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class KakaoProfile {
-    public Long id;
+    public String id;
     public String connectedAt;
     public KakaoAccount kakaoAccount;
 

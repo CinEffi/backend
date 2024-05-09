@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.domain.dto.GetScrapRes;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.movie.MovieGenre;
@@ -34,10 +35,11 @@ public class ScrapService {
     private final ScoreRepository scoreRepository;
     private final UserRepository userRepository;
     private final MovieRepository movieRepository;
-
+    private final EncryptUtil encryptUtil;
     @Transactional(readOnly = true)
-    public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
-        Page<Scrap> userScrapList = scrapRepository.findAllByUserId(userId, pageable);
+    public GetScrapRes getUserScrapList(String userId, Long loginUserId, Pageable pageable) {
+        Long DecryptUserId = encryptUtil.LongDecrypt(userId);
+        Page<Scrap> userScrapList = scrapRepository.findAllByUserId(DecryptUserId, pageable);
         List<ScrapDto> scrapList = new ArrayList<>();
 
         int totalPageNum = userScrapList.getTotalPages();
