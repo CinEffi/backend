@@ -183,7 +183,7 @@ public class InitService {
         for (long i = 1; i < 11; i++) {
             BoxOfficeMovie boxOfficeMovie = boxOfficeMovieRepository.save(BoxOfficeMovie.builder()
                             .id(i)
-                            .title("박스오피스 랭킹" + i)
+                            .title("랭킹" + i)
                             .rank(String.valueOf(i))
                             .targetDt(String.valueOf(LocalDate.now()))
                             .releaseDate(LocalDate.now())
