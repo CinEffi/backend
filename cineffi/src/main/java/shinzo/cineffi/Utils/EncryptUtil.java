@@ -34,7 +34,7 @@ public class EncryptUtil { //URL 암호화 복호화
             cipher.init(Cipher.ENCRYPT_MODE, sKeySpec, ivParameterSpec);
 
             byte[] encrypted = cipher.doFinal(plainText.getBytes());
-            return Base64.getEncoder().encodeToString(encrypted);
+            return Base64.getUrlEncoder().encodeToString(encrypted);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -53,7 +53,7 @@ public class EncryptUtil { //URL 암호화 복호화
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(Cipher.DECRYPT_MODE, sKeySpec, ivParameterSpec);
 
-            byte[] original = cipher.doFinal(Base64.getDecoder().decode(encrypted));
+            byte[] original = cipher.doFinal(Base64.getUrlDecoder().decode(encrypted));
             return Long.parseLong(new String(original));
         } catch (Exception ex) {
             ex.printStackTrace();
