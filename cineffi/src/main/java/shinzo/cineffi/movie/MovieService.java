@@ -170,11 +170,8 @@ public class MovieService {
     //내가 준 영화평점 (영화 상세페이지 조회)
     @Transactional(readOnly = true)
     public Float getUserScoreForMovie(Long movieId, Long userId) {
-        return scoreRepo.findByMovieIdAndUserId(movieId, userId)
-                .map(Score::getScore)
-                .orElse(null);
-
-
+        Score score = scoreRepo.findByMovieIdAndUserId(movieId, userId);
+        return (score != null) ? score.getScore() : null;
     }
 
     public String encodeImage(byte[] imageData) {
