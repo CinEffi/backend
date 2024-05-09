@@ -1,4 +1,4 @@
-package shinzo.cineffi.config;
+package shinzo.cineffi.Utils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -15,8 +14,7 @@ public class EncryptUtil { //URL 암호화 복호화
 
     @Value("${app.encryption.key}")
     private String key;
-
-    private static final String INIT_VECTOR = "encryptionIntVec"; //초기화 벡터는 뭔지 물어보기
+    private static final String INIT_VECTOR = "encryptionIntVec";
 
     //값을 암호화하는 메서드
     public String encrypt(String value) {
