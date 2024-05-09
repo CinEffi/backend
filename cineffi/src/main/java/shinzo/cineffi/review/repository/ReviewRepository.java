@@ -24,4 +24,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findAllByIsDeleteFalseOrderByLikeNumDesc(Pageable pageable);
 
     Optional<Object> findByIdAndUserId(Long reviewId, Long userId);
+    Integer countByMovieAndIsDeleteFalse(Movie movie);
 }

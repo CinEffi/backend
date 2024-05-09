@@ -194,6 +194,7 @@ public class ReviewService {
         }
         return ReviewByMovieListDTO.builder()
                 .movieId(movie.getId())
+                .totalReviewNum(reviewRepository.countByMovieAndIsDeleteFalse(movie))
                 .totalPageNum(reviewPage.getTotalPages())
                 .reviews(reviewLookupDTOList).build();
     }
