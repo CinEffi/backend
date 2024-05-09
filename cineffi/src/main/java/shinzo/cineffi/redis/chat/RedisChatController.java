@@ -24,21 +24,22 @@ public class RedisChatController {
         redisChatService.joinChatroom(redisChatroom.getId()
                 , createRedisChatroomDTO.getOwnerId()
                 , createRedisChatroomDTO.getOwnerNickname());
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
-                .message(SuccessMsg.SUCCESS.getDetail())
-                .result(RedisChatService.parseObjectToJSON(redisChatroom))
-                .build();
-        return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(redisChatroom)
+                        .build()
+        );
     }
 
     @GetMapping("/listAll")
     public ResponseEntity<ResponseDTO<?>> listChatroom() {
         List<RedisChatroom> redisChatroomList = redisChatService.listChatroom();
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+        return ResponseEntity.ok(ResponseDTO.builder()
                 .message(SuccessMsg.SUCCESS.getDetail())
-                .result(RedisChatService.parseObjectToJSON(redisChatroomList))
-                .build();
-        return ResponseEntity.ok(responseDTO);
+                .result(redisChatroomList)
+                .build()
+        );
     }
 
 
@@ -48,46 +49,36 @@ public class RedisChatController {
             @RequestBody JoinRedisChatroomDTO joinRedisChatroomDTO) {
         Long userId = joinRedisChatroomDTO.getUserId();
         String nickname = joinRedisChatroomDTO.getNickname();
-        RedisUserChat redisUserChat = redisChatService.joinChatroom(chatroomId, userId, nickname);
-        ResponseDTO<String> responseDto = ResponseDTO.<String>builder()
+        return ResponseEntity.ok(ResponseDTO.builder()
                 .message(SuccessMsg.SUCCESS.getDetail())
-                .result(RedisChatService.parseObjectToJSON(redisUserChat))
-                .build();
-        return ResponseEntity.ok(responseDto);
+                .result(redisChatService.joinChatroom(chatroomId, userId, nickname)).build()
+        );
     }
 
     @GetMapping("/{chatroomId}/userlist")
     public ResponseEntity<ResponseDTO<?>> listUserChat(@PathVariable Long chatroomId) {
-        List<RedisUserChat> redisChatroomList = redisChatService.listUserChat(chatroomId);
-        ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
+        return ResponseEntity.ok(ResponseDTO.builder()
                 .message(SuccessMsg.SUCCESS.getDetail())
-                .result(RedisChatService.parseObjectToJSON(redisChatroomList))
-                .build();
-        return ResponseEntity.ok(responseDTO);
+                .result(redisChatService.listUserChat(chatroomId))
+                .build());
     }
 
     @PostMapping("/{chatroomId}/leave")
     public ResponseEntity<ResponseDTO<?>> leaveChatroom(
             @PathVariable Long chatroomId, @RequestBody Long userId) {
-        RedisUserChat redisUserChat = redisChatService.leaveChatroom(chatroomId, userId);
-        ResponseDTO<String> responseDto = ResponseDTO.<String>builder()
+        return ResponseEntity.ok(ResponseDTO.builder()
                 .message(SuccessMsg.SUCCESS.getDetail())
-                .result(RedisChatService.parseObjectToJSON(redisUserChat))
-                .build();
-        return ResponseEntity.ok(responseDto);
+                .result(redisChatService.leaveChatroom(chatroomId, userId))
+                .build()
+        );
     }
-    // 이렇게 변수가 하나인 경우는 {} 로 묶지 않고 바로 값을 전송해도 된다.
-    // 사실 단일값을 객체로 받으면 오히려 오류가 발생한다.. 이유는 모르겠음
 
     @PostMapping("/{chatroomId}/send")
     public ResponseEntity<ResponseDTO<?>> sendMessage(
             @PathVariable Long chatroomId, @RequestBody SendRedisMessageDTO sendRedisMessageDTO) {
-        RedisChatMessage redisChatMessage
-                = redisChatService.sendMaeesage(chatroomId, sendRedisMessageDTO.getUserId(), sendRedisMessageDTO.getData());
-        ResponseDTO<RedisChatMessage> responseDto = ResponseDTO.<RedisChatMessage>builder()
-                .message(SuccessMsg.SUCCESS.getDetail())
-                .result(redisChatMessage)
-                .build();
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(ResponseDTO.builder().message(SuccessMsg.SUCCESS.getDetail())
+                .result(redisChatService.sendMaeesage(chatroomId,
+                        sendRedisMessageDTO.getUserId(),
+                        sendRedisMessageDTO.getData())).build());
     }
 }

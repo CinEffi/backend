@@ -22,22 +22,25 @@ public class RedisChatService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedisMessageListenerContainer listenerContainer;
+    private final RedisMessageSubscriber subscriber;
 
     private final AtomicLong chatroomIdGenerator = new AtomicLong(0);
 
     public RedisChatroom createChatroom(String title) {
-        Long id = chatroomIdGenerator.incrementAndGet();
-        // 이것도 사실.. 좋은방법이 아닙니다 (서버 확장 시 각 BE 노드마다 id를 생성할 것임)
-        // chatroom_id를 잘 가져오려면
-        // redis에 요청해서 (key : nextChatroomId를 관리합니다 하나씩 높여주면 됩니다.)
-            // 이거 chatroomList의 size로 하면 안돼요!
-        // redis가 막 (다시)켜졌을떄는 db에서 최상위 id(없으면 0) + 1을 가져오고요
-        RedisChatroom redisChatroom = RedisChatroom.builder().id(id).title(title).build();
 
-        redisTemplate.opsForHash().put("chatroom", id.toString(), redisChatroom);
-        listenerContainer.addMessageListener(new RedisMessageSubscriber()
-                , new ChannelTopic("chatroom:" + redisChatroom.getId()));
+        Object nextIdObj = redisTemplate.opsForValue().get("nextChatroomId");
+        Long nextChatroomId = nextIdObj == null ? 1L : Long.parseLong(nextIdObj.toString());
+        // 사실 1L이 아니라 db에서 Generated Id값을 조회해야함.
+        // redis에 요청해서 (key : nextChatroomId를 관리합니다 하나씩 높여주면 됩니다.)
+        // 이거 chatroomList의 size로 하면 안돼요!
+        // redis가 막 (다시)켜졌을떄는 db에서 최상위 id(없으면 0) + 1을 가져오고요
+
+        RedisChatroom redisChatroom = RedisChatroom.builder().id(nextChatroomId).title(title).build();
+        redisTemplate.opsForHash().put("chatroom", nextChatroomId.toString(), redisChatroom);
+        listenerContainer.addMessageListener(subscriber, new ChannelTopic("chatroom:" + redisChatroom.getId()));
         // 단일 노드에서는 이 시점에만 이렇게 체결하는게 맞다.
+
+        redisTemplate.opsForValue().set("nextChatroomId", (++nextChatroomId).toString());
 
         // 여러 노드인 경우에도 같으나, join 시 {해당 노드,목적지 채널} 에 대해 첫 Member인 경우에 체결하면 된다.
         // 실질 멤버가 사라지면 SUBS를 해제하는 로직도 해둬야한다.
@@ -116,8 +119,11 @@ public class RedisChatService {
                 = RedisChatMessageList.builder().userId(userId).data(data).ms(epochMilli).build();
 //        redisTemplate.opsForZSet().add("chatlog:" + chatroomId, redisChatMessage, (double) epochMilli);
         redisTemplate.opsForList().rightPush("chatlog:" + chatroomId, redisChatMessageList);
-        redisTemplate.convertAndSend("chatroom:" + chatroomId, data);
+
+        redisTemplate.convertAndSend("chatroom:" + chatroomId, userId + ":" + data);
         return redisChatMessage;
+
+
     /*  2안) chatMessage에 timeStamp 저장하고, list에 저장하기
      ***********************************************************************************
      *  RedisChatMessage redisChatMessage = RedisChatMessage.builder()
