@@ -9,18 +9,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.domain.dto.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import shinzo.cineffi.config.EncryptUtil;
 import shinzo.cineffi.domain.dto.GenreMovieListDTO;
 import shinzo.cineffi.domain.dto.MovieDetailDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.UpcomingMovieDTO;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.exception.message.SuccessMsg;
-
-import java.util.List;
 
 import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 
