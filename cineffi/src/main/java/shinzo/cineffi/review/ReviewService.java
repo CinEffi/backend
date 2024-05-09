@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.movie.MovieGenre;
@@ -40,7 +41,7 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
-
+    private final EncryptUtil encryptUtil;
     @Transactional(readOnly = true)
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);

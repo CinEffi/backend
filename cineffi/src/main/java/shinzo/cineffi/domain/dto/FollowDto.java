@@ -6,8 +6,8 @@ import lombok.Data;
 @Data
 @Builder
 public class FollowDto {
-    private Long followId;
-    private Long userId;
+    private String followId;
+    private String userId;
     private String nickname;
     private String profileImage;
     private int level;
