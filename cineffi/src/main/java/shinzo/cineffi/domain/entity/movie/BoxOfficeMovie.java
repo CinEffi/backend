@@ -32,7 +32,7 @@ public class BoxOfficeMovie {
     private LocalDate releaseDate;
 
     @Lob
-    private String poster;
+    private byte[] poster;
 
     private Float cinephileAvgScore;
     private Float levelAvgScore;
