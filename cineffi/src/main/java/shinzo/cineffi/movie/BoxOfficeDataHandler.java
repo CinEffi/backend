@@ -86,6 +86,7 @@ public class BoxOfficeDataHandler {
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
     public void processDailyBoxOfficeData() {
         List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
+        String baseImgStr = "data:image/png;base64,";
         for (BoxOfficeMovie boxOfficeMovie : boxOfficeMovies) {
             List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(boxOfficeMovie.getTitle());
             if (!movies.isEmpty()) {
@@ -98,7 +99,7 @@ public class BoxOfficeDataHandler {
                         .title(boxOfficeMovie.getTitle())
                         .targetDt(boxOfficeMovie.getTargetDt())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(encodeImage(movie.getPoster()))
+                        .poster(baseImgStr + encodeImage(movie.getPoster()))
                         .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
                         .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
                         .build();
