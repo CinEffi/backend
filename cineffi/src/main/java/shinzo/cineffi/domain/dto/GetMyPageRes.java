@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GetMyPageRes {
-    private Long userId;
+    private String userId;
     private String nickname;
     private String userProfileImage;
     private int collectionNum;

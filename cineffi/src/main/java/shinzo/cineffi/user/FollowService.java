@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.domain.dto.FollowDto;
 import shinzo.cineffi.domain.dto.GetFollowRes;
 import shinzo.cineffi.domain.entity.user.Follow;
@@ -29,7 +30,7 @@ public class FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserActivityNumRepository uanRepository;
-
+    private final EncryptUtil encryptUtil;
 
     @Transactional
     // 유저 팔로우
@@ -96,8 +97,8 @@ public class FollowService {
                 }
             }
             FollowerResList.add(FollowDto.builder()
-                    .followId(f.getId())
-                    .userId(follower.getId())
+                    .followId(encryptUtil.LongEncrypt(f.getId()))
+                    .userId(encryptUtil.LongEncrypt(follower.getId()))
                     .nickname(follower.getNickname())
                     .profileImage(decodeImage(follower.getProfileImage()))
                     .level(follower.getLevel())
@@ -130,8 +131,8 @@ public class FollowService {
                     isFollowed = true;
             }
             FollowingResList.add(FollowDto.builder()
-                    .followId(f.getId())
-                    .userId(following.getId())
+                    .followId(encryptUtil.LongEncrypt(f.getId()))
+                    .userId(encryptUtil.LongEncrypt(following.getId()))
                     .nickname(following.getNickname())
                     .profileImage(decodeImage(following.getProfileImage()))
                     .level(following.getLevel())

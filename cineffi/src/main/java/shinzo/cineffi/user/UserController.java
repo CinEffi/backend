@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
+import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.entity.user.Report;
@@ -35,7 +36,7 @@ public class UserController {
     private final ReviewService reviewService;
     private final ScrapService scrapService;
     private final ReportRepository reportRepository;
-
+    private final EncryptUtil encryptUtil;
 
     /**
      * 유저 마이페이지 조회
@@ -43,12 +44,14 @@ public class UserController {
      * @return
      */
     @GetMapping("/api/users/{user-id}")
-    public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") Long userId) {
+    public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") String userId) {
+
+        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(userService.getMyPage(userId, loginUserId))
+                        .result(userService.getMyPage(DecryptUserId, loginUserId))
                         .build());
     }
 
@@ -98,13 +101,14 @@ public class UserController {
      * @return
      */
     @GetMapping("api/users/{user-id}/reviews")
-    public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") Long userId,
+    public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") String userId,
                                                         @PageableDefault(page = 0, size=10) Pageable pageable) {
+        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(reviewService.getUserReviewList(userId, pageable, loginUserId))
+                        .result(reviewService.getUserReviewList(DecryptUserId, pageable, loginUserId))
                         .build());
 
     }
@@ -115,7 +119,7 @@ public class UserController {
      * @return
      */
     @GetMapping("/api/users/{user-id}/scrap")
-    public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") Long userId,
+    public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") String userId,
                                                        @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
