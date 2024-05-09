@@ -61,8 +61,8 @@ public class MovieService {
 
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
-        List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
-        for (Movie movie : movieList){
+        Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+        for (Movie movie : movieList.getContent()){
             InListMoviveDTO dto = InListMoviveDTO.builder()
                     .movieId(movie.getId())
                     .title(movie.getTitle())
@@ -88,10 +88,10 @@ public class MovieService {
     }
 
     public MovieSearchRespon findSearchList(String q, int page, int size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size / 2);
         q=q.trim();
-        Genre genre = getEnumGenreBykorGenre(q);
-        if(genre != null) q = genre.toString();
+//        Genre genre = getEnumGenreBykorGenre(q);
+//        if(genre != null) q = genre.toString();
 
         Page<Movie> pageList = movieRepo.findSearchList(q, pageable);
         List<MovieDTO> dtoList = pageList.getContent().stream().map(movie -> MovieDTO.builder()
@@ -103,6 +103,21 @@ public class MovieService {
                         .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
                         .build())
                 .collect(Collectors.toList());
+
+        Genre genre = getEnumGenreBykorGenre(q);
+        if(genre != null) {
+            Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+            movieList.getContent().stream().map(movie -> MovieDTO.builder()
+                    .movieId(movie.getId())
+                    .title(movie.getTitle())
+                    .releaseDate(movie.getReleaseDate())
+                    .poster(encodeImage(movie.getPoster()))
+                    .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                    .build())
+                    .forEach(dtoList::add);
+        }
+
 
         return MovieSearchRespon.builder()
                 .movieList(dtoList)

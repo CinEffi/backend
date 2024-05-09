@@ -11,11 +11,14 @@ import shinzo.cineffi.domain.entity.movie.AvgScore;
 import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.domain.entity.movie.Director;
 import shinzo.cineffi.domain.entity.movie.Movie;
+import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.movie.BoxOfficeDataHandler;
+import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.movie.repository.AvgScoreRepository;
 import shinzo.cineffi.movie.repository.BoxOfficeMovieRepository;
 import shinzo.cineffi.movie.repository.DirectorRepository;
+import shinzo.cineffi.movie.repository.MovieGenreRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.review.ReviewService;
 import shinzo.cineffi.score.ScoreService;
@@ -23,6 +26,8 @@ import shinzo.cineffi.user.FollowService;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
@@ -39,6 +44,7 @@ public class InitService {
     private final ReviewService reviewService;
     private final FollowService followService;
     private final ScoreService scoreService;
+    private final MovieGenreRepository movieGenreRepository;
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
@@ -111,6 +117,33 @@ public class InitService {
                     .runtime(60 + i)
                     .tmdbId(1 + i)
                     .build());
+
+            List<MovieGenre> genres = new ArrayList<>();
+            for (int j = 0; j < 3; j++) {
+                Genre genre = null;
+                switch ( (i+j) % 12){
+                    case 0: genre = Genre.ACTION; break;
+                    case 1: genre = Genre.COMEDY; break;
+                    case 2: genre = Genre.ADVENTURE; break;
+                    case 3: genre = Genre.ANIMATION; break;
+                    case 4: genre = Genre.CRIME; break;
+                    case 5: genre = Genre.DOCUMENTARY; break;
+                    case 6: genre = Genre.DRAMA; break;
+                    case 7: genre = Genre.FAMILY; break;
+                    case 8: genre = Genre.FANTASY; break;
+                    case 9: genre = Genre.HISTORY; break;
+                    case 10: genre = Genre.MYSTERY; break;
+                    case 11: genre = Genre.ROMANCE; break;
+                }
+                MovieGenre movieGenre = MovieGenre.builder()
+                        .genre(genre)
+                        .movie(movie)
+                        .build();
+                genres.add(movieGenre);
+                movieGenreRepository.save(movieGenre);
+            }
+            movieRepository.save(movie.toBuilder().genreList(genres).build());
+
         }
         // 영화 1
         AvgScore avgScore1 = avgScoreRepository.save(AvgScore.builder().build());
