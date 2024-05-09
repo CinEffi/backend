@@ -41,14 +41,13 @@ public class MovieService {
     public List<UpcomingMovieDTO> findUpcomingList(){
         List<Movie> upcomingList = movieRepo.findUpcomingList();
         List<UpcomingMovieDTO> result = new ArrayList<>();
-        String baseImgStr = "data:image/png;base64,";
 
         for (Movie movie : upcomingList){
             UpcomingMovieDTO dto = UpcomingMovieDTO.builder()
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(baseImgStr + encodeImage(movie.getPoster()))
+                    .poster(encodeImage(movie.getPoster()))
                     .build();
             result.add(dto);
         }
@@ -59,7 +58,6 @@ public class MovieService {
         int randomPick = new Random().nextInt(values().length);
         Genre genre = Genre.values()[randomPick];
         Pageable pageable = (Pageable) PageRequest.of(0, 20);
-        String baseImgStr = "data:image/png;base64,";
 
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
@@ -69,7 +67,7 @@ public class MovieService {
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(baseImgStr + encodeImage(movie.getPoster()))
+                    .poster(encodeImage(movie.getPoster()))
                     .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
                     .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
                     .build();
@@ -94,14 +92,13 @@ public class MovieService {
         q=q.trim();
         Genre genre = getEnumGenreBykorGenre(q);
         if(genre != null) q = genre.toString();
-        String baseImgStr = "data:image/png;base64,";
 
         Page<Movie> pageList = movieRepo.findSearchList(q, pageable);
         List<MovieDTO> dtoList = pageList.getContent().stream().map(movie -> MovieDTO.builder()
                         .movieId(movie.getId())
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(baseImgStr + encodeImage(movie.getPoster()))
+                        .poster(encodeImage(movie.getPoster()))
                         .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
                         .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
                         .build())
@@ -121,13 +118,12 @@ public class MovieService {
 
         List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
         Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
-        String baseImgStr = "data:image/png;base64,";
 
         InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
                 .releaseDate(movie.getReleaseDate())
-                .poster(baseImgStr + encodeImage(movie.getPoster()))
+                .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
                 .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Enum::name).collect(Collectors.toList()))
                 .build();
@@ -147,13 +143,12 @@ public class MovieService {
 
 
     private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
-        String baseImgStr = "data:image/png;base64,";
 
         List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId)
                 .stream()
                 .map(am -> CrewListDTO.builder()
                         .name(am.getActor().getName())
-                        .profile(baseImgStr + encodeImage(am.getActor().getProfileImage()))
+                        .profile(encodeImage(am.getActor().getProfileImage()))
                         .job("Actor")
                         .character(am.getCharacter())
                         .build())
@@ -163,7 +158,7 @@ public class MovieService {
         if (movie != null && movie.getDirector() != null) {
             actors.add(CrewListDTO.builder()
                     .name(movie.getDirector().getName())
-                    .profile(baseImgStr + encodeImage(movie.getDirector().getProfileImage()))
+                    .profile(encodeImage(movie.getDirector().getProfileImage()))
                     .job("Director")
                     .character("")
                     .build());
@@ -183,7 +178,10 @@ public class MovieService {
     }
 
     public String encodeImage(byte[] imageData) {
-        return Base64.getEncoder().encodeToString(imageData);
+        String baseImgStr = "data:image/png;base64,";
+        String result = Base64.getEncoder().encodeToString(imageData);
+
+        return baseImgStr + result;
     }
 
 }

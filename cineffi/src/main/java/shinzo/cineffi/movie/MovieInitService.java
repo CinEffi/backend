@@ -13,6 +13,7 @@ import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.movie.repository.*;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -67,7 +68,7 @@ public class MovieInitService {
     public void fetchTMDBIdsByDate() {
         for (int year = startYear; year <= endYear; year++) {
             for (int month = startMonth; month <= endMonth; month++) {
-                String startDate = String.format("%d-%02d-01", year, month);
+                String startDate = String.format("%d-%02d-26", year, month);
                 String endDate = String.format("$d-%02d-2d", year, month, YearMonth.of(year, month).lengthOfMonth());
 
                 List<Movie> movies = requestTMDBIds(startDate, endDate);
@@ -192,24 +193,28 @@ public class MovieInitService {
     }
 
     //이미지 데이터 요청하기
-    private byte[] requestImg(String imagePath, ImageType type) {
+    public byte[] requestImg(String imagePath, ImageType type) {
         if (imagePath != null) {
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(type == POSTER ? TMDB_PATH_MOVIE + imagePath : TMDB_PATH_IMAGE + imagePath);
+                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
                 // 서버로부터 응답 상태 코드 확인
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     try (InputStream inputStream = connection.getInputStream();
-                         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 
-                        // InputStream에서 데이터를 읽고 String으로 변환
-                        String base64Data = bufferedReader.lines().collect(Collectors.joining());
-                        // Base64로 인코딩된 String 데이터를 디코딩하여 byte[] 반환
-                        return Base64.getDecoder().decode(base64Data);
+                        // InputStream에서 데이터를 읽고 byte[]로 변환
+                        int nRead;
+                        byte[] data = new byte[16384]; // 16KB buffer size
+
+                        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                            buffer.write(data, 0, nRead);
+                        }
+                        buffer.flush();
+                        return buffer.toByteArray();
                     }
                 }
                 return returnDefaultImg(type);
