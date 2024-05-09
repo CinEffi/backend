@@ -38,7 +38,7 @@ public class InitService {
     private final ScoreService scoreService;
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
-    @PostConstruct
+//    @PostConstruct
     @Transactional
     public void initialize() {
         // 테스트 유저 생성

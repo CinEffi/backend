@@ -12,10 +12,7 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.movie.repository.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -54,7 +51,7 @@ public class NewMovieInitService {
 
     @Value("${kobis.api_key}")
     private String KOBIS_API_KEY;
-    private String KOBIS_BASEURL = "http://kobis.or.kr/kobisopenapi/webservice/rest";
+    private String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private static final int MAX_PAGES = 500;
@@ -134,10 +131,10 @@ public class NewMovieInitService {
 
     private Optional<Movie> requestMovieCode(Movie TMDBMovie){
         Movie result = null;
-        String NoBlankTitle = removeBlankStr(TMDBMovie.getTitle());
+        String TMDBTitle = TMDBMovie.getTitle();
 
         try {
-            URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + NoBlankTitle);
+            URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.connect();
@@ -212,20 +209,24 @@ public class NewMovieInitService {
         if (imagePath != null) {
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(type == POSTER ? TMDB_PATH_MOVIE + imagePath : TMDB_PATH_IMAGE + imagePath);
+                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
                 // 서버로부터 응답 상태 코드 확인
                 if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                     try (InputStream inputStream = connection.getInputStream();
-                         InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 
-                        // InputStream에서 데이터를 읽고 String으로 변환
-                        String base64Data = bufferedReader.lines().collect(Collectors.joining());
-                        // Base64로 인코딩된 String 데이터를 디코딩하여 byte[] 반환
-                        return Base64.getDecoder().decode(base64Data);
+                        // InputStream에서 데이터를 읽고 byte[]로 변환
+                        int nRead;
+                        byte[] data = new byte[16384]; // 16KB buffer size
+
+                        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                            buffer.write(data, 0, nRead);
+                        }
+                        buffer.flush();
+                        return buffer.toByteArray();
                     }
                 }
                 return returnDefaultImg(type);
