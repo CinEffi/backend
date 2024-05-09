@@ -23,9 +23,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service
@@ -37,9 +35,9 @@ public class ScrapService {
     private final MovieRepository movieRepository;
     private final EncryptUtil encryptUtil;
     @Transactional(readOnly = true)
-    public GetScrapRes getUserScrapList(String userId, Long loginUserId, Pageable pageable) {
-        Long DecryptUserId = encryptUtil.LongDecrypt(userId);
-        Page<Scrap> userScrapList = scrapRepository.findAllByUserId(DecryptUserId, pageable);
+    public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
+
+        Page<Scrap> userScrapList = scrapRepository.findAllByUserId(userId, pageable);
         List<ScrapDto> scrapList = new ArrayList<>();
 
         int totalPageNum = userScrapList.getTotalPages();

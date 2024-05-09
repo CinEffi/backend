@@ -45,7 +45,6 @@ public class UserController {
      */
     @GetMapping("/api/users/{user-id}")
     public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") String userId) {
-
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
@@ -121,12 +120,14 @@ public class UserController {
     @GetMapping("/api/users/{user-id}/scrap")
     public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") String userId,
                                                        @PageableDefault(page = 0, size=10) Pageable pageable) {
+
+        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(scrapService.getUserScrapList(userId, loginUserId, pageable))
+                        .result(scrapService.getUserScrapList(DecryptUserId, loginUserId, pageable))
                         .build()
         );
     }
