@@ -7,7 +7,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.reactive.result.view.RedirectView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import shinzo.cineffi.domain.dto.*;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
+
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,36 +28,47 @@ import static shinzo.cineffi.exception.message.ErrorMsg.*;
 public class AuthController {
     private final AuthService authService;
 
-    @GetMapping("/auth/login/kakao")
-    public RedirectView loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) {
+//    @GetMapping("/auth/login/kakao")
+//    public RedirectView loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) {
+//
+//        //인가코드로 카카오 토큰 발급
+//        KakaoToken kakaoToken = authService.requestKakaoToken(code);
+//        //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
+//        Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+//        LoginResponseDTO userInfo = authService.userInfo(userId);
+//        ResponseEntity<ResponseDTO<Object>> result = null;
+//
+//        try {
+//            result = authLogin(userId);
+//            ResponseDTO<Object> obj = result.getBody().toBuilder()
+//                    .message(SuccessMsg.SUCCESS.getDetail())
+//                    .result(userInfo)
+//                    .build();
+//            ResponseEntity.ok(obj);
+//
+//        } catch (JsonProcessingException e) {
+//            throw new RuntimeException(e);
+//        }
+//        ResponseEntity<ResponseDTO<Object>> a = result;
+//
+//        redirectAttributes.addFlashAttribute("result", result);
+//
+//        // Redirect to another page
+//        return new RedirectView("http://localhost:3000");
+//    }
+@GetMapping("/auth/login/kakao")
+public ResponseEntity<ResponseDTO<Object>> loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) throws JsonProcessingException {
 
-        //인가코드로 카카오 토큰 발급
-        KakaoToken kakaoToken = authService.requestKakaoToken(code);
+    //인가코드로 카카오 토큰 발급
+    KakaoToken kakaoToken = authService.requestKakaoToken(code);
+    //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
+    Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+    LoginResponseDTO userInfo = authService.userInfo(userId);
 
-        //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
-        Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
-        LoginResponseDTO userInfo = authService.userInfo(userId);
-        ResponseEntity<ResponseDTO<Object>> result = null;
+        return redirectauthLogin(userId,userInfo);
 
-        try {
-            result = authLogin(userId);
-            ResponseDTO<Object> obj = result.getBody().toBuilder()
-                    .message(SuccessMsg.SUCCESS.getDetail())
-                    .result(userInfo)
-                    .build();
-            result.ok(obj);
 
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        ResponseEntity<ResponseDTO<Object>> a = result;
-
-        redirectAttributes.addFlashAttribute("result", result);
-
-        // Redirect to another page
-        return new RedirectView("http://localhost:3000");
-    }
-
+}
 
 @PostMapping("/auth/signup")
 public ResponseEntity<ResponseDTO<String>> signup(@RequestBody AuthRequestDTO request) {
@@ -109,6 +121,26 @@ public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestD
                 .message(SuccessMsg.SUCCESS.getDetail())
                 .build();
         return ResponseEntity.ok().headers(headers).body(responseDTO);
+    }
+    private ResponseEntity<ResponseDTO<Object>> redirectauthLogin(Long userId, LoginResponseDTO userInfo) throws JsonProcessingException {
+        Object[] result = authService.makeCookie(userId);
+        HttpHeaders headers = (HttpHeaders) result[0];
+
+        // 리다이렉션 URL 설정
+        String redirectUrl = "http://localhost:3000/auth/check";
+
+        // ResponseDTO 생성
+        ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
+                .isSuccess(true)
+                .result(userInfo)
+                .message(SuccessMsg.SUCCESS.getDetail())
+                .build();
+
+        // 리다이렉션 응답 반환
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .headers(headers)
+                .location(URI.create(redirectUrl))
+                .body(responseDTO);
     }
 
 
