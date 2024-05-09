@@ -131,7 +131,7 @@ public class NewMovieInitService {
 
     private Optional<Movie> requestMovieCode(Movie TMDBMovie){
         Movie result = null;
-        String TMDBTitle = TMDBMovie.getTitle();
+        String TMDBTitle = BlankStrMakeURLStr(TMDBMovie.getTitle());
 
         try {
             URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
@@ -165,10 +165,11 @@ public class NewMovieInitService {
         return Optional.ofNullable(result);
     }
 
-    private String removeBlankStr(String blankStr){
+    private String BlankStrMakeURLStr(String blankStr){
         String result = "";
         for (int i = 0; i < blankStr.length(); i++) {
             if(blankStr.charAt(i) != ' ') result += blankStr.charAt(i);
+            else result += "%20";
         }
         return result;
     }
@@ -178,7 +179,7 @@ public class NewMovieInitService {
         return mapper.readValue(json, Map.class);
     }
 
-    //요청ㅇ으로 받은 데이터를 우리 영화 데이터로
+    //요청으로 받은 데이터를 우리 영화 데이터로
     private Movie TMDBMapToMovie(Map<String, Object> map) {
         Integer id = (Integer) map.get("id");
         String title = (String) map.get("title");
