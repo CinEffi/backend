@@ -45,7 +45,6 @@ public class AuthService {
     public Long loginByKakao(String accessToken){
         String email = requestKakaoEmail(accessToken);
         boolean isEmailDuplicate = userAccountRepository.existsByEmail(email);
-
         //회원가입 전적 없으면 회원가입
         if(!isEmailDuplicate) {
             AuthRequestDTO dto = AuthRequestDTO.builder()
@@ -55,7 +54,6 @@ public class AuthService {
                     .build();
             joinUser(dto);
         }
-
         return getUserIdByEmail(email);
     }
 
@@ -64,7 +62,6 @@ public class AuthService {
         //요청보낼 헤더 생성
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
         //요청보낼 바디 생성
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
@@ -88,6 +85,7 @@ public class AuthService {
         KakaoToken kakaoToken = null;
         try {
             kakaoToken = objectMapper.readValue(accessTokenResponse.getBody(), KakaoToken.class);
+
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -206,6 +204,7 @@ public class AuthService {
     }
 
     public Object[] makeCookie(Long userId){
+        System.out.println("called make Cookie");
         JWToken jwToken = JWTUtil.allocateToken(userId,"ROLE_USER");//액세스 토큰 발급
         //Access 토큰 쿠키
         ResponseCookie accessCookie = ResponseCookie.from("access",jwToken.getAccessToken())
@@ -216,6 +215,7 @@ public class AuthService {
                 .secure(true)
                 .build();
         //Refresh 토큰 쿠키
+        System.out.println("access!!!" + accessCookie);
         normalLoginRefreshToken(userId, jwToken.getRefreshToken());
         ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
                 .sameSite("None")
@@ -224,6 +224,7 @@ public class AuthService {
                 .httpOnly(true)
                 .secure(true)
                 .build();
+        System.out.println("refresh!!!" + refreshCookie);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, String.valueOf(accessCookie));
         headers.add(HttpHeaders.SET_COOKIE, String.valueOf(refreshCookie));
