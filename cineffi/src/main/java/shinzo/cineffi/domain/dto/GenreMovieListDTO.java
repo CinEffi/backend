@@ -12,6 +12,6 @@ import java.util.List;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 public class GenreMovieListDTO {
-    private Genre genre;
+    private String genre;
     private List<InListMoviveDTO> movieList;
 }

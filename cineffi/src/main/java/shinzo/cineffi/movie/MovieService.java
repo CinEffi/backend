@@ -74,7 +74,7 @@ public class MovieService {
             dtoList.add(dto);
         }
 
-        return new GenreMovieListDTO(genre, dtoList);
+        return new GenreMovieListDTO(genre.getGenre(), dtoList);
     }
 
     public void insertDailyBoxOffice() {
@@ -140,7 +140,7 @@ public class MovieService {
                 .releaseDate(movie.getReleaseDate())
                 .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
-                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Enum::name).collect(Collectors.toList()))
+                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getGenre).collect(Collectors.toList()))
                 .build();
 
         return MovieDetailDTO.builder()
