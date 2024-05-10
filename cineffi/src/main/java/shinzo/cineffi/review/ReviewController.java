@@ -7,10 +7,14 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.*;
+import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
 import java.util.List;
+
+import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
 
 @RestController
 @RequiredArgsConstructor
@@ -87,10 +91,12 @@ public class ReviewController {
         // 인기를 어떻게 측정할꺼니 // likeNum 이겠구나.
         //
         // 더 나가면, 분명 sort기준을 따로 만들어 줄수도 있지만 우선 간단하게 좋아요 수 만으로 정렬해 보자.
-        String string = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
-        Long userId = string.equals("anonymousUser") ? null : Long.parseLong(string);
-        return ResponseEntity.ok(ResponseDTO.builder()
-                .result(reviewService.sortReviewByHot(pageable, userId))
-                .message(SuccessMsg.SUCCESS.getDetail()).build());
+        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
+        else {
+            return ResponseEntity.ok(ResponseDTO.builder()
+                    .result(reviewService.sortReviewByHot(pageable, loginUserId))
+                    .message(SuccessMsg.SUCCESS.getDetail()).build());
+        }
     }
 }
