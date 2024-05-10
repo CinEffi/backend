@@ -25,9 +25,7 @@ import shinzo.cineffi.review.repository.ReviewRepository;
 import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
@@ -218,10 +216,13 @@ public class ReviewService {
         for (Review review : reviewPage) {
             Movie movie = review.getMovie();
             User user = review.getUser();
+            Score score = scoreRepository.findByMovieIdAndUserId(movie.getId(),user.getId());
+
             ReviewLookupDTO reviewLookupDTO = ReviewLookupDTO.builder()
                     .movieId(movie.getId())
                     .movieTitle(movie.getTitle())
-                    .moviePoster(movie.getPoster())
+                    .moviePoster(encodeImage(movie.getPoster()))
+                    .reviewScore(score.getScore())
                     .reviewId(review.getId())
                     .reviewWriterId(user.getId())
                     .reviewWriterNickname(user.getNickname())
@@ -232,5 +233,11 @@ public class ReviewService {
         }
         return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)
                 .totalPageNum(reviewPage.getTotalPages()).build();
+    }
+    public String encodeImage(byte[] imageData) {
+        String baseImgStr = "data:image/png;base64,";
+        String result = Base64.getEncoder().encodeToString(imageData);
+
+        return baseImgStr + result;
     }
 }

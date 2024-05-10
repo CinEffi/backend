@@ -92,11 +92,10 @@ public class ReviewController {
         //
         // 더 나가면, 분명 sort기준을 따로 만들어 줄수도 있지만 우선 간단하게 좋아요 수 만으로 정렬해 보자.
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
-        else {
+        
             return ResponseEntity.ok(ResponseDTO.builder()
                     .result(reviewService.sortReviewByHot(pageable, loginUserId))
                     .message(SuccessMsg.SUCCESS.getDetail()).build());
         }
-    }
+
 }
