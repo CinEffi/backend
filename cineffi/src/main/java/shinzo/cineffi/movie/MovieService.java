@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.*;
+import shinzo.cineffi.domain.entity.review.Review;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
+import shinzo.cineffi.review.repository.ReviewRepository;
 import shinzo.cineffi.score.repository.ScoreRepository;
 
 import java.util.*;
@@ -28,7 +30,7 @@ public class MovieService {
     private final ScoreRepository scoreRepo;
     private final ScrapRepository scrapRepo;
     private final ActorMovieRepository actorMovieRepo;
-
+    private final ReviewRepository reviewRepository;
 
 
     public static Genre getEnumGenreBykorGenre(String korName) {
@@ -61,20 +63,20 @@ public class MovieService {
 
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
-        List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
-        for (Movie movie : movieList){
+        Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+        for (Movie movie : movieList.getContent()){
             InListMoviveDTO dto = InListMoviveDTO.builder()
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
                     .poster(encodeImage(movie.getPoster()))
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
-                    .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                     .build();
             dtoList.add(dto);
         }
 
-        return new GenreMovieListDTO(genre, dtoList);
+        return new GenreMovieListDTO(genre.getGenre(), dtoList);
     }
 
     public void insertDailyBoxOffice() {
@@ -88,10 +90,10 @@ public class MovieService {
     }
 
     public MovieSearchRespon findSearchList(String q, int page, int size){
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size / 2);
         q=q.trim();
-        Genre genre = getEnumGenreBykorGenre(q);
-        if(genre != null) q = genre.toString();
+//        Genre genre = getEnumGenreBykorGenre(q);
+//        if(genre != null) q = genre.toString();
 
         Page<Movie> pageList = movieRepo.findSearchList(q, pageable);
         List<MovieDTO> dtoList = pageList.getContent().stream().map(movie -> MovieDTO.builder()
@@ -99,10 +101,25 @@ public class MovieService {
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
                         .poster(encodeImage(movie.getPoster()))
-                        .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
-                        .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                        .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                        .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                         .build())
                 .collect(Collectors.toList());
+
+        Genre genre = getEnumGenreBykorGenre(q);
+        if(genre != null) {
+            Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+            movieList.getContent().stream().map(movie -> MovieDTO.builder()
+                    .movieId(movie.getId())
+                    .title(movie.getTitle())
+                    .releaseDate(movie.getReleaseDate())
+                    .poster(encodeImage(movie.getPoster()))
+                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                    .build())
+                    .forEach(dtoList::add);
+        }
+
 
         return MovieSearchRespon.builder()
                 .movieList(dtoList)
@@ -116,33 +133,47 @@ public class MovieService {
                 .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
         boolean isScrap = (userId != null) && scrapRepo.existsByMovieIdAndUserId(movieId, userId);
 
+
         List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
         Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
 
+        Review existingReview = userId != null ? reviewRepository.findByMovieAndUserIdAndIsDeleteFalse(movie, userId) : null;
         InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
                 .releaseDate(movie.getReleaseDate())
                 .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
-                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Enum::name).collect(Collectors.toList()))
+                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getGenre).collect(Collectors.toList()))
                 .build();
 
         return MovieDetailDTO.builder()
                 .movie(inMovieDetail)
                 .runtime(movie.getRuntime())
                 .introduction(movie.getIntroduction())
-                .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
-                .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
-                .allAvgScore(movie.getAvgScore().getAllScoreSum())
+                .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                .allAvgScore(movie.getAvgScore().getAllAvgScore())
                 .myScore(myScore)
                 .isScrap(isScrap)
+                .existingReviewId(existingReview != null ? existingReview.getId() : null)
+                .existingReviewContent(existingReview != null ? existingReview.getContent() : null)
                 .crewList(crewList)
                 .build();
     }
 
-
     private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
+        List<CrewListDTO> crewList = new ArrayList<>();
+
+        Movie movie = movieRepo.findById(movieId).orElse(null);
+        if (movie != null && movie.getDirector() != null) {
+            crewList.add(CrewListDTO.builder()
+                    .name(movie.getDirector().getName())
+                    .profile(encodeImage(movie.getDirector().getProfileImage()))
+                    .job("Director")
+                    .character("")
+                    .build());
+        }
 
         List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId)
                 .stream()
@@ -154,26 +185,16 @@ public class MovieService {
                         .build())
                 .collect(Collectors.toList());
 
-        Movie movie = movieRepo.findById(movieId).orElse(null);
-        if (movie != null && movie.getDirector() != null) {
-            actors.add(CrewListDTO.builder()
-                    .name(movie.getDirector().getName())
-                    .profile(encodeImage(movie.getDirector().getProfileImage()))
-                    .job("Director")
-                    .character("")
-                    .build());
-        }
-        return actors;
+        crewList.addAll(actors);
+        return crewList;
     }
 
 
     //내가 준 영화평점 (영화 상세페이지 조회)
     @Transactional(readOnly = true)
     public Float getUserScoreForMovie(Long movieId, Long userId) {
-        return scoreRepo.findByMovieIdAndUserId(movieId, userId)
-                .map(Score::getScore)
-                .orElse(null);
-
+        Score score = scoreRepo.findByMovieIdAndUserId(movieId, userId);
+        return (score != null) ? score.getScore() : null;
     }
 
     public String encodeImage(byte[] imageData) {

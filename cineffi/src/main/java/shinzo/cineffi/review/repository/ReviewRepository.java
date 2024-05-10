@@ -16,12 +16,16 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByIdAndIsDeleteFalse(Long userId);
 
     Review findByMovieAndUserAndIsDeleteFalse(Movie movie, User user);
-    List<Review> findAllByUserIdAndIsDeleteFalse(Long userId);
-    Page<Review> findAllByUserIdAndIsDeleteFalse(Long userId, Pageable pageable);
-    Page<Review> findByMovieAndIsDeleteFalse(Movie movie, Pageable pageable);
+//    List<Review> findAllByUserIdAndIsDeleteFalse(Long userId);
+//    Page<Review> findAllByUserIdAndIsDeleteFalse(Long userId, Pageable pageable);
+    Page<Review> findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    Page<Review> findByMovieAndIsDeleteFalseOrderById(Movie movie, Pageable pageable);
 
     Page<Review> findAllByIsDeleteFalseOrderByCreatedAtDesc(Pageable pageable);
     Page<Review> findAllByIsDeleteFalseOrderByLikeNumDesc(Pageable pageable);
 
     Optional<Object> findByIdAndUserId(Long reviewId, Long userId);
+    Integer countByMovieAndIsDeleteFalse(Movie movie);
+    Review findByMovieAndUserIdAndIsDeleteFalse(Movie movie, Long userId);
 }

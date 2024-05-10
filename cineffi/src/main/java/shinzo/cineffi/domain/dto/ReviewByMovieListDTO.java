@@ -9,5 +9,6 @@ import java.util.List;
 public class ReviewByMovieListDTO {
     private Long movieId;// 이게 안좋아서 movieId를 해야할 수도 있어.
     private Integer totalPageNum;
+    private Integer totalReviewNum;
     private List<ReviewByMovieDTO> reviews;
 }

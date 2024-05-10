@@ -36,8 +36,9 @@ public class ScrapService {
     private final EncryptUtil encryptUtil;
     @Transactional(readOnly = true)
     public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
-
-        Page<Scrap> userScrapList = scrapRepository.findAllByUserId(userId, pageable);
+        // 존재하는 유저인지 검증
+        if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
+        Page<Scrap> userScrapList = scrapRepository.findAllByUserIdOrderByIdDesc(userId, pageable);
         List<ScrapDto> scrapList = new ArrayList<>();
 
         int totalPageNum = userScrapList.getTotalPages();

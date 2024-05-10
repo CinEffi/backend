@@ -11,7 +11,7 @@ public class ScrapDto {
     private Long movieId;
     private String title;
     private String poster;
-    private float userScore;
+    private Float userScore;
     private LocalDate releaseDate;
     private Boolean isScrap;
 }

@@ -113,7 +113,7 @@ public class BoxOfficeDataHandler {
         String baseImgStr = "data:image/png;base64,";
         String result = Base64.getEncoder().encodeToString(imageData);
 
-        return baseImgStr + result;
+        return (baseImgStr + result);
     }
 
 }

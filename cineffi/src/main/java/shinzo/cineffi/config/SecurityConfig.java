@@ -46,7 +46,7 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
-                        configuration.setAllowedOrigins(List.of("http://localhost:3000","https://9e54-180-70-193-179.ngrok-free.app"));
+                        configuration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:3003","https://48fb-175-197-204-117.ngrok-free.app","https://9e54-180-70-193-179.ngrok-free.app"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);

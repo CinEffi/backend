@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface ScoreRepository extends JpaRepository<Score, Long> {
     Score findByMovieAndUser(Movie movie, User user);
 
-    Optional<Score> findByMovieIdAndUserId(Long movieId, Long userId);
+    Score findByMovieIdAndUserId(Long movieId, Long userId);
 }

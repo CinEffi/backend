@@ -25,9 +25,7 @@ import shinzo.cineffi.review.repository.ReviewRepository;
 import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
@@ -42,24 +40,21 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
     private final EncryptUtil encryptUtil;
+
+
     @Transactional(readOnly = true)
     public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
-        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
+        // 존재하는 유저인지 검증
+        if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
+
+        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId, pageable);
+
         int totalPageNum = userCollection.getTotalPages();
 
         List<ReviewDto> reviewList = new ArrayList<>();
-        User loginUser = loginUserId != null ? userRepository.findById(loginUserId).orElse(null) : null;
         userCollection.forEach(review -> {
-
             // 평론에서 영화 객체 따로 빼놓기
             Movie movie = review.getMovie();
-
-            // 해당 유저가 해당 영화에 준 평점 불러오기
-            Float userScore = null;
-            Score foundUserScore = scoreRepository.findByMovieAndUser(movie, review.getUser());
-            if (foundUserScore != null)
-                userScore = foundUserScore.getScore();
-
             // Dto 꾸리기
             reviewList.add(ReviewDto.builder()
                     .reviewId(review.getId())
@@ -67,24 +62,32 @@ public class ReviewService {
                     .movieTitle(movie.getTitle())
                     .poster(decodeImage(movie.getPoster()))
                     .content(review.getContent())
-                    .userScore(userScore) // 타겟 유저가 해당 영화에 준 평점
+                    .userScore(scoreRepository.findByMovieAndUser(movie, review.getUser()) == null ? null : scoreRepository.findByMovieAndUser(movie, review.getUser()).getScore()) // 타겟 유저가 해당 영화에 준 평점
                     .likeNumber(review.getLikeNum())
-                    .isLiked(loginUser == null ? false : reviewLikeRepository.findByReviewAndUser(review, loginUser) != null) // 로그인 안했으면 false, 로그인 했으면 유저가 평론에 좋아요 눌렀는지 아닌지
-                    .isMyReview(loginUser == null ? false : !reviewRepository.findByIdAndUserId(review.getId(), loginUserId).isEmpty())
-                    // 로그인 안했으면 false/ 로그인 했으면 로그인 유저와 평론으로 조회했을 비어있지 않으면 true
+                    .isLiked(loginUserId == null ? false : reviewLikeRepository.findByReviewAndUserId(review, loginUserId) != null)
+                    // 로그인 안했으면 false, 로그인 했으면 유저가 평론에 좋아요 눌렀는지 아닌지
+                    .isMyReview(loginUserId == null ? false : !reviewRepository.findByIdAndUserId(review.getId(), loginUserId).isEmpty())
+                    // 로그인 안했으면 false, 로그인 했으면 로그인 유저가 작성한 평론이 해당 평론이라면 true
                     .build());
         });
-        return GetCollectionRes.builder().totalPageNum(totalPageNum).collection(reviewList).build();
+        return GetCollectionRes.builder()
+                .totalPageNum(totalPageNum)
+                .collection(reviewList)
+                .build();
     }
 
     //평론 작성
     public Long createReview(ReviewCreateDTO reviewCreateDTO, Long userId) {
+
         // 리뷰를 생성하는 유저 찾기
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
         // 리뷰 쓸 영화 조회, 찾기
         Movie movie = movieRepository.findById(reviewCreateDTO.getMovieId())
                 .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
+
+        if (reviewRepository.findByMovieAndUserAndIsDeleteFalse(movie, user) != null) throw new CustomException(ErrorMsg.REVIEW_EXIST);
+
         // 평론 생성 + DB에 저장하기
         Review createReview = Review.builder()
                 .movie(movie)
@@ -99,6 +102,9 @@ public class ReviewService {
         userRepository.save(user);
         return review.getId();
     }
+
+    //  kill
+
     //평론 수정
     public void updateReview(ReviewUpdateDTO reviewUpdateDTO, Long reviewId, Long userId) {
         String content = reviewUpdateDTO.getContent();
@@ -169,13 +175,14 @@ public class ReviewService {
     public ReviewByMovieListDTO lookupReviewByMovie(Long movieId, Pageable pageable, Long myUserId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(
                 () -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
-        Page<Review> reviewPage = reviewRepository.findByMovieAndIsDeleteFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsDeleteFalseOrderById(movie, pageable);
         List<ReviewByMovieDTO> reviewLookupDTOList = new ArrayList<>();
         for (Review review : reviewPage) {
             User user = review.getUser();
             Score score = scoreRepository.findByMovieAndUser(movie, user);
 
             ReviewByMovieDTO reviewByMovieDTO = ReviewByMovieDTO.builder()
+                    .userId(encryptUtil.LongEncrypt(user.getId()))
                     .reviewId(review.getId())
                     .isMyReview(myUserId != null ? myUserId == user.getId() : false)
                     .nickname(user.getNickname())
@@ -186,13 +193,14 @@ public class ReviewService {
                     .content(review.getContent())
                     .score(score != null ? score.getScore() : null)
                     .likeNumber(review.getLikeNum())
-                    .createdAt(review.getCreatedAt())
+                    .createdAt(review.getCreatedAt().toLocalDate())
                     .isLiked(myUserId != null ? reviewLikeRepository.findByReviewAndUserId(review, myUserId) != null : false)
                     .build();
             reviewLookupDTOList.add(reviewByMovieDTO);
         }
         return ReviewByMovieListDTO.builder()
                 .movieId(movie.getId())
+                .totalReviewNum(reviewRepository.countByMovieAndIsDeleteFalse(movie))
                 .totalPageNum(reviewPage.getTotalPages())
                 .reviews(reviewLookupDTOList).build();
     }
@@ -210,19 +218,28 @@ public class ReviewService {
         for (Review review : reviewPage) {
             Movie movie = review.getMovie();
             User user = review.getUser();
+            Score score = scoreRepository.findByMovieIdAndUserId(movie.getId(),user.getId());
+
             ReviewLookupDTO reviewLookupDTO = ReviewLookupDTO.builder()
                     .movieId(movie.getId())
                     .movieTitle(movie.getTitle())
-                    .moviePoster(movie.getPoster())
+                    .moviePoster(encodeImage(movie.getPoster()))
+                    .reviewScore(score.getScore())
                     .reviewId(review.getId())
                     .reviewWriterId(user.getId())
                     .reviewWriterNickname(user.getNickname())
                     .reviewContent(review.getContent())
                     .likeNumber(review.getLikeNum())
-                    .createdAt(review.getCreatedAt()).build();
+                    .createdAt(review.getCreatedAt().toLocalDate()).build();
             reviewLookupDTOList.add(reviewLookupDTO);
         }
         return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)
                 .totalPageNum(reviewPage.getTotalPages()).build();
+    }
+    public String encodeImage(byte[] imageData) {
+        String baseImgStr = "data:image/png;base64,";
+        String result = Base64.getEncoder().encodeToString(imageData);
+
+        return baseImgStr + result;
     }
 }

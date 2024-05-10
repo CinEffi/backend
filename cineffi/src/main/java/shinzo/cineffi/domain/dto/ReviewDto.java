@@ -11,7 +11,7 @@ public class ReviewDto {
     private String poster;
     private Long reviewId;
     private String content;
-    private float userScore;
+    private Float userScore;
     private int likeNumber;
     private Boolean isLiked;
     private Boolean isMyReview;
