@@ -73,13 +73,6 @@ spring:
       username: root
       password: n1234
       driver-class-name: org.postgresql.Driver
-  datasource:
-    # local postgres
-    url: jdbc:postgresql://localhost:5432/cineffi
-    username:
-    password:
-    driver-class-name: org.postgresql.Driver
-
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
