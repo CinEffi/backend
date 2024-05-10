@@ -163,6 +163,17 @@ public class MovieService {
     }
 
     private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
+        List<CrewListDTO> crewList = new ArrayList<>();
+
+        Movie movie = movieRepo.findById(movieId).orElse(null);
+        if (movie != null && movie.getDirector() != null) {
+            crewList.add(CrewListDTO.builder()
+                    .name(movie.getDirector().getName())
+                    .profile(encodeImage(movie.getDirector().getProfileImage()))
+                    .job("Director")
+                    .character("")
+                    .build());
+        }
 
         List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId)
                 .stream()
@@ -174,16 +185,8 @@ public class MovieService {
                         .build())
                 .collect(Collectors.toList());
 
-        Movie movie = movieRepo.findById(movieId).orElse(null);
-        if (movie != null && movie.getDirector() != null) {
-            actors.add(CrewListDTO.builder()
-                    .name(movie.getDirector().getName())
-                    .profile(encodeImage(movie.getDirector().getProfileImage()))
-                    .job("Director")
-                    .character("")
-                    .build());
-        }
-        return actors;
+        crewList.addAll(actors);
+        return crewList;
     }
 
 
