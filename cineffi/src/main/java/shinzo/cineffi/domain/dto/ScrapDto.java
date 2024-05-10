@@ -15,4 +15,3 @@ public class ScrapDto {
     private LocalDate releaseDate;
     private Boolean isScrap;
 }
-g
