@@ -48,11 +48,17 @@ public class MovieController {
 //                        .build()
 //        );
 
-        newMovieInitService.initTMDBIdsByDate();
+        long beforeTime = System.currentTimeMillis();
+
+        newMovieInitService.initData();
+
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime)/1000;
+
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result("")
+                        .result(secDiffTime)
                         .build());
     }
 
