@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.movie.*;
+import shinzo.cineffi.domain.entity.review.Review;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.*;
+import shinzo.cineffi.review.repository.ReviewRepository;
 import shinzo.cineffi.score.repository.ScoreRepository;
 
 import java.util.*;
@@ -28,7 +30,7 @@ public class MovieService {
     private final ScoreRepository scoreRepo;
     private final ScrapRepository scrapRepo;
     private final ActorMovieRepository actorMovieRepo;
-
+    private final ReviewRepository reviewRepository;
 
 
     public static Genre getEnumGenreBykorGenre(String korName) {
@@ -131,9 +133,11 @@ public class MovieService {
                 .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
         boolean isScrap = (userId != null) && scrapRepo.existsByMovieIdAndUserId(movieId, userId);
 
+
         List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
         Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
 
+        Review existingReview = userId != null ? reviewRepository.findByMovieAndUserIdAndIsDeleteFalse(movie, userId) : null;
         InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
@@ -152,10 +156,11 @@ public class MovieService {
                 .allAvgScore(movie.getAvgScore().getAllScoreSum())
                 .myScore(myScore)
                 .isScrap(isScrap)
+                .existingReviewId(existingReview != null ? existingReview.getId() : null)
+                .existingReviewContent(existingReview != null ? existingReview.getContent() : null)
                 .crewList(crewList)
                 .build();
     }
-
 
     private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
 

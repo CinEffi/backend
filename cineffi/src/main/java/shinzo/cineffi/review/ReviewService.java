@@ -50,13 +50,13 @@ public class ReviewService {
         if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
 
         Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
+
         int totalPageNum = userCollection.getTotalPages();
 
         List<ReviewDto> reviewList = new ArrayList<>();
         userCollection.forEach(review -> {
             // 평론에서 영화 객체 따로 빼놓기
             Movie movie = review.getMovie();
-
             // Dto 꾸리기
             reviewList.add(ReviewDto.builder()
                     .reviewId(review.getId())
@@ -80,12 +80,16 @@ public class ReviewService {
 
     //평론 작성
     public Long createReview(ReviewCreateDTO reviewCreateDTO, Long userId) {
+
         // 리뷰를 생성하는 유저 찾기
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
         // 리뷰 쓸 영화 조회, 찾기
         Movie movie = movieRepository.findById(reviewCreateDTO.getMovieId())
                 .orElseThrow(() -> new CustomException(ErrorMsg.MOVIE_NOT_FOUND));
+
+        if (reviewRepository.findByMovieAndUserAndIsDeleteFalse(movie, user) != null) throw new CustomException(ErrorMsg.REVIEW_EXIST);
+
         // 평론 생성 + DB에 저장하기
         Review createReview = Review.builder()
                 .movie(movie)
@@ -100,6 +104,9 @@ public class ReviewService {
         userRepository.save(user);
         return review.getId();
     }
+
+    //  kill
+
     //평론 수정
     public void updateReview(ReviewUpdateDTO reviewUpdateDTO, Long reviewId, Long userId) {
         String content = reviewUpdateDTO.getContent();
@@ -177,6 +184,7 @@ public class ReviewService {
             Score score = scoreRepository.findByMovieAndUser(movie, user);
 
             ReviewByMovieDTO reviewByMovieDTO = ReviewByMovieDTO.builder()
+                    .userId(encryptUtil.LongEncrypt(user.getId()))
                     .reviewId(review.getId())
                     .isMyReview(myUserId != null ? myUserId == user.getId() : false)
                     .nickname(user.getNickname())
