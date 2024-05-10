@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 @Builder
 public class GetScrapRes {
-    private int totalPageNum;
+    private int totalScrapNum;
     private List<ScrapDto> scrapList;
 }
