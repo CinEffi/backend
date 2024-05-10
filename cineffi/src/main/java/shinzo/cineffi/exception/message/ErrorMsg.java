@@ -21,6 +21,7 @@ public enum ErrorMsg {
         EMPTY_FOLLOW(BAD_REQUEST, "팔로우하고 있지 않습니다."),
         FILE_NOT_IMAGE(BAD_REQUEST, "이미지 파일이 아닙니다."),
         INVALID_SCORE_VALUE(BAD_REQUEST, "평점 값이 유효하지 않습니다."),
+        REVIEW_EXIST(BAD_REQUEST, "해당 영화에 대해 이미 작성된 리뷰가 있습니다."),
 
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),

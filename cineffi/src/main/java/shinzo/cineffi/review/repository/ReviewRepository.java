@@ -25,4 +25,5 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Object> findByIdAndUserId(Long reviewId, Long userId);
     Integer countByMovieAndIsDeleteFalse(Movie movie);
+    Review findByMovieAndUserIdAndIsDeleteFalse(Movie movie, Long userId);
 }

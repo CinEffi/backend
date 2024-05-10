@@ -18,6 +18,8 @@ public class MovieDetailDTO {
     private Float allAvgScore;
     private Float myScore;
     private Boolean isScrap;
+    private Long existingReviewId;
+    private String existingReviewContent;
     private List<CrewListDTO> crewList;
 
 }
