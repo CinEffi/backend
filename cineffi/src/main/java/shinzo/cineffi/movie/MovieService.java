@@ -70,8 +70,8 @@ public class MovieService {
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
                     .poster(encodeImage(movie.getPoster()))
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
-                    .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                     .build();
             dtoList.add(dto);
         }
@@ -101,8 +101,8 @@ public class MovieService {
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
                         .poster(encodeImage(movie.getPoster()))
-                        .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
-                        .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                        .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                        .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                         .build())
                 .collect(Collectors.toList());
 
@@ -114,8 +114,8 @@ public class MovieService {
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
                     .poster(encodeImage(movie.getPoster()))
-                    .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
+                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                     .build())
                     .forEach(dtoList::add);
         }
@@ -151,9 +151,9 @@ public class MovieService {
                 .movie(inMovieDetail)
                 .runtime(movie.getRuntime())
                 .introduction(movie.getIntroduction())
-                .cinephileAvgScore(movie.getAvgScore().getCinephileScoreSum())
-                .levelAvgScore(movie.getAvgScore().getLevelScoreSum())
-                .allAvgScore(movie.getAvgScore().getAllScoreSum())
+                .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                .allAvgScore(movie.getAvgScore().getAllAvgScore())
                 .myScore(myScore)
                 .isScrap(isScrap)
                 .existingReviewId(existingReview != null ? existingReview.getId() : null)
