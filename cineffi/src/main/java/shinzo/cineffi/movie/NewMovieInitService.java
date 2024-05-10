@@ -59,37 +59,42 @@ public class NewMovieInitService {
     private int END_YEAR;
 
     public void initData(){
-        //각 년도마다의 데이터 가져오기
+        //각 년도마다의 데이터 가져와서 저장
         for (int curYear = END_YEAR; curYear >= START_YEAR; curYear--) {
-            //각 해의 TMDB 데이터와 kobis데이터를 가져와 우리 영화 데이터로 만들어 저장
+            //각 해의 TMDB 데이터와 kobis데이터를 가져오기
             List<Movie> TMDBMovies = requestTMDBDataByDates(curYear);
-//            movieRepo.saveAll(TMDBMovies);
-
             List<Movie> kobisMovies = requestMovieCode(curYear);
-//            movieRepo.saveAll(kobisMovies);
 
             Map<String, Movie> kobisKorTitleMap = new HashMap<>();
             Map<String, Movie> kobisEngTitleMap = new HashMap<>();
-//            Map<LocalDate, Movie> kobisReleaseDateMap = new HashMap<>();
             for(Movie kobisMovie : kobisMovies){
                 kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
                 if(kobisMovie.getEngTitle() != null) kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
-//                if(kobisMovie.getReleaseDate() != null) kobisReleaseDateMap.put(kobisMovie.getReleaseDate(), kobisMovie);
 
             }
+
             for (int movieIdx = 0; movieIdx < TMDBMovies.size(); movieIdx++) {
                 Movie TMDBMovie = TMDBMovies.get(movieIdx);
                 Movie result = null;
                 String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
-                Movie movie = kobisKorTitleMap.get(korTitleMapKey);
-                System.out.println("왜않대");
                 if(kobisKorTitleMap.containsKey(korTitleMapKey)){
                     result = kobisKorTitleMap.get(korTitleMapKey)
                             .toBuilder()
                             .poster(TMDBMovie.getPoster())
+                            .tmdbId(TMDBMovie.getTmdbId())
                             .build();
                     movieRepo.save(result);
-                    break;
+                    continue;
+                }
+                if(TMDBMovie.getEngTitle() == null) continue;
+                String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
+                if(kobisEngTitleMap.containsKey(engTitleMapKey)){
+                    result = kobisEngTitleMap.get(engTitleMapKey)
+                            .toBuilder()
+                            .poster(TMDBMovie.getPoster())
+                            .tmdbId(TMDBMovie.getTmdbId())
+                            .build();
+                    movieRepo.save(result);
                 }
             }
 
@@ -197,132 +202,6 @@ public class NewMovieInitService {
         }
         return result;
 
-    }
-
-
-    public void oldinitTMDBIdsByDate() {
-        int startYear = 2024;
-        int endYear = LocalDate.now().getYear();
-
-        ExecutorService executor = Executors.newFixedThreadPool(10); // 10개의 스레드를 가진 스레드 풀 생성
-
-        try {
-            for (int year = startYear; year <= endYear; year++) {
-                for (int month = 4; month <= 4; month++) {
-                    final int finalYear = year;
-                    final int finalMonth = month;
-                    executor.submit(() -> {
-                        String startDate = String.format("%d-%02d-1", finalYear, finalMonth);
-                        String endDate = String.format("%d-%02d-30", finalYear, finalMonth);
-//                        List<Movie> movies = requestTMDBIds(startDate, endDate);
-//                        for (Movie movie : movies) {
-//                            Optional<Movie> codeMovie = requestMovieCode(movie);
-//                            if(codeMovie.isPresent()) movieRepo.save(codeMovie.get());
-//                        }
-//                        initMovieData(movies); // 데이터 처리 로직
-                    });
-                }
-            }
-            executor.shutdown();
-            executor.awaitTermination(1, TimeUnit.HOURS); // 최대 1시간 동안 작업이 완료될 때까지 대기
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.out.println("Thread was interrupted, Failed to complete operation");
-        }
-    }
-
-    private List<Movie> oldrequestTMDBIds(String startDate, String endDate) {
-        List<Movie> movies = new ArrayList<>();
-        int maxPages = MAX_PAGES;  // 최대 페이지 수 정의
-
-        try {
-            for (int page = 1; page <= maxPages; page++) {
-                URL url = new URL(TMDB_BASEURL + TMDB_PATH_MOVIE + "/discover/movie" +
-                        "?api_key=" + TMDB_API_KEY + "&language=en-US&include_adult=false" +
-                        "&page=" + page + "&release_date.gte=" + startDate + "&release_date.lte=" + endDate +
-                        "&with_runtime.gte=40&region=KR");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.connect();
-
-                int responseCode = conn.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    String response = new String(conn.getInputStream().readAllBytes());
-                    Map<String, Object> responseData = parseJson(response);  // JSON 파싱 함수
-                    List<Map<String, Object>> results = (List<Map<String, Object>>) responseData.get("results");
-                    int totalPages = (int) responseData.get("total_pages");
-                    maxPages = Math.min(maxPages, totalPages);
-
-                    for (Map<String, Object> result : results) {
-                        Movie movie = TMDBMapToMovie(result);
-                        if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
-                            movies.add(movie);
-                            movieRepo.save(movie);
-                        }
-                    }
-                }
-                conn.disconnect();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return movies;
-    }
-
-    private Optional<Movie> oldrequestMovieCode(Movie TMDBMovie){
-        Movie result = null;
-//        String TMDBTitle = makeURLStr(TMDBMovie.getEngTitle()).toLowerCase();
-        String a = "A Traveler's Needs";
-        String lowerCase = a.toLowerCase();
-        String TMDBTitle = makeURLStr(lowerCase);
-
-
-        try {
-            URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.connect();
-
-            int responseCode = conn.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                String response = new String(conn.getInputStream().readAllBytes());
-                Map<String, Object> responseData = parseJson(response);  // JSON 파싱 함수
-                Map<String, Object> results = (Map<String, Object>) responseData.get("movieListResult");
-                List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
-                if (movieMapList.size() != 0) {
-                    for (Map<String, Object> movieMap : movieMapList) {
-                        Movie kobisMovie = kobisMapToMovie(movieMap);
-                        Movie movie = kobisMovie.toBuilder()
-                                .tmdbId(TMDBMovie.getTmdbId())
-                                .engTitle(TMDBMovie.getEngTitle())
-                                .poster(TMDBMovie.getPoster())
-                                .releaseDate(kobisMovie.getReleaseDate() == null ? TMDBMovie.getReleaseDate() : kobisMovie.getReleaseDate()).build();
-
-//                        if(makeNoBlankStr(kobisMovie.getEngTitle().toLowerCase(Locale.ROOT)).equals(makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase())){
-//                            result = movie;
-//                            break;
-//                        }
-//                        if(makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getTitle()))){
-//                            result = movie;
-//                            break;
-//                        }
-//                        if(makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getEngTitle()))){
-//                            result = movie;
-//                            break;
-//                        }
-//                        if(kobisMovie.getReleaseDate() != null && TMDBMovie.getReleaseDate().isEqual(kobisMovie.getReleaseDate())){
-//                            result = movie;
-//                            break;
-//                        }
-                    }
-                }
-            }
-            conn.disconnect();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return Optional.ofNullable(result);
     }
 
     private String makeURLStr(String blankStr){
