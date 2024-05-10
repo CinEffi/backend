@@ -129,7 +129,9 @@ public class NewMovieInitService {
 
     private Optional<Movie> requestMovieCode(Movie TMDBMovie){
         Movie result = null;
-        String TMDBTitle = makeURLStr(TMDBMovie.getEngTitle());
+//        String TMDBTitle = makeURLStr(TMDBMovie.getEngTitle()).toLowerCase();
+//        String a = "A Traveler's Needs";
+        String TMDBTitle = makeURLStr(TMDBMovie.getEngTitle().toLowerCase());
 
         try {
             URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY + "&movieNm=" + TMDBTitle);
@@ -146,12 +148,27 @@ public class NewMovieInitService {
                 if (movieMapList.size() != 0) {
                     for (Map<String, Object> movieMap : movieMapList) {
                         Movie kobisMovie = kobisMapToMovie(movieMap);
-                        Movie movie = TMDBMovie.toBuilder().title((String) movieMap.get("movieNm")).kobisCode((String) movieMap.get("movieCd")).build();
+                        Movie movie = kobisMovie.toBuilder()
+                                .tmdbId(TMDBMovie.getTmdbId())
+                                .engTitle(TMDBMovie.getEngTitle())
+                                .poster(TMDBMovie.getPoster())
+                                .releaseDate(kobisMovie.getReleaseDate() == null ? TMDBMovie.getReleaseDate() : kobisMovie.getReleaseDate()).build();
 
-                        if(makeNoBlankStr(kobisMovie.getEngTitle().toLowerCase(Locale.ROOT)).equals(makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase()) ||
-                                makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getTitle())) ||
-                                TMDBMovie.getReleaseDate() == kobisMovie.getReleaseDate()){
+                        if(makeNoBlankStr(kobisMovie.getEngTitle().toLowerCase(Locale.ROOT)).equals(makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase())){
                             result = movie;
+                            break;
+                        }
+                        if(makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getTitle()))){
+                            result = movie;
+                            break;
+                        }
+                        if(makeNoBlankStr(TMDBMovie.getEngTitle()).equals(makeNoBlankStr(kobisMovie.getEngTitle()))){
+                            result = movie;
+                            break;
+                        }
+                        if(kobisMovie.getReleaseDate() != null && TMDBMovie.getReleaseDate().isEqual(kobisMovie.getReleaseDate())){
+                            result = movie;
+                            break;
                         }
                     }
                 }
@@ -202,14 +219,21 @@ public class NewMovieInitService {
     private Movie kobisMapToMovie(Map<String, Object> map) {
         String movieCode = (String) map.get("movieCd");
         String title = (String) map.get("movieNm");
-        String engtitle = (String) map.get("movieNmEn");
-        LocalDate releaseDate = LocalDate.parse((String) map.get("openDt"), KOBIS_DATE_FORMATTER);
+        String engTitle = (String) map.get("movieNmEn");
 
-        return Movie.builder()
+        Movie movie = Movie.builder()
                 .kobisCode(movieCode)
                 .title(title)
-                .engTitle(engtitle)
-                .releaseDate(releaseDate).build();
+                .build();
+
+        if(engTitle != null && !engTitle.equals("")) {
+            movie = movie.toBuilder().engTitle(engTitle).build();
+        }
+        if(map.get("openDt") != null && !engTitle.equals("")) {
+            LocalDate releaseDate = LocalDate.parse((String) map.get("openDt"), KOBIS_DATE_FORMATTER);
+            movie =  movie.toBuilder().releaseDate(releaseDate).build();
+        }
+        return movie;
 
     }
 
