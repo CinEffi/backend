@@ -7,6 +7,10 @@ WORKDIR /app
 COPY cineffi/gradlew cineffi/build.gradle cineffi/settings.gradle ./
 COPY cineffi/gradle ./gradle
 COPY cineffi/src/main ./src/main
+
+RUN mkdir -p /root/.gradle
+RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPort=3128\nsystemProp.https.proxyHost=krmp-proxy.9rum.cc\nsystemProp.https.proxyPort=3128" > /root/.gradle/gradle.properties
+
 RUN ./gradlew bootJar
 
 # app
