@@ -68,11 +68,11 @@ spring:
     activate:
       on-profile:
         - dev
-    datasource:
-      url: jdbc:postgresql://db:5432/cineffi
-      username: root
-      password: n1234
-      driver-class-name: org.postgresql.Driver
+  datasource:
+    url: jdbc:postgresql://db:5432/cineffi
+    username: root
+    password: n1234
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
