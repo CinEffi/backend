@@ -49,7 +49,7 @@ public class ReviewService {
         // 존재하는 유저인지 검증
         if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
 
-        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalse(userId, pageable);
+        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId, pageable);
 
         int totalPageNum = userCollection.getTotalPages();
 

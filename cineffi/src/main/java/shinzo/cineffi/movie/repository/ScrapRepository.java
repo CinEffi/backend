@@ -12,8 +12,9 @@ import java.util.Optional;
 
 public interface ScrapRepository extends JpaRepository<Scrap, Long> {
 
-    List<Scrap> findAllByUserId(Long userId);
-    Page<Scrap> findAllByUserId(Long userId, Pageable pageable);
+//    List<Scrap> findAllByUserId(Long userId);
+//    Page<Scrap> findAllByUserId(Long userId, Pageable pageable);
+    Page<Scrap> findAllByUserIdOrderByIdDesc(Long userId, Pageable pageable);
 
     boolean existsByMovieIdAndUserId(Long movieId, Long userId);
 
