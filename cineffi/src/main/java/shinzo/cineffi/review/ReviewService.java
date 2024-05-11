@@ -43,13 +43,11 @@ public class ReviewService {
 
 
     @Transactional(readOnly = true)
-    public GetCollectionRes getUserReviewList(Long userId, Pageable pageable, Long loginUserId) {
-        // 존재하는 유저인지 검증
+    public GetCollectionRes getUserReviewList(Long userId, Long loginUserId //, Pageable pageable) {
+    ) {// 존재하는 유저인지 검증
         if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
-
-        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId, pageable);
-
-        int totalPageNum = userCollection.getTotalPages();
+        List<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId);
+//        Page<Review> userCollection = reviewRepository.findAllByUserIdAndIsDeleteFalseOrderByCreatedAtDesc(userId, pageable);
 
         List<ReviewDto> reviewList = new ArrayList<>();
         userCollection.forEach(review -> {
@@ -71,7 +69,7 @@ public class ReviewService {
                     .build());
         });
         return GetCollectionRes.builder()
-                .totalPageNum(totalPageNum)
+                .totalCollectionNum(userCollection.size())
                 .collection(reviewList)
                 .build();
     }

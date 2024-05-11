@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 @Builder
 public class GetCollectionRes {
-    private int totalPageNum;
+    private int totalCollectionNum;
     private List<ReviewDto> collection;
 }

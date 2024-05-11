@@ -87,9 +87,9 @@ public class UserService {
 
         try {
             userRepository.save(user.toBuilder()
-                    .nickname(nickname != null ? nickname : user.getNickname())
-                    .profileImage(profileImage != null ? profileImage.getBytes() : user.getProfileImage())
-                    .userAccount(password != null ? userAccount.toBuilder().password(BCrypt.hashpw(password, BCrypt.gensalt())).build() : user.getUserAccount()) // 비밀번호 암호화하여 저장
+                    .nickname(( nickname == null || nickname.isEmpty() ) ? user.getNickname() : nickname)
+                    .profileImage( (profileImage == null || nickname.isEmpty() ) ? user.getProfileImage() : profileImage.getBytes())
+                    .userAccount( (password == null || password.isEmpty() ) ? user.getUserAccount() : userAccount.toBuilder().password(BCrypt.hashpw(password, BCrypt.gensalt())).build()) // 비밀번호 암호화하여 저장
                     .build());
         } catch (IOException e) {
             throw new CustomException(FAIDED_TO_CONVERT_IMAGE);

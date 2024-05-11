@@ -35,13 +35,13 @@ public class ScrapService {
     private final MovieRepository movieRepository;
     private final EncryptUtil encryptUtil;
     @Transactional(readOnly = true)
-    public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
+//    public GetScrapRes getUserScrapList(Long userId, Long loginUserId, Pageable pageable) {
+    public GetScrapRes getUserScrapList(Long userId, Long loginUserId) {
+
         // 존재하는 유저인지 검증
         if(!userRepository.existsById(userId)) throw new CustomException(ErrorMsg.EMPTY_USER);
-        Page<Scrap> userScrapList = scrapRepository.findAllByUserIdOrderByIdDesc(userId, pageable);
+        List<Scrap> userScrapList = scrapRepository.findAllByUserIdOrderByIdDesc(userId);
         List<ScrapDto> scrapList = new ArrayList<>();
-
-        int totalPageNum = userScrapList.getTotalPages();
 
         for (Scrap scrap : userScrapList) {
             // 스크랩에서 영화, 유저 객체 빼놓기
@@ -70,7 +70,7 @@ public class ScrapService {
 
         return GetScrapRes.builder()
                 .scrapList(scrapList)
-                .totalPageNum(totalPageNum).build();
+                .totalScrapNum(scrapList.size()).build();
 
     }
 

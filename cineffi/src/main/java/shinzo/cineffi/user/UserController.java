@@ -101,16 +101,16 @@ public class UserController {
      * @return
      */
     @GetMapping("api/users/{user-id}/reviews")
-    public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") String userId,
-                                                        @PageableDefault(page = 0, size=10) Pageable pageable) {
+    public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") String userId
+//            , @PageableDefault(page = 0, size=10) Pageable pageable
+    ) {
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(reviewService.getUserReviewList(DecryptUserId, pageable, loginUserId))
+                        .result(reviewService.getUserReviewList(DecryptUserId, loginUserId))//, pageable ))
                         .build());
-
     }
 
     /**
@@ -119,8 +119,9 @@ public class UserController {
      * @return
      */
     @GetMapping("/api/users/{user-id}/scrap")
-    public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") String userId,
-                                                       @PageableDefault(page = 0, size=10) Pageable pageable) {
+    public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") String userId
+//            , @PageableDefault(page = 0, size=10) Pageable pageable
+    ) {
 
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
@@ -128,7 +129,7 @@ public class UserController {
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(scrapService.getUserScrapList(DecryptUserId, loginUserId, pageable))
+                        .result(scrapService.getUserScrapList(DecryptUserId, loginUserId))//, pageable))
                         .build()
         );
     }
