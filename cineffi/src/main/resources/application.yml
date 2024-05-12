@@ -80,7 +80,7 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
-        format_sql: true
+#        format_sql: true
 
   mail:
     host: smtp.gmail.com
@@ -118,7 +118,7 @@ tmdb:
 logging:
   level:
     org.hibernate.SQL: debug
-    org.hibernate.orm.jdbc.bind: trace
+#    org.hibernate.orm.jdbc.bind: trace
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
