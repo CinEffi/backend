@@ -78,8 +78,8 @@ public class RedisConfig {
         // https://go-coding.tistory.com/101
         // https://velog.io/@yoojkim/Spring-Boot-Redis-%EC%82%AC%EC%9A%A9%ED%95%98%EA%B8%B0
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return redisTemplate;
     }

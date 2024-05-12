@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
@@ -39,7 +40,7 @@ public class Chatroom extends BaseEntity {
     private User owner;
 
     @OneToMany(mappedBy = "chatroom", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserChat> userChats = new ArrayList<>();
+    private List<UserChat> userChats;
 
     @ColumnDefault("false")
     private boolean debate;

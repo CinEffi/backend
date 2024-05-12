@@ -15,6 +15,10 @@ public enum ErrorMsg {
         PASSWORD_INCORRECT(BAD_REQUEST,"비밀번호가 옳지 않습니다."),
         PASSWORD_INCORRECT_MISMATCH(BAD_REQUEST, "입력하신 비밀번호와 비밀번호 확인이 일치하지 않습니다."),
         NOT_CHATROOM_OWNER(BAD_REQUEST, "채팅방 주인이 아닙니다."),
+        NOT_JOINED_CHATROOM(BAD_REQUEST, "접속한 채팅방이 아닙니다."),
+        USER_MUTED(BAD_REQUEST, "뮤트된 사용자입니다."),
+        USER_CANNOT_JOIN(BAD_REQUEST, "접속이 불가능합니다. (이미 접속중이거나 영구 퇴장 상태입니다.)"),
+
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),

@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 public class RedisMessageSubscriber implements MessageListener {
 
     private final RedisTemplate<String, Object> redisTemplate;
-
     @Override
     public void onMessage(Message message, byte[] pattern) {
         // 여가서,
@@ -29,21 +28,38 @@ public class RedisMessageSubscriber implements MessageListener {
         String[] parts = new String(message.getBody()).split(":");
         String userlist = "userlist:" + channel.split(":")[1];
 
+
+
         for (RedisUserChat redisUserChat :
                 redisTemplate.opsForHash().entries(userlist).values().stream()
                         .map(RedisUserChat.class::cast).collect(Collectors.toList()))
-            onChat(redisUserChat, channel, parts);
+            onChat(redisUserChat, channel, parts[0], parts[1]);
+
+        ////////////////
+        ////////////////
+
+        ////////////////
+        ////////////////
+
+        ////////////////
+        ////////////////
+        ////////////////
+        ////////////////
+
+        ////////////////
+        ////////////////
+        ////////////////
+        ////////////////
+
 
         // 지금은 출력이 잘 되는지만 확인하고 있지만, FE와 연결되는 경우
         // 이 부분에서 이제 Map<chatroomId, List<WebSocket>> 으로
         // 웹소켓에 전송해주는 처리를 해주면 된다.
     }
 
-    public static void onChat(RedisUserChat redisUserChat, String channel, String[] parts) {
-        String userId = parts[0];
-        String message = parts[1];
-        System.out.printf("At %s, %s said to %s(%d) : %s\n" , channel, parts[0]
-                , redisUserChat.getNickname(), redisUserChat.getUserId(), parts[1]);
+    public static void onChat(RedisUserChat redisUserChat, String channel, String userId, String message) {
+        System.out.printf("At %s, %s said to %s(%d) : %s\n" , channel, userId
+                , redisUserChat.getNickname(), redisUserChat.getUserId(), message);
     }
 
 }

@@ -17,12 +17,26 @@ import java.util.List;
 public class RedisChatController {
     final private RedisChatService redisChatService;
 
+
+    @PostMapping("/tmp/create/user")
+    public ResponseEntity<ResponseDTO<?>> tmpCreateUser(
+            @RequestBody String nickname) {
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(redisChatService.tmpCreateUser(nickname))
+                        .build()
+        );
+    }
+
+
     @PostMapping("/create")
     public ResponseEntity<ResponseDTO<?>> createChatroom(
             @RequestBody CreateRedisChatroomDTO createRedisChatroomDTO) {
-        RedisChatroom redisChatroom = redisChatService.createChatroom(createRedisChatroomDTO.getTitle());
+        Long ownerId = createRedisChatroomDTO.getOwnerId();
+        RedisChatroom redisChatroom = redisChatService.createChatroom(createRedisChatroomDTO.getTitle(), ownerId);
         redisChatService.joinChatroom(redisChatroom.getId()
-                , createRedisChatroomDTO.getOwnerId()
+                , ownerId
                 , createRedisChatroomDTO.getOwnerNickname());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -41,8 +55,6 @@ public class RedisChatController {
                 .build()
         );
     }
-
-
     @PostMapping("/{chatroomId}/join")
     public ResponseEntity<ResponseDTO<?>> joinChatroom(
             @PathVariable Long chatroomId,
@@ -77,8 +89,14 @@ public class RedisChatController {
     public ResponseEntity<ResponseDTO<?>> sendMessage(
             @PathVariable Long chatroomId, @RequestBody SendRedisMessageDTO sendRedisMessageDTO) {
         return ResponseEntity.ok(ResponseDTO.builder().message(SuccessMsg.SUCCESS.getDetail())
-                .result(redisChatService.sendMaeesage(chatroomId,
+                .result(redisChatService.sendMessage(chatroomId,
                         sendRedisMessageDTO.getUserId(),
                         sendRedisMessageDTO.getData())).build());
+    }
+
+    @GetMapping("/backup")
+    public ResponseEntity<ResponseDTO<?>> backupChatroom() {
+        redisChatService.backupToDatabase();
+        return ResponseEntity.ok(ResponseDTO.builder().message(SuccessMsg.SUCCESS.getDetail()).build());
     }
 }

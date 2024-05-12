@@ -4,23 +4,25 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 
 @Builder
 @Getter
-@Setter
 public class RedisChatMessage {
+
     private Long userId;
     private String data;
-
+    private String ms;
     @JsonCreator
-    public RedisChatMessage (
+    public RedisChatMessage(
             @JsonProperty("userId") Long userId,
-            @JsonProperty("data") String data
+            @JsonProperty("data") String data,
+            @JsonProperty("ms") String ms
     ) {
         this.userId = userId;
         this.data = data;
+        this.ms = ms;
     }
-
 }

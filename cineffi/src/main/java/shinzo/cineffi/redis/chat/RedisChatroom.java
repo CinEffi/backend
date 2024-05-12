@@ -14,11 +14,13 @@ import org.springframework.data.redis.core.RedisHash;
 public class RedisChatroom {
     private Long id;
     private String title;
+    private Long ownerId;
     // getters and setters
 
     @JsonCreator
-    public RedisChatroom(@JsonProperty("id") Long id, @JsonProperty("title") String title) {
+    public RedisChatroom(@JsonProperty("id") Long id, @JsonProperty("title") String title, @JsonProperty("ownerId") Long ownerId) {
         this.id = id;
         this.title = title;
+        this.ownerId = ownerId;
     }
 }
