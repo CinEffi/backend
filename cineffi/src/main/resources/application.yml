@@ -115,10 +115,10 @@ tmdb:
   start-month: 4
   end-month: 4
 
-logging:
-  level:
-    org.hibernate.SQL: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+#logging:
+#  level:
+#    org.hibernate.SQL: INFO
+#    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
