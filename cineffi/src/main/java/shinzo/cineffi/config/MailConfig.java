@@ -21,10 +21,12 @@ public class MailConfig {
         mailSender.setPassword("tboxbeusjvbysajd");
 
         Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtps"); // SMTPS 프로토콜 사용
-        props.put("mail.smtps.auth", "true");
-        props.put("mail.smtps.starttls.enable", "true");
-        props.put("mail.smtps.starttls.required", "true");
+        props.put("mail.transport.protocol", "smtp"); // SMTP 프로토콜 사용
+        props.put("mail.smtp.auth", "true"); // SMTP 인증 활성화
+        props.put("mail.smtp.starttls.enable", "true"); // STARTTLS 활성화
+        props.put("mail.smtp.starttls.required", "true"); // STARTTLS 필수
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); // SSL 소켓 팩토리 사용
+        props.put("mail.smtp.socketFactory.port", "465"); // SSL 소켓 팩토리 포트
 
         return mailSender;
     }
