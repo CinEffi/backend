@@ -26,18 +26,18 @@ public class MailController {
 
     @PostMapping("/api/auth/verify/email")
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO emailRequestDTO) throws URISyntaxException, IOException, InterruptedException {
-        HttpClient client = HttpClient.newBuilder()
-                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))
-                .build();
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("smtp.gmail.com:587"))
-                .timeout(Duration.ofMinutes(1))
-                .header("Content-Type", "application/json")
-                .GET()
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+//        HttpClient client = HttpClient.newBuilder()
+//                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))
+//                .build();
+//
+//        HttpRequest request = HttpRequest.newBuilder()
+//                .uri(new URI("smtp.gmail.com:587"))
+//                .timeout(Duration.ofMinutes(1))
+//                .header("Content-Type", "application/json")
+//                .GET()
+//                .build();
+//
+//        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         int number = mailService.sendMail(emailRequestDTO.getEmail());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()

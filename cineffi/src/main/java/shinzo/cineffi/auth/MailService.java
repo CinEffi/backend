@@ -1,6 +1,7 @@
 package shinzo.cineffi.auth;
 
 import jakarta.mail.MessagingException;
+import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import shinzo.cineffi.domain.entity.user.AuthCode;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Properties;
 
 @Service
 @EnableScheduling
@@ -83,14 +85,21 @@ public class MailService {
     //생성한 메일을 전송
     public int sendMail(String request){
         MimeMessage message = CreateMail(request);
-//        // HttpProxy의 객체 생성
-//        HttpProxy proxy = new HttpProxy("18.222.124.59", 8080);
-//
-//// SMTP 클라이언트 생성
-//        try (SmtpClient client = new SmtpClient("host", 587, "username", "password")) {
-//
-//            // 프록시 설정
-//            client.setProxy(proxy);
+        Properties props = System.getProperties();
+        props.put("mail.smtp.host", "smtp.example.com");  // SMTP 서버 주소
+        props.put("mail.smtp.port", "587");               // SMTP 서버 포트
+        props.put("mail.smtp.auth", "true");              // SMTP 인증 필요시
+        props.put("mail.smtp.starttls.enable", "true");   // TLS 필요시
+
+        // 프록시 서버 설정
+        props.put("mail.smtp.proxy.host", "프록시서버주소");
+        props.put("mail.smtp.proxy.port", "포트번호");
+
+        // 프록시 인증이 필요한 경우
+        props.put("mail.smtp.proxy.user", "사용자이름");
+        props.put("mail.smtp.proxy.password", "비밀번호");
+
+        Session session = Session.getInstance(props);
         javaMailSender.send(message);
         return number;
     }
