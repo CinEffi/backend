@@ -9,6 +9,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.auth.repository.AuthCodeRepository;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.entity.user.AuthCode;
@@ -24,6 +25,7 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
+    private final RestTemplate restTemplate;
 
 
     public static void createNumber(){
