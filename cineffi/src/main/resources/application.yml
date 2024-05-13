@@ -73,7 +73,7 @@ logging:
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
-  redirect_url: https://kd0fa487ebb45a.user-app.krampoline.com/api/auth/login/kakao
+  redirect_url: https://k7f10638b4382a.user-app.krampoline.com/api/auth/login/kakao
 app:
   encryption:
     key: "cineffiSecretKey"
