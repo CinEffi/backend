@@ -20,6 +20,7 @@ public class Director {
     private Long id;
 
     private String name;
+    private String engname;
 
     @Lob
     private byte[] profileImage;

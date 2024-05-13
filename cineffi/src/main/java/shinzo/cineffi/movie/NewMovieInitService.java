@@ -3,12 +3,18 @@ package shinzo.cineffi.movie;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
-import shinzo.cineffi.domain.entity.movie.Movie;
+import reactor.core.publisher.Mono;
+import shinzo.cineffi.domain.entity.movie.*;
+import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
+import shinzo.cineffi.domain.enums.InitType;
 import shinzo.cineffi.movie.repository.*;
 
 import java.io.*;
@@ -18,16 +24,21 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
 
 import static shinzo.cineffi.domain.enums.ImageType.POSTER;
+import static shinzo.cineffi.domain.enums.ImageType.PROFILE;
+import static shinzo.cineffi.domain.enums.InitType.KOBIS;
+import static shinzo.cineffi.domain.enums.InitType.TMDB;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NewMovieInitService {
     private final MovieRepository movieRepo;
     private final MovieGenreRepository movieGenreRepo;
@@ -46,11 +57,12 @@ public class NewMovieInitService {
     private String TMDB_PATH_IMAGE;
     @Value("${tmdb.path_movie}")
     private String TMDB_PATH_MOVIE;
-    private final DateTimeFormatter TMDB_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final int MAX_PAGES = 500;
 
     @Value("${kobis.api_key}")
     private String KOBIS_API_KEY;
+    @Value("${kobis.api_key2}")
+    private String KOBIS_API_KEY2;
     private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
     @Value("${tmdb.start-year}")
@@ -58,152 +70,283 @@ public class NewMovieInitService {
     @Value("${tmdb.end-year}")
     private int END_YEAR;
 
+    private static final int THREAD_COUNT = 10; // 동시에 처리할 스레드 수
+
+    @Transactional
     public void initData(){
         //각 년도마다의 데이터 가져와서 저장
         for (int curYear = END_YEAR; curYear >= START_YEAR; curYear--) {
-            //각 해의 TMDB 데이터와 kobis데이터를 가져오기
-            List<Movie> TMDBMovies = requestTMDBDataByDates(curYear);
-            List<Movie> kobisMovies = requestMovieCode(curYear);
+            List<Movie> TMDBBasicDatas = requestTMDBDatasByDate(curYear);
+            List<Movie> kobisBasicDatas = requestKobisDatas(curYear);
+            List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+            movieRepo.saveAll(mixBasicDatas);
+            movieRepo.flush();
 
-            Map<String, Movie> kobisKorTitleMap = new HashMap<>();
-            Map<String, Movie> kobisEngTitleMap = new HashMap<>();
-            for(Movie kobisMovie : kobisMovies){
-                kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
-                if(kobisMovie.getEngTitle() != null) kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
-
-            }
-
-            for (int movieIdx = 0; movieIdx < TMDBMovies.size(); movieIdx++) {
-                Movie TMDBMovie = TMDBMovies.get(movieIdx);
-                Movie result = null;
-                String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
-                if(kobisKorTitleMap.containsKey(korTitleMapKey)){
-                    result = kobisKorTitleMap.get(korTitleMapKey)
-                            .toBuilder()
-                            .poster(TMDBMovie.getPoster())
-                            .tmdbId(TMDBMovie.getTmdbId())
-                            .build();
-                    movieRepo.save(result);
-                    continue;
-                }
-                if(TMDBMovie.getEngTitle() == null) continue;
-                String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
-                if(kobisEngTitleMap.containsKey(engTitleMapKey)){
-                    result = kobisEngTitleMap.get(engTitleMapKey)
-                            .toBuilder()
-                            .poster(TMDBMovie.getPoster())
-                            .tmdbId(TMDBMovie.getTmdbId())
-                            .build();
-                    movieRepo.save(result);
-                }
+            List<Movie> mixBasicDatas1 = mixBasicDatas;
+            List<Movie> movieDatas = requestDetailDatas(mixBasicDatas);
+            List<Movie> movies = movieRepo.findAllByReleaseDate(curYear);
+            Map<Long, Movie> movieDataMap = new HashMap<>();
+            for (Movie movie : movieDatas) movieDataMap.put(movie.getId(), movie);
+            for(Movie movie : movies){
+                Movie movieData = movieDataMap.get(movie.getId());
+                movie.toBuilder()
+                        .originCountry(movieData.getOriginCountry())
+                        .runtime(movieData.getRuntime())
+                        .build();
+                movieRepo.save(movie);
             }
 
         }
-
     }
-    private List<Movie> requestTMDBDataByDates(int year) {
+
+    private List<Movie> requestTMDBDatasByDate(int year) {
         List<Movie> result = new ArrayList<>();
-        for (int month = 1; month <= 12; month++) {
+        for (int month = 4; month <= 4; month++) {
             final int finalMonth = month;
-            String startDate = String.format("%d-%02d-01", year, finalMonth);
+            String startDate = String.format("%d-%02d-25", year, finalMonth);
             String endDate = String.format("%d-%02d-%02d", year, finalMonth, YearMonth.of(year, finalMonth).lengthOfMonth());
             List<Movie> movies = requestTMDBdatas(startDate, endDate);
             result.addAll(movies);
         }
         return result;
     }
-
-    private List<Movie> requestTMDBdatas(String startDate, String endDate) {
+    public List<Movie> requestTMDBdatas(String startDate, String endDate) {
+        RestTemplate restTemplate = new RestTemplate();
         List<Movie> movies = new ArrayList<>();
         int maxPages = MAX_PAGES;
 
-        try {
-            HttpURLConnection conn = null; // 연결 초기화
-            for (int page = 1; page <= maxPages; page++) {
-                if (conn != null) {
-                    conn.disconnect(); // 이전 연결 종료
-                }
-                URL url = new URL(TMDB_BASEURL + TMDB_PATH_MOVIE + "/discover/movie" +
-                        "?api_key=" + TMDB_API_KEY + "&language=ko-KR&include_adult=false" +
-                        "&page=" + page + "&release_date.gte=" + startDate + "&release_date.lte=" + endDate +
-                        "&with_runtime.gte=40&region=KR");
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestProperty("Connection", "keep-alive");
-                conn.setRequestProperty("AUTHORIZATION", "Bearer " + TMDB_ACCESS_TOKEN);
-                conn.connect();
+        for (int page = 1; page <= maxPages; page++) {
+            String url = String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate);
 
-                int responseCode = conn.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    InputStream inputStream = conn.getInputStream();
-                    String response = new BufferedReader(new InputStreamReader(inputStream))
-                            .lines().collect(Collectors.joining("\n"));
-                    Map<String, Object> responseData = parseJson(response);
-                    List<Map<String, Object>> results = (List<Map<String, Object>>) responseData.get("results");
-                    int totalPages = (int) responseData.get("total_pages");
-                    maxPages = Math.min(maxPages, totalPages);
+            Map response = restTemplate.getForObject(url, Map.class);
+            if (response != null) {
+                List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+                int totalPages = (int) response.get("total_pages");
+                maxPages = Math.min(maxPages, totalPages);
 
-                    for (Map<String, Object> result : results) {
-                        Movie movie = TMDBMapToMovie(result);
-                        if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
-                            movies.add(movie);
-                        }
+                for (Map<String, Object> result : results) {
+                    Movie movie = TMDBMapToMovie(result);
+                    if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
+                        movies.add(movie);
                     }
                 }
             }
-            if (conn != null) {
-                conn.disconnect(); // 최종 연결 종료
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         return movies;
     }
-
-    private List<Movie> requestMovieCode(int year){
+    public List<Movie> requestKobisDatas(int year) {
+        RestTemplate restTemplate = new RestTemplate();
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
-        int totalPage = 100;
+        int totalPage = 100; // 초기 추정치
 
-        try {
-            while (curPage <= totalPage) {
-                URL url = new URL(KOBIS_BASEURL + "/movie/searchMovieList.json?key=" + KOBIS_API_KEY
-                        + "&openStartDt=" + year + "&openEndDt=" + year + "&itemPerPage=100" + "&curPage=" + curPage);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.connect();
+        while (curPage <= totalPage) {
+            String url = String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
+                    KOBIS_BASEURL, KOBIS_API_KEY2, year, year, curPage);
 
-                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    String response = new String(conn.getInputStream().readAllBytes());
-                    Map<String, Object> responseData = parseJson(response);  // JSON 파싱
-                    Map<String, Object> results = (Map<String, Object>) responseData.get("movieListResult");
-                    int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
-                    totalPage = totCnt / 100; // 전체 페이지 수 계산
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
+            int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
+            totalPage = (totCnt + 99) / 100; // 전체 페이지 수 계산 (올림 처리)
 
-                    List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
-                    if (movieMapList.size() != 0) {
-                        for (Map<String, Object> movieMap : movieMapList) {
-                            if(((String) movieMap.get("genreAlt")).contains("에로")) continue;
-                            Movie kobisMovie = kobisMapToMovie(movieMap);
-                            result.add(kobisMovie);
-                        }
-                    }
+            List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
+            if (movieMapList != null && !movieMapList.isEmpty()) {
+                for (Map<String, Object> movieMap : movieMapList) {
+                    if(((String) movieMap.get("genreAlt")).contains("에로")) continue;
+                    Movie kobisMovie = kobisMapToMovie(movieMap);
+                    result.add(kobisMovie);
                 }
-                conn.disconnect();
-                if (curPage >= totalPage) {
-                    break;
-                }
-                curPage++; // 다음 페이지로
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            curPage++; // 다음 페이지로
         }
+
+        return result;
+    }
+    protected List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies){
+        List<Movie> result = new ArrayList<>();
+        Map<String, Movie> kobisKorTitleMap = new HashMap<>();
+        Map<String, Movie> kobisEngTitleMap = new HashMap<>();
+        for(Movie kobisMovie : kobisMovies){
+            kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
+            if(kobisMovie.getEngTitle() != null) kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
+
+        }
+
+        for (int movieIdx = 0; movieIdx < TMDBMovies.size(); movieIdx++) {
+            Movie movie = null;
+            Movie TMDBMovie = TMDBMovies.get(movieIdx);
+            String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
+            if(kobisKorTitleMap.containsKey(korTitleMapKey)){
+                movie = kobisKorTitleMap.get(korTitleMapKey)
+                        .toBuilder()
+                        .poster(TMDBMovie.getPoster())
+                        .tmdbId(TMDBMovie.getTmdbId())
+                        .introduction(TMDBMovie.getIntroduction())
+                        .build();
+                result.add(movie);
+                continue;
+            }
+            if(TMDBMovie.getEngTitle() == null) continue;
+            String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
+            if(kobisEngTitleMap.containsKey(engTitleMapKey)){
+                movie = kobisEngTitleMap.get(engTitleMapKey)
+                        .toBuilder()
+                        .poster(TMDBMovie.getPoster())
+                        .tmdbId(TMDBMovie.getTmdbId())
+                        .build();
+                result.add(movie);
+            }
+        }
+        return result;
+    }
+
+    private List<Movie> requestDetailDatas(List<Movie> movies) {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+        List<Future<Movie>> futures = new
+                ArrayList<>();
+        List<Movie> result = new ArrayList<>();
+
+        for (Movie movie : movies) {
+            Future<Movie> future = executor.submit(() -> requestDetailData(movie));
+            futures.add(future);
+        }
+
+        for (Future<Movie> future : futures) {
+            try {
+                Movie data = future.get(); // 결과가 준비될 때까지 기다림
+                if (data != null) result.add(data);
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown(); // 모든 작업이 완료된 후 스레드 풀 종료
         return result;
 
     }
 
+    private Movie requestDetailData(Movie movie){
+        Map<String, Object> param = new HashMap<>();
+        String kobisCode = movie.getKobisCode();
+        int tmdbId = movie.getTmdbId();
+
+        // KOBIS 요청 수행
+        Map<String, Object> kobisDetails = (Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY2 + "&movieCd=" + kobisCode, KOBIS).get("movieInfoResult");
+
+        // TMDB 요청 수행
+        Map<String, Object> tmdbDetails = requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB);
+
+        if (!tmdbDetails.isEmpty() && !kobisDetails.isEmpty()) {
+            param.put("kobisDetails", kobisDetails);
+            param.put("tmdbDetails", tmdbDetails);
+        }
+
+        return detailDataMapToMovie(param, movie);
+    }
+
+    private Map<String, Object> requestData(String urlString, InitType type) {
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> responseData = new HashMap<>();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.set("Connection", "keep-alive");
+
+            if (type.equals(InitType.TMDB)) {
+                headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
+            }
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String response = restTemplate.getForObject(urlString, String.class, entity);
+            int test = 0;
+            if (response != null) {
+                responseData = parseJson(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return responseData;
+    }
+
+    private Map<String, Object> requestTMDBGenreAndCredits(int movieTmdbId){
+    //tmdbId, 맡은일(job : Actor or Director), 사람의 한글이름, 영어이름, 맡은 배역으로 4개 넣을것
+    Map<String, Object> result = new HashMap<>();
+
+    try {
+        HttpURLConnection conn = null; // 연결 초기화
+//            URL url = new URL(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + movieTmdbId + "/credits?key=" + KOBIS_API_KEY2 + "&language=ko-KR");
+        URL url = new URL(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + movieTmdbId + "?key=" + KOBIS_API_KEY2 + "&language=ko-KR&append_to_response=credits");
+        conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Accept", "application/json");
+        conn.setRequestProperty("Connection", "keep-alive");
+        conn.setRequestProperty("AUTHORIZATION", "Bearer " + TMDB_ACCESS_TOKEN);
+        conn.connect();
+
+        int responseCode = conn.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            InputStream inputStream = conn.getInputStream();
+            String response = new BufferedReader(new InputStreamReader(inputStream))
+                    .lines().collect(Collectors.joining("\n"));
+            result = parseJson(response);
+
+        }
+        conn.disconnect(); // 최종 연결 종료
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return result;
+}
+    private List<Genre> returnTMDBGenres(Map<String, Object> map){
+        List<Genre> result = new ArrayList<>();
+
+        List<Map<String, Object>> genres = (List<Map<String, Object>>) map.get("genres");
+        for (Map<String, Object> genre : genres){
+            result.add(Genre.getEnum((String) genre.get("name")));
+        }
+
+        return result;
+    }
+    private List<Map<String, String>> returnTMDBCredits(Map<String, Object> map){
+        //tmdbId, 맡은일(job : Actor or Director), 사람의 한글이름, 영어이름, 맡은 배역으로 4개 넣을것
+        List<Map<String, String>> result = new ArrayList<>();
+
+        Map<String, Object> credits = (Map<String, Object>) map.get("credits");
+        List<Map<String, Object>> casts = (List<Map<String, Object>>) credits.get("cast");
+        List<Map<String, Object>> crews = (List<Map<String, Object>>) credits.get("crew");
+
+        for (Map<String, Object> cast : casts){
+            int wer = Integer.parseInt("234325");
+            int order = (Integer) cast.get("order");
+            if(order <= 12){
+                Map<String, String> actor = new HashMap<>();
+                actor.put("tmdbId", ((Integer) cast.get("id")).toString());
+                actor.put("job", "Actor");
+                actor.put("korName", (String) cast.get("name"));
+                actor.put("engName", (String) cast.get("original_name"));
+                actor.put("profilePath", (String) cast.get("profile_path"));
+                actor.put("order", ((Integer) cast.get("order")).toString());
+                result.add(actor);
+            }
+        }
+        for (Map<String, Object> crew : crews) {
+            if ("Director".equals((String) crew.get("job"))){
+                Map<String, String> director = new HashMap<>();
+                director.put("tmdbId",((Integer) crew.get("id")).toString());
+                director.put("job", "Director");
+                director.put("korName", (String) crew.get("name"));
+                director.put("engName", (String) crew.get("original_name"));
+                director.put("profilePath", (String) crew.get("profile_path"));
+                result.add(director);
+            }
+        }
+
+        return result;
+    }
+
+    //문자열 검사 혹은 규격에 맞추는 메서드들
     private String makeURLStr(String blankStr){
         if(blankStr == null) return null;
         String result = "";
@@ -221,17 +364,26 @@ public class NewMovieInitService {
         }
         return result;
     }
-
     private Map<String, Object> parseJson(String json) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(json, Map.class);
+    }
+    private boolean isKorStr(String str){
+        if(str == null) return false;
+        for (char ch : str.toCharArray()) {
+            if (!(ch >= 0xAC00 && ch <= 0xD7A3)) {
+                return false; // 한글 범위를 벗어나는 문자가 있다면 false 반환
+            }
+        }
+        return true;
     }
 
     //요청으로 받은 데이터를 우리 영화 데이터로
     private Movie TMDBMapToMovie(Map<String, Object> map) {
         Integer id = (Integer) map.get("id");
         String title = (String) map.get("title");
-        byte[] poster = requestImg((String) map.get("poster"), POSTER);
+        String introduction = (String) map.get("overview");
+        byte[] poster = requestImg((String) map.get("poster_path"), POSTER);
         LocalDate releaseDate = LocalDate.parse((String) map.get("release_date"));
         String engTitle = "";
         if(((String) map.get("original_language")).equals("en")) engTitle = (String) map.get("original_title");
@@ -239,6 +391,7 @@ public class NewMovieInitService {
         Movie result = Movie.builder()
                 .tmdbId(id)
                 .title(title)
+                .introduction(introduction)
                 .poster(poster)
                 .releaseDate(releaseDate).build();
         if(!engTitle.equals("")) result = result.toBuilder().engTitle(engTitle).build();
@@ -265,19 +418,133 @@ public class NewMovieInitService {
         return movie;
 
     }
+    @Transactional
+    protected Movie detailDataMapToMovie(Map<String, Object> map, Movie data){
+        //반환값
+        Movie result = data;
+        Map<String, Object> kobisResponse = (Map<String, Object>) ((Map<String, Object>) map.get("kobisDetails")).get("movieInfo");
+        Map<String, Object> tmdbResponse = (Map<String, Object>) map.get("tmdbDetails");
+        Integer runtime = (Integer) tmdbResponse.get("runtime");
+        if(runtime == 0) return null;
+        String title = (String) kobisResponse.get("movieNm");
+        List<Map<String, Object>> nations = (List<Map<String, Object>>) kobisResponse.get("nations");
+        String nation = (String) nations.get(0).get("nationNm");
+        List<Map<String, Object>> kobisDirectors = kobisResponse.get("directors") == null ? new ArrayList<>() : (List<Map<String, Object>>) kobisResponse.get("directors");
+        List<Map<String, Object>> kobisActors = kobisResponse.get("actors") == null ? new ArrayList<>() : (List<Map<String, Object>>) kobisResponse.get("actors");
+        Map<String, Object> credits = (Map<String, Object>) tmdbResponse.get("credits");
+        List<Map<String, Object>> castMaps = (List<Map<String, Object>>) credits.get("cast");
+        List<Map<String, Object>> crewMaps = (List<Map<String, Object>>) credits.get("crew");
+        List<Map<String, Object>> genreMaps = (List<Map<String, Object>>) tmdbResponse.get("genres");
+
+        AvgScore avgScore = AvgScore.builder().build();
+        avgScoreRepo.save(avgScore);
+
+        List<MovieGenre> genres = new ArrayList<>();
+        for(Map<String, Object> genreMap : genreMaps){
+            Genre genre = Genre.getEnum((String) genreMap.get("name"));
+            MovieGenre mg = MovieGenre.builder()
+                    .genre(genre)
+                    .movie(result)
+                    .build();
+            movieGenreRepo.save(mg);
+            genres.add(mg);
+        }
+
+        System.out.println("이거되나?1");
+
+        result = result.toBuilder()
+                .originCountry(nation)
+                .avgScore(avgScore)
+                .genreList(genres)
+                .build();
+
+        if(kobisDirectors.size() != 0) {
+            String directorName = (String) kobisDirectors.get(0).get("peopleNm");
+            String directorEngName = (String) kobisDirectors.get(0).get("peopleNmEn");
+
+            Director director = Director.builder()
+                    .name(directorName)
+                    .engname(directorEngName)
+                    .build();
+
+            for(Map<String, Object> crewMap : crewMaps) {
+                if ((crewMap.get("job")).equals("Director")) {
+                    byte[] profileImg = requestImg((String) crewMap.get("profile_path"), PROFILE);
+                    director = director.toBuilder()
+                            .tmdbId((Integer) crewMap.get("id"))
+                            .engname((String) crewMap.get("original_name"))
+                            .profileImage(profileImg)
+                            .build();
+                    break;
+                }
+            }
+            directorRepo.save(director);
+
+            result = result.toBuilder()
+                    .director(director)
+                    .build();
+        }
+        if(kobisActors.size() != 0){
+            for (int i = 0; i < kobisActors.size(); i++) {
+                String actorKorName = (String) kobisActors.get(i).get("peopleNm");
+                String actorEngName = (String) kobisActors.get(i).get("peopleNmEn");
+                String cast = (String) kobisActors.get(i).get("cast");
+
+                Actor actor = Actor.builder()
+                        .name(actorKorName)
+                        .engName(actorEngName)
+                        .build();
+                ActorMovie actorMovie = ActorMovie.builder()
+                        .character(cast)
+                        .movie(result)
+                        .build();
+                for (Map<String, Object> castMap : castMaps){
+                    if(!castMap.containsKey("order")) continue;
+
+                    Integer tmdbId = (Integer) castMap.get("id");
+                    Integer TMDBOrder = (Integer) castMap.get("order");
+                    String TMDBKorName = makeNoBlankStr((String) castMap.get("name"));
+                    String TMDBProfilePath = (String) castMap.get("profile_path");
+                    String TMDBEngName = castMap.get("original_name") == null ? null : makeNoBlankStr((String) castMap.get("original_name")).toLowerCase();
+
+                    if((TMDBKorName.equals(makeNoBlankStr(actor.getName()))) ||
+                            (TMDBEngName != null && TMDBEngName.equals(makeNoBlankStr(actor.getEngName()).toLowerCase()))){
+                        actor = actor.toBuilder()
+                                .tmdbId(tmdbId)
+                                .profileImage(requestImg(TMDBProfilePath, PROFILE))
+                                .build();
+                        actorMovie = actorMovie.toBuilder()
+                                .actor(actor)
+                                .orders(TMDBOrder)
+                                .build();
+                        actorRepo.save(actor);
+                        actorMovieRepo.save(actorMovie);
+                        break;
+                    }
+
+                }
+            }
+        }
+
+        return result;
+    }
 
     //이미지 데이터 요청하기
     private byte[] requestImg(String imagePath, ImageType type) {
         if (imagePath != null) {
-            HttpURLConnection connection = null;
+            HttpURLConnection conn = null;
             try {
-                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
+                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath + "?key=" + KOBIS_API_KEY2);
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("Connection", "keep-alive");
+                conn.setRequestProperty("AUTHORIZATION", "Bearer " + TMDB_ACCESS_TOKEN);
+                conn.connect();
 
                 // 서버로부터 응답 상태 코드 확인
-                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    try (InputStream inputStream = connection.getInputStream();
+                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    try (InputStream inputStream = conn.getInputStream();
                          ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
 
                         // InputStream에서 데이터를 읽고 byte[]로 변환
@@ -296,7 +563,7 @@ public class NewMovieInitService {
                 e.printStackTrace();
                 return returnDefaultImg(type);
             } finally {
-                if (connection != null) connection.disconnect();
+                if (conn != null) conn.disconnect();
             }
         }
         else {

@@ -244,7 +244,7 @@ public class MovieInitService {
 
     public static Genre getGenreBykorName(String korName) {
         for (Genre genre : Genre.values()) {
-            if (genre.getGenre().equals(korName)) return genre;
+            if (genre.getgenreKor().equals(korName)) return genre;
         }
         return null;
     }
