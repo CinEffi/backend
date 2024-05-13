@@ -3,6 +3,8 @@ package shinzo.cineffi.auth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import shinzo.cineffi.config.RestTemplateConfig;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
@@ -13,9 +15,12 @@ import shinzo.cineffi.exception.message.SuccessMsg;
 @RequiredArgsConstructor
 public class MailController {
     private final MailService mailService;
+    private final RestTemplate restTemplate;
 
     @PostMapping("/api/auth/verify/email")
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO request) {
+        String apiUrl = "YOUR_API_ENDPOINT_URL"; // API 요청 보내기
+        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
         int number = mailService.sendMail(request.getEmail());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                 .isSuccess(true)

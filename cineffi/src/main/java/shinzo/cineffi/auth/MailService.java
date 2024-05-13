@@ -5,7 +5,6 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,11 +12,7 @@ import org.springframework.stereotype.Service;
 import shinzo.cineffi.auth.repository.AuthCodeRepository;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.entity.user.AuthCode;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -29,6 +24,8 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
+
+
     public static void createNumber(){
         number = (int)(Math.random() * (90000)) + 100000;// (int) Math.random() * (최댓값-최소값+1) + 최소값
     }
@@ -83,23 +80,6 @@ public class MailService {
     }
     //생성한 메일을 전송
     public int sendMail(String request){
-                // 프록시 서버 설정
-                String proxyHost = "krmp-proxy.9rum.cc";
-                int proxyPort = 3128;
-
-                // RestTemplate 인스턴스 생성
-                RestTemplate restTemplate = new RestTemplate();
-
-                // RestTemplate에 프록시 설정
-                SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-                Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort));
-                requestFactory.setProxy(proxy);
-                restTemplate.setRequestFactory(requestFactory);
-
-                // HTTP 요청 보내기
-                ResponseEntity<String> response = restTemplate.getForEntity("smtp.gmail.com:587", String.class);
-                System.out.println("Response: " + response.getBody());
-
         MimeMessage message = CreateMail(request);
         javaMailSender.send(message);
         return number;
