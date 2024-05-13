@@ -72,67 +72,68 @@ server:
 proxy:
   host: krmp-proxy.9rum.cc
   port: 3128
----
-spring:
-  datasource:
-    # local postgres
-    url: jdbc:postgresql://localhost:5432/cineffi
-    username:
-    password:
-    driver-class-name: org.postgresql.Driver
 
-
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: create
+#---
+#spring:
+#  datasource:
+#    # local postgres
+#    url: jdbc:postgresql://localhost:5432/cineffi
+#    username:
+#    password:
+#    driver-class-name: org.postgresql.Driver
+#
+#
+#  jpa:
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#    hibernate:
+#      ddl-auto: create
+##    properties:
+##      hibernate:
+##        format_sql: true
+#
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: skwd1012@gmail.com
+#    password: tboxbeusjvbysajd
 #    properties:
-#      hibernate:
-#        format_sql: true
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: skwd1012@gmail.com
-    password: tboxbeusjvbysajd
-    properties:
-      mail:
-        smtp:
-          auth: true
-          timeout: 5000
-          connectiontimeout: 5000
-          writetimeout: 5000
-          starttls:
-            enable: true
-    auth-code-expiration-millis: 300000 //5분
-#  jwt:
-#    expiration_time : 300,000
-
-kobis:
-  api_key: 5b5979d8f9822605465799f4de0d864a
-  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
-
-tmdb:
-  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMmY4YjA2ZTIxYzhkYTJiZGQ3NmZjMDVjZWU3ZmMyZCIsInN1YiI6IjY2MGQwNjM0OTVjZTI0MDE2NDZlNjRiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.wXKroToQPTplaBr8TBaH-yV38zsQB35IfIj115nqdF8
-  api_key: 12f8b06e21c8da2bdd76fc05cee7fc2d
-  base_url: https://
-  path_image: image.tmdb.org/t/p/w500
-  path_movie: api.themoviedb.org/3
-  start-year: 2024
-  end-year: 2024
-  start-month: 4
-  end-month: 4
-
-#logging:
-#  level:
-#    org.hibernate.SQL: debug
-#    org.hibernate.orm.jdbc.bind: trace
-
-kakao:
-  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
-  redirect_url: http://localhost:8080/api/auth/login/kakao
-
-app:
-  encryption:
-    key: "cineffiSecretKey"
+#      mail:
+#        smtp:
+#          auth: true
+#          timeout: 5000
+#          connectiontimeout: 5000
+#          writetimeout: 5000
+#          starttls:
+#            enable: true
+#    auth-code-expiration-millis: 300000 //5분
+##  jwt:
+##    expiration_time : 300,000
+#
+#kobis:
+#  api_key: 5b5979d8f9822605465799f4de0d864a
+#  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
+#
+#tmdb:
+#  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMmY4YjA2ZTIxYzhkYTJiZGQ3NmZjMDVjZWU3ZmMyZCIsInN1YiI6IjY2MGQwNjM0OTVjZTI0MDE2NDZlNjRiOCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.wXKroToQPTplaBr8TBaH-yV38zsQB35IfIj115nqdF8
+#  api_key: 12f8b06e21c8da2bdd76fc05cee7fc2d
+#  base_url: https://
+#  path_image: image.tmdb.org/t/p/w500
+#  path_movie: api.themoviedb.org/3
+#  start-year: 2024
+#  end-year: 2024
+#  start-month: 4
+#  end-month: 4
+#
+##logging:
+##  level:
+##    org.hibernate.SQL: debug
+##    org.hibernate.orm.jdbc.bind: trace
+#
+#kakao:
+#  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
+#  redirect_url: http://localhost:8080/api/auth/login/kakao
+#
+#app:
+#  encryption:
+#    key: "cineffiSecretKey"
 
