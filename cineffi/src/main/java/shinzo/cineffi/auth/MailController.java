@@ -21,7 +21,6 @@ import java.net.http.HttpResponse;
 @RequiredArgsConstructor
 public class MailController {
     private final MailService mailService;
-    private final RestTemplate restTemplate;
 
     @PostMapping("/api/auth/verify/email")
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO request) throws URISyntaxException {
