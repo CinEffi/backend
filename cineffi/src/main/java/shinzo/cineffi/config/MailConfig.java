@@ -10,8 +10,13 @@ import java.util.Properties;
 @Configuration
 public class MailConfig {
 
+
     @Bean
     public JavaMailSenderImpl mailSender() {
+        // 시스템 속성으로 HTTP 프록시 설정
+        System.setProperty("http.proxyHost", "krmp-proxy.9rum.cc");
+        System.setProperty("http.proxyPort", "3128");
+
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com"); // SMTP 호스트 설정
         mailSender.setPort(587); // SMTP 포트 설정
@@ -24,8 +29,6 @@ public class MailConfig {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
-        props.put("mail.smtp.socks.host", "krmp-proxy.9rum.cc"); // 프록시 호스트
-        props.put("mail.smtp.socks.port", "3128"); // 프록시 포트
 
         return mailSender;
     }
