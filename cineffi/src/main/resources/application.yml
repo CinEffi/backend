@@ -27,9 +27,9 @@ spring:
     properties:
       mail:
         smtp:
-          proxy:
-            host: krmp-proxy.9rum.cc
-            port: 3128
+#          proxy:
+#            host: krmp-proxy.9rum.cc
+#            port: 3128
           auth: true
           timeout: 5000
           connectiontimeout: 5000
