@@ -1,6 +1,7 @@
 package shinzo.cineffi.movie;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -38,7 +39,6 @@ import static shinzo.cineffi.domain.enums.InitType.TMDB;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class NewMovieInitService {
     private final MovieRepository movieRepo;
     private final MovieGenreRepository movieGenreRepo;
@@ -72,7 +72,6 @@ public class NewMovieInitService {
 
     private static final int THREAD_COUNT = 10; // 동시에 처리할 스레드 수
 
-    @Transactional
     public void initData(){
         //각 년도마다의 데이터 가져와서 저장
         for (int curYear = END_YEAR; curYear >= START_YEAR; curYear--) {
@@ -82,7 +81,7 @@ public class NewMovieInitService {
             movieRepo.saveAll(mixBasicDatas);
             movieRepo.flush();
 
-            List<Movie> mixBasicDatas1 = mixBasicDatas;
+
             List<Movie> movieDatas = requestDetailDatas(mixBasicDatas);
             List<Movie> movies = movieRepo.findAllByReleaseDate(curYear);
             Map<Long, Movie> movieDataMap = new HashMap<>();
@@ -164,6 +163,7 @@ public class NewMovieInitService {
 
         return result;
     }
+    @Transactional
     protected List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies){
         List<Movie> result = new ArrayList<>();
         Map<String, Movie> kobisKorTitleMap = new HashMap<>();
@@ -199,7 +199,7 @@ public class NewMovieInitService {
                 result.add(movie);
             }
         }
-        return result;
+        return movieRepo.saveAll(result);
     }
 
     private List<Movie> requestDetailDatas(List<Movie> movies) {
@@ -444,16 +444,15 @@ public class NewMovieInitService {
             Genre genre = Genre.getEnum((String) genreMap.get("name"));
             MovieGenre mg = MovieGenre.builder()
                     .genre(genre)
-                    .movie(result)
+                    .movie(data)
                     .build();
             movieGenreRepo.save(mg);
             genres.add(mg);
         }
 
-        System.out.println("이거되나?1");
-
         result = result.toBuilder()
                 .originCountry(nation)
+                .runtime(runtime)
                 .avgScore(avgScore)
                 .genreList(genres)
                 .build();
