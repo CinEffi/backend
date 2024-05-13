@@ -27,7 +27,7 @@ public class MailConfig {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.starttls.required", "true");
-        props.put("mail.smtp.socks.host", "krmp-proxy.9rumrum.cc"); // 프록시 호스트
+        props.put("mail.smtp.socks.host", "krmp-proxy.9rum.cc"); // 프록시 호스트
         props.put("mail.smtp.socks.port", "3128"); // 프록시 포트
 
         return mailSender;
