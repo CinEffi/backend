@@ -4,12 +4,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import shinzo.cineffi.config.RestTemplateConfig;
+import shinzo.cineffi.config.NetworkUtils;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,9 +24,16 @@ public class MailController {
     private final RestTemplate restTemplate;
 
     @PostMapping("/api/auth/verify/email")
-    public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO request) {
-        String apiUrl = "YOUR_API_ENDPOINT_URL"; // API 요청 보내기
-        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+    public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO request) throws URISyntaxException {
+//        HttpClient client = NetworkUtils.createHttpClientWithProxy();
+//        HttpRequest request = HttpRequest.newBuilder()
+//                .uri(new URI("https://example.com"))
+//                .GET()
+//                .build();
+//
+//        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+
         int number = mailService.sendMail(request.getEmail());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                 .isSuccess(true)
