@@ -12,8 +12,8 @@ public class MailConfig {
     @Bean
     public JavaMailSenderImpl mailSender() {
         // 시스템 속성 설정
-        System.setProperty("socksProxyHost", "krmp-proxy.9rum.cc");
-        System.setProperty("socksProxyPort", "3128");
+//        System.setProperty("socksProxyHost", "krmp-proxy.9rum.cc");
+//        System.setProperty("socksProxyPort", "3128");
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com"); // SMTP 호스트 설정
