@@ -15,7 +15,7 @@ public class MailConfig {
     public JavaMailSenderImpl mailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.gmail.com"); // SMTP 호스트 설정
-        mailSender.setPort(465); // SSL 포트 설정
+        mailSender.setPort(587); // SSL 포트 설정
 
         mailSender.setUsername("skwd1012@gmail.com");
         mailSender.setPassword("tboxbeusjvbysajd");

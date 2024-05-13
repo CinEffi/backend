@@ -83,6 +83,14 @@ public class MailService {
     //생성한 메일을 전송
     public int sendMail(String request){
         MimeMessage message = CreateMail(request);
+//        // HttpProxy의 객체 생성
+//        HttpProxy proxy = new HttpProxy("18.222.124.59", 8080);
+//
+//// SMTP 클라이언트 생성
+//        try (SmtpClient client = new SmtpClient("host", 587, "username", "password")) {
+//
+//            // 프록시 설정
+//            client.setProxy(proxy);
         javaMailSender.send(message);
         return number;
     }
