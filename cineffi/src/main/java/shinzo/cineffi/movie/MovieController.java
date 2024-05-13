@@ -34,20 +34,6 @@ public class MovieController {
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {
-//        long beforeTime = System.currentTimeMillis(); //코드 실행 전에 시간 받아오기
-//
-//        movieInitService.fetchTMDBIdsByDate();
-//
-//        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-//        long secDiffTime = (afterTime - beforeTime)/1000; //두 시간에 차 계산
-//
-//        return ResponseEntity.ok(
-//                ResponseDTO.builder()
-//                        .message(SuccessMsg.SUCCESS.getDetail())
-//                        .result(secDiffTime)
-//                        .build()
-//        );
-
         long beforeTime = System.currentTimeMillis();
 
         newMovieInitService.initData();
