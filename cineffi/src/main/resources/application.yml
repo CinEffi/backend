@@ -126,3 +126,6 @@ kakao:
 app:
   encryption:
     key: "cineffiSecretKey"
+server:
+  port:
+    4000
