@@ -139,13 +139,15 @@ public class ChatService {
                 RedisChatMessage message = (RedisChatMessage)messageObj;
                 User sender = userRepository.findById(message.getUserId()).orElseThrow(() ->
                         new IllegalArgumentException("User not found with id: " + message.getUserId()));
-                new IllegalArgumentException("User not found with id: " + message.getUserId());
 
-                chatMessageRepository.save(ChatMessage.builder()
+                ChatMessage chatMessage = ChatMessage.builder()
                         .sender(sender)
                         .chatroom(chatroomRepository.findById(Long.parseLong(id)).get())
                         .content(message.getContent())
-                        .timestamp(LocalDateTime.parse(message.getTimestamp())).build());
+                        .timestamp(LocalDateTime.parse(message.getTimestamp()))
+                        .build();
+                chatMessageRepository.save(chatMessage);
+
             }
             redisTemplate.delete("chatlog:" + id);
         }
@@ -172,7 +174,7 @@ public class ChatService {
     public void joinChatroom() {
         // 유저 있는지 검증
         // 챗룸이 있는 챗룸인지 검증하고
-        UserChat
+//        UserChat
         // redisUserChat.getOpsHash().get("userlist:" + 1, 2);
         // userChat 만들어서 db에 save (처음 왔을때만 만들어)
         // 있는지 확인해서, 없을때만 만든다.
