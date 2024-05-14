@@ -38,6 +38,9 @@ public class User extends BaseEntity {
     @ColumnDefault("false")
     private Boolean isCertified;
 
+    @ColumnDefault("false")
+    private Boolean isKakao;
+
     @ColumnDefault("0")
     private Integer exp;
 

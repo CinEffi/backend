@@ -16,4 +16,5 @@ public class LoginResponseDTO {
     private byte[] profileImage;
     private Boolean isBad;
     private Boolean isCertified;
+    private Boolean isKakao;
 }
