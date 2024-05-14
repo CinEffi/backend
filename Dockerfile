@@ -1,5 +1,5 @@
 # Base image 지정 : 주로 OS나 런타임 이미지를 지정
-FROM openjdk:17.0.2-alpine as builder
+FROM openjdk:17.0.2-jdk-slim-buster as builder
 
 # 커맨드를 실행하는 디렉토리를 지정, -w:오버라이딩
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPor
 RUN ./gradlew bootJar
 
 # app
-FROM openjdk:17.0.2-alpine
+FROM openjdk:17.0.2-slim-buster
 WORKDIR /app
 
 # 필요한 JAR 파일 복사
