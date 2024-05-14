@@ -12,6 +12,7 @@ import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,4 +42,17 @@ public class Chatroom extends BaseEntity {
 
     @Column(columnDefinition = "TIMESTAMP(3) WITHOUT TIME ZONE")
     private LocalDateTime closedAt;
+
+    public RedisChatroom toRedisChatroom(List<String> tagList) {
+
+        return RedisChatroom.builder()
+                .title(title)
+                .tags(tagList)
+                .memberNum(1) // 새로운 채팅방이 생성되면 최소한 한 명의 멤버가 있습니다.
+                .createdAt(LocalDateTime.now().toString()) // 현재 시간으로 생성 시간 설정
+                .closedAt(null)// 처음에는 닫힌 시간이 없습니다.
+                .ownerId(owner.getId())//생성자
+                .build();
+
+    }
 }

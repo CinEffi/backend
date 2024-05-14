@@ -7,13 +7,13 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class RedisMessage {
+public class RedisChatMessage {
     private Long userId;
     private String content;
     private String timestamp;
 
     @JsonCreator
-    public RedisMessage(
+    public RedisChatMessage(
             @JsonProperty("userId") Long userId,
             @JsonProperty("content") String content,
             @JsonProperty("timestamp") String timestamp

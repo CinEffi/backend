@@ -1,15 +1,19 @@
 package shinzo.cineffi.domain.entity.chat;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import shinzo.cineffi.domain.entity.user.User;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@NoArgsConstructor
+@RequiredArgsConstructor
+@Builder
+
 public class ChatMessage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")

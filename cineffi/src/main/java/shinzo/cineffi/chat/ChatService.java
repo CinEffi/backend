@@ -3,20 +3,32 @@ package shinzo.cineffi.chat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import shinzo.cineffi.chat.redisObject.RedisChatMessage;
 import shinzo.cineffi.chat.redisObject.RedisChatroom;
+import shinzo.cineffi.chat.redisObject.RedisUserChat;
 import shinzo.cineffi.chat.repository.ChatMessageRepository;
 import shinzo.cineffi.chat.repository.ChatroomRepository;
 import shinzo.cineffi.chat.repository.ChatroomTagRepository;
 import shinzo.cineffi.chat.repository.UserChatRepository;
+import shinzo.cineffi.domain.entity.chat.ChatMessage;
 import shinzo.cineffi.domain.entity.chat.Chatroom;
+import shinzo.cineffi.domain.entity.chat.ChatroomTag;
+import shinzo.cineffi.domain.entity.chat.UserChat;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.enums.UserChatStatus;
+import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,44 +47,132 @@ public class ChatService {
 
 
     public void createChatroom(Long userId,
-                               String title
+                                        String title
                                 , List<String> tags) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorMsg.USER_NOT_FOUND));
 
-//        type "CREATE" data CreateChatroomDTO
+        Chatroom chatroom = chatroomRepository.save(Chatroom.builder()
+                .title(title)
+                .owner(user)
+                .closedAt(null) // 처음에는 닫힌 시간이 없습니다.
+                .build());
 
+        for (String tag : tags){
+            chatroomTagRepository.save(ChatroomTag
+                    .builder()
+                    .content(tag)
+                    .chatroom(chatroom)
+                    .build());
+        }
         // User user = user 있는사람인지 검사
-        // 챗룸 생성 Chatroom.builder(); db에 담고
-        // RedisChatroom redisChatroom = saved.toRedisChatroom();
+
+        // RedisChatroom 객체 생성
+        RedisChatroom redisChatroom = chatroom.toRedisChatroom(tags);
+
+
         // redis에 RedisChatroom 보내주기
+        redisTemplate.opsForHash().put("chatroom", chatroom.getId().toString(), redisChatroom);
+
+        String chatroomId = chatroom.getId().toString();
+        String chatroomTitle = chatroom.getTitle();
+        String channelName = "chatroom:" + chatroom.getId();
+        String notificationMessage = "새로운 채팅방이 생성되었습니다: " + chatroomTitle;
+
+        // 채팅방 생성에 대한 알림
+        listenerContainer.addMessageListener(subscriber, new ChannelTopic(channelName));
+        redisTemplate.convertAndSend(channelName, notificationMessage);
+
+        // RedisChatroom 객체 반환
 
 
-        /*
-        *
+    }
 
-        User user = userRepository.findById(ownerId).orElseThrow(() -> new CustomException(ErrorMsg.USER_NOT_FOUND));
-        Chatroom chatroom = chatroomRepository.save(Chatroom.builder().title(title).owner(user).build());
-        RedisChatroom redisChatroom = RedisChatroom.builder().id(chatroom.getId()).title(title).ownerId(ownerId).build();
-        redisTemplate.opsForHash().put("chatroom", nextChatroomId.toString(), redisChatroom);
+    public void backupToDatabase() {
+        //레디스 -> DB
+        //  backupChatroom();채팅방
+        //  backupUserChat();레디스 채팅 유저 목록(HASH)
+        //  backupChatlog();레디스 메세지 리스트 chatMessage
 
-//        stringRedisTemplate.opsForSet().add("updateChatroom", nextChatroomId.toString());
-//        이부분은, 채팅방의 어떤 설정을 바꿀때 이렇게 합시다. 만드는게 엄청 빠를 필요는 없어요.
-        listenerContainer.addMessageListener(subscriber, new ChannelTopic("chatroom:" + redisChatroom.getId()));
 
-        // 단일 노드에서는 이 시점에만 이렇게 체결하는게 맞다.
-//        redisTemplate.opsForValue().set("nextChatroomId", (++nextChatroomId).toString());
-        // 여러 노드인 경우에도 같으나, join 시 {해당 노드,목적지 채널} 에 대해 첫 Member인 경우에 체결하면 된다.
-        // 실질 멤버가 사라지면 SUBS를 해제하는 로직도 해둬야한다.
-        return redisChatroom;
-        * */
-        // WebSocketHandler -> joinChatroom(); 방만든사람 여기로 조인시키기
+//        chatroom 백업
+        stringRedisTemplate.opsForSet().members("updateChatroom").stream()
+                .map(String.class::cast).collect(Collectors.toList()).forEach(id -> {
+                    RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", id);
+                    if (redisChatroom != null) {
+                        User user = userRepository.findById(redisChatroom.getOwnerId()).get();
+                        Long chatroomId = Long.parseLong(id);
+                        String chatroomTitle = redisChatroom.getTitle();
+                        Chatroom chatroom = chatroomRepository.save(chatroomRepository.findById(
+                                        chatroomId).get().toBuilder().owner(user)
+                                .title(chatroomTitle).build());
+
+                    } else
+                        System.out.println("redisChatroom is null");
+                    // tag를 재설정하는 로직도 삽입해야함.
+                });
+        redisTemplate.delete("updateChatroom");
+
+
+
+        //UserChat 백업
+        stringRedisTemplate.opsForSet().members("updateUserChat").stream().map(String.class::cast).toList()
+                .forEach(entry -> {
+                    String[] parts = entry.split(":");
+                    Long chatroomId = Long.parseLong(parts[0]);
+                    Long userId = Long.parseLong(parts[1]);
+
+                    UserChat userchat = userChatRepository.findByUserIdAndChatroomId(userId, chatroomId);
+                    RedisUserChat redisUserChat = (RedisUserChat) redisTemplate.opsForHash().get("userlist:" + chatroomId, userId.toString());
+                    UserChatStatus redisUserChatStatus = redisUserChat.getRedisUserChatStatus();
+                    userChatRepository.save(userchat.toBuilder().userChatStatus(redisUserChatStatus).build());
+                });
+        // 여기서, 업데이트가 아무것도 안되고 있다. { 원래는 userChatStatus의 업데이트를 갈겨야 한다. }
+        // mute 하는걸로는 update목록에 올리면 안되겠군
+        stringRedisTemplate.delete("updateUserChat");
+
+
+        //chatlog 백업
+        for (String id : stringRedisTemplate.opsForHash().keys("chatroom")
+                .stream().map(String.class::cast).collect(Collectors.toSet())) {
+
+            for (Object messageObj : Objects.requireNonNull(redisTemplate.opsForList().range("chatlog:" + id, 0, -1))) {
+                RedisChatMessage message = (RedisChatMessage)messageObj;
+                User sender = userRepository.findById(message.getUserId()).orElseThrow(() ->
+                        new IllegalArgumentException("User not found with id: " + message.getUserId()));
+                new IllegalArgumentException("User not found with id: " + message.getUserId());
+
+                chatMessageRepository.save(ChatMessage.builder()
+                        .sender(sender)
+                        .chatroom(chatroomRepository.findById(Long.parseLong(id)).get())
+                        .content(message.getContent())
+                        .timestamp(LocalDateTime.parse(message.getTimestamp())).build());
+            }
+            redisTemplate.delete("chatlog:" + id);
+        }
     }
 
 
+    public void sendMessageToChatroom(Long chatroomId, Long senderId, String message) {
+
+        Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, senderId.toString());
+        if (obj == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
+        if (((RedisUserChat) obj).getRedisUserChatStatus() != UserChatStatus.JOINED)
+            throw new CustomException(ErrorMsg.NOT_JOINED_CHATROOM);
+        if (((RedisUserChat) obj).getIsMuted())
+            throw new CustomException(ErrorMsg.USER_MUTED);
+        LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
+        RedisChatMessage redisChatMessage
+                = RedisChatMessage.builder().userId(senderId).content(message).timestamp(now.toString()).build();
+        redisTemplate.convertAndSend("chatroom:" + chatroomId, senderId + ":" + message + "(" + now + ")");
+
+
+
+    }
 
     public void joinChatroom() {
         // 유저 있는지 검증
         // 챗룸이 있는 챗룸인지 검증하고
-
+        UserChat
         // redisUserChat.getOpsHash().get("userlist:" + 1, 2);
         // userChat 만들어서 db에 save (처음 왔을때만 만들어)
         // 있는지 확인해서, 없을때만 만든다.
@@ -133,81 +233,9 @@ public class ChatService {
     }
 
 
-    public void sendMessageToChatroom(Long chatroomId, Long senderId, String message) {
-        /*
-        *
-        Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, userId.toString());
-        if (obj == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
-        if (((RedisUserChat) obj).getRedisUserChatStatus() != RedisUserChatStatus.JOINED)
-            throw new CustomException(ErrorMsg.NOT_JOINED_CHATROOM);
-        if (((RedisUserChat) obj).getIsMuted())
-            throw new CustomException(ErrorMsg.USER_MUTED);
-        LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
-        RedisChatMessage redisChatMessage
-                = RedisChatMessage.builder().userId(userId).data(data).ms(now.toString()).build();
-≈        redisTemplate.convertAndSend("chatroom:" + chatroomId, userId + ":" + data + "(" + now + ")");
-        return redisChatMessage;
-        * */
-
-    }
-
-    public void backupToDatabase() {
-        //  backupChatroom();
-        //  backupUserChat();
-        //  backupChatlog();
-
-        /*
-       * //
-       * chatroom에 쌓여있는 얘들 전부 백업하기
-        stringRedisTemplate.opsForSet().members("updateChatroom").stream()
-                .map(String.class::cast).collect(Collectors.toList()).forEach(id -> {
-                    RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", id);
-                    if (redisChatroom != null) {
-                        User user = userRepository.findById(redisChatroom.getOwnerId()).get();
 
 
-                        Chatroom chatroom = chatroomRepository.save(chatroomRepository.findById(
-                                        redisChatroom.getId()).get().toBuilder().owner(user)
-                                .title(redisChatroom.getTitle()).build());
 
-                    } else
-                        System.out.println("redisChatroom is null");
-                    // tag를 재설정하는 로직도 삽입해야함.
-                });
-        redisTemplate.delete("updateChatroom");
-
-        stringRedisTemplate.opsForSet().members("updateUserChat").stream().map(String.class::cast).collect(Collectors.toList())
-                .forEach(entry -> {
-                    String[] parts = entry.split(":");
-                    Long chatroomId = Long.parseLong(parts[0]);
-                    Long userId = Long.parseLong(parts[1]);
-
-                    UserChat userchat = userChatRepository.findByUserIdAndChatroomId(userId, chatroomId).get();
-                    RedisUserChat redisUserChat = (RedisUserChat) redisTemplate.opsForHash().get("userlist:" + chatroomId, userId.toString());
-                    RedisUserChatStatus redisUserChatStatus = redisUserChat.getRedisUserChatStatus();
-                    userChatRepository.save(userchat.toBuilder().userChatStatus(userChatStatus).build());
-                });
-        // 여기서, 업데이트가 아무것도 안되고 있다. { 원래는 userChatStatus의 업데이트를 갈겨야 한다. }
-        // mute 하는걸로는 update목록에 올리면 안되겠군
-        stringRedisTemplate.delete("updateUserChat");
-
-
-        for (String id : stringRedisTemplate.opsForHash().keys("chatroom")
-                .stream().map(String.class::cast).collect(Collectors.toSet())) {
-
-            for (Object messageObj : redisTemplate.opsForList().range("chatlog:" + id, 0, -1)) {
-                RedisChatMessage message = (RedisChatMessage)messageObj;
-                messageRepository.save(Message.builder().senderId(message.getUserId())
-                        .chatroom(chatroomRepository.findById(Long.parseLong(id)).get())
-                        .content(message.getData())
-                        .timestamp(LocalDateTime.parse(message.getMs())).build());
-            }
-            redisTemplate.delete("chatlog:" + id);
-        }
-    }
-        *
-        * */
-    }
 
 
     public void test() {
