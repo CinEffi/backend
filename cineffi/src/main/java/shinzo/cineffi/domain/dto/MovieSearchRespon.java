@@ -11,6 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class MovieSearchRespon {
     private List<MovieDTO> movieList;
-    private int totalPageNum;
 
 }

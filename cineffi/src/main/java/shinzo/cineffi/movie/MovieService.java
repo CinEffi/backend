@@ -32,14 +32,6 @@ public class MovieService {
     private final ActorMovieRepository actorMovieRepo;
     private final ReviewRepository reviewRepository;
 
-
-    public static Genre getEnumGenreBykorGenre(String korName) {
-        for (Genre genre : Genre.values()) {
-            if (genre.getgenreKor().equals(korName)) return genre;
-        }
-        return null;
-    }
-
     public List<UpcomingMovieDTO> findUpcomingList(){
         List<Movie> upcomingList = movieRepo.findUpcomingList();
         List<UpcomingMovieDTO> result = new ArrayList<>();
@@ -63,8 +55,8 @@ public class MovieService {
 
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
-        Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
-        for (Movie movie : movieList.getContent()){
+        List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+        for (Movie movie : movieList){
             InListMoviveDTO dto = InListMoviveDTO.builder()
                     .movieId(movie.getId())
                     .title(movie.getTitle())
@@ -76,7 +68,7 @@ public class MovieService {
             dtoList.add(dto);
         }
 
-        return new GenreMovieListDTO(genre.getgenreKor(), dtoList);
+        return new GenreMovieListDTO(genre.getKor(), dtoList);
     }
 
     public void insertDailyBoxOffice() {
@@ -89,14 +81,16 @@ public class MovieService {
         return boxOfficeMovieRepository.findAll();
     }
 
-    public MovieSearchRespon findSearchList(String q, int page, int size){
-        Pageable pageable = PageRequest.of(page, size / 2);
+    public List<MovieDTO> findSearchList(String q){
+        final int totalResultNum = 20;
+        List<MovieDTO> result = new ArrayList<>();
+        Set<String> titleSet = new HashSet<>();
+        Pageable pageable = PageRequest.of(0, totalResultNum);
         q=q.trim();
-//        Genre genre = getEnumGenreBykorGenre(q);
-//        if(genre != null) q = genre.toString();
 
-        Page<Movie> pageList = movieRepo.findSearchList(q, pageable);
-        List<MovieDTO> dtoList = pageList.getContent().stream().map(movie -> MovieDTO.builder()
+        List<Movie> searchList = movieRepo.findSearchList(q, pageable);
+        List<MovieDTO> dtoList = searchList.stream()
+                .map(movie -> MovieDTO.builder()
                         .movieId(movie.getId())
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
@@ -105,26 +99,32 @@ public class MovieService {
                         .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                         .build())
                 .collect(Collectors.toList());
+        titleSet.addAll(dtoList.stream().map(MovieDTO::getTitle).toList());
 
-        Genre genre = getEnumGenreBykorGenre(q);
+        Genre genre = Genre.getEnum(q);
         if(genre != null) {
-            Page<Movie> movieList = movieRepo.findGenreList(genre, pageable);
-            movieList.getContent().stream().map(movie -> MovieDTO.builder()
-                    .movieId(movie.getId())
-                    .title(movie.getTitle())
-                    .releaseDate(movie.getReleaseDate())
-                    .poster(encodeImage(movie.getPoster()))
-                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
-                    .build())
-                    .forEach(dtoList::add);
+            List<Movie> genreList = movieRepo.findGenreList(genre, pageable);
+            List<MovieDTO> dtoList2 = genreList.stream()
+                    .map(movie -> MovieDTO.builder()
+                            .movieId(movie.getId())
+                            .title(movie.getTitle())
+                            .releaseDate(movie.getReleaseDate())
+                            .poster(encodeImage(movie.getPoster()))
+                            .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                            .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                            .build())
+                    .collect(Collectors.toList());
+
+                if(!dtoList2.isEmpty()) {
+                    for (MovieDTO dto : dtoList2) {
+                        if (!titleSet.contains(dto.getTitle())) dtoList.add(dto);
+                    }
+                }
         }
 
+        result.addAll(dtoList.subList(0, Math.min(20, dtoList.size() - 1)));
 
-        return MovieSearchRespon.builder()
-                .movieList(dtoList)
-                .totalPageNum(pageList.getTotalPages())
-                .build();
+        return result;
     }
 
 
@@ -134,7 +134,7 @@ public class MovieService {
         boolean isScrap = (userId != null) && scrapRepo.existsByMovieIdAndUserId(movieId, userId);
 
 
-        List<CrewListDTO> crewList = getActorAndDorectorList(movieId);
+        List<CrewListDTO> crewList = getActorAndDirectorList(movieId);
         Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
 
         Review existingReview = userId != null ? reviewRepository.findByMovieAndUserIdAndIsDeleteFalse(movie, userId) : null;
@@ -144,7 +144,7 @@ public class MovieService {
                 .releaseDate(movie.getReleaseDate())
                 .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
-                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getgenreKor).collect(Collectors.toList()))
+                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getKor).collect(Collectors.toList()))
                 .build();
 
         return MovieDetailDTO.builder()
@@ -162,8 +162,9 @@ public class MovieService {
                 .build();
     }
 
-    private List<CrewListDTO> getActorAndDorectorList(Long movieId) { //배우, 감독 가져오기
+    private List<CrewListDTO> getActorAndDirectorList(Long movieId) { //배우, 감독 가져오기
         List<CrewListDTO> crewList = new ArrayList<>();
+        Pageable pageable = PageRequest.of(0, 8);
 
         Movie movie = movieRepo.findById(movieId).orElse(null);
         if (movie != null && movie.getDirector() != null) {
@@ -175,7 +176,7 @@ public class MovieService {
                     .build());
         }
 
-        List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId)
+        List<CrewListDTO> actors = actorMovieRepo.findByMovieId(movieId, pageable)
                 .stream()
                 .map(am -> CrewListDTO.builder()
                         .name(am.getActor().getName())

@@ -83,8 +83,8 @@ public class MovieController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ResponseDTO<?>> findsearchMovieList(@RequestParam String q, @RequestParam int page, @RequestParam int size){
-        MovieSearchRespon response = movieService.findSearchList(q, page, size);
+    public ResponseEntity<ResponseDTO<?>> findsearchMovieList(@RequestParam String q){
+        List<MovieDTO> response = movieService.findSearchList(q);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()

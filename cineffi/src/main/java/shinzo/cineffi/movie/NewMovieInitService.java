@@ -25,11 +25,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static shinzo.cineffi.domain.enums.ImageType.POSTER;
 import static shinzo.cineffi.domain.enums.ImageType.PROFILE;
-import static shinzo.cineffi.domain.enums.InitType.KOBIS;
-import static shinzo.cineffi.domain.enums.InitType.TMDB;
+import static shinzo.cineffi.domain.enums.InitType.*;
 
 @Service
 @RequiredArgsConstructor
@@ -92,16 +92,14 @@ public class NewMovieInitService {
         return result;
     }
     private List<Movie> requestTMDBdatas(String startDate, String endDate) {
-        RestTemplate restTemplate = new RestTemplate();
         List<Movie> movies = new ArrayList<>();
         int maxPages = MAX_PAGES;
         int requestCount = 0;  // 요청 횟수를 추적하기 위한 카운터
 
         for (int page = 1; page <= maxPages; page++) {
-            String url = String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
-                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate);
+            Map<String, Object> response = (Map<String, Object>)requestData(String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate), TMDB_MOVIE);
 
-            Map response = restTemplate.getForObject(url, Map.class);
             if (response != null) {
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
                 int totalPages = (int) response.get("total_pages");
@@ -130,16 +128,14 @@ public class NewMovieInitService {
         return movies;
     }
     private List<Movie> requestKobisDatas(int year) {
-        RestTemplate restTemplate = new RestTemplate();
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
         int totalPage = 100; // 초기 추정치
 
         while (curPage <= totalPage) {
-            String url = String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
-                    KOBIS_BASEURL, KOBIS_API_KEY3, year, year, curPage);
+            Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
+                    KOBIS_BASEURL, KOBIS_API_KEY3, year, year, curPage), KOBIS);
 
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
             totalPage = (totCnt + 99) / 100; // 전체 페이지 수 계산 (올림 처리)
@@ -201,7 +197,6 @@ public class NewMovieInitService {
         }
         return movieRepo.saveAll(result);
     }
-
     private void requestDetailDatas(List<Movie> movies) {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
         List<Future<Map<String, Object>>> futures = new ArrayList<>();
@@ -243,25 +238,16 @@ public class NewMovieInitService {
         totalSave(result);
 
     }
-
-    @Transactional
-    public void totalSave(List<Movie> dataList){
-        for (Movie data : dataList){
-            if(data != null) movieRepo.save(data);
-
-        }
-    }
-
     private Map<String, Object> requestDetailData(Movie movie){
         Map<String, Object> result = new HashMap<>();
         String kobisCode = movie.getKobisCode();
         int tmdbId = movie.getTmdbId();
 
         // KOBIS 요청 수행
-        Map<String, Object> kobisDetails = (Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY3 + "&movieCd=" + kobisCode, KOBIS).get("movieInfoResult");
+        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY3 + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
 
         // TMDB 요청 수행
-        Map<String, Object> tmdbDetails = requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB);
+        Map<String, Object> tmdbDetails = (Map<String, Object>) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
 
         if (!tmdbDetails.isEmpty() && !kobisDetails.isEmpty()) {
             result.put("kobisDetails", kobisDetails);
@@ -270,28 +256,34 @@ public class NewMovieInitService {
 
         return result;
     }
-    private Map<String, Object> requestData(String urlString, InitType type) {
+    private Object requestData(String urlString, InitType type) {
         RestTemplate restTemplate = new RestTemplate();
-        Map<String, Object> responseData = new HashMap<>();
+        Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             headers.set("Connection", "keep-alive");
 
-            if (type.equals(InitType.TMDB)) {
-                headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
-            }
+            if (type.equals(TMDB_MOVIE)) headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            String response = restTemplate.getForObject(urlString, String.class, entity);
-            int test = 0;
-            if (response != null) {
-                responseData = parseJson(response);
-            }
+            Object response = null;
+            if(type.equals(TMDB_IMG)) response = restTemplate.getForObject(urlString, byte[].class, entity);
+            else response = parseJson(restTemplate.getForObject(urlString, String.class, entity));
+
+            if (response != null) result = response;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return responseData;
+        return result;
+    }
+
+    @Transactional
+    public void totalSave(List<Movie> dataList){
+        for (Movie data : dataList){
+            if(data != null) movieRepo.save(data);
+
+        }
     }
 
     //문자열 검사 혹은 규격에 맞추는 메서드들
@@ -480,42 +472,17 @@ public class NewMovieInitService {
 
     //이미지 데이터 요청하기
     private byte[] requestImg(String imagePath, ImageType type) {
-        if (imagePath != null) {
-            HttpURLConnection conn = null;
-            try {
-                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath + "?key=" + KOBIS_API_KEY3);
-                conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setRequestProperty("Accept", "application/json");
-                conn.setRequestProperty("Connection", "keep-alive");
-                conn.setRequestProperty("AUTHORIZATION", "Bearer " + TMDB_ACCESS_TOKEN);
-                conn.connect();
+        if (imagePath == null) return returnDefaultImg(type);
 
-                // 서버로부터 응답 상태 코드 확인
-                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    try (InputStream inputStream = conn.getInputStream();
-                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+        try {
+            // Directly get byte array from the restTemplate
+            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath + "?key=" + KOBIS_API_KEY3, TMDB_IMG);
 
-                        // InputStream에서 데이터를 읽고 byte[]로 변환
-                        int nRead;
-                        byte[] data = new byte[16384]; // 16KB buffer size
+            if (imageBytes == null && imageBytes.length <= 0) return returnDefaultImg(type);
+            return imageBytes;
 
-                        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-                            buffer.write(data, 0, nRead);
-                        }
-                        buffer.flush();
-                        return buffer.toByteArray();
-                    }
-                }
-                return returnDefaultImg(type);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return returnDefaultImg(type);
-            } finally {
-                if (conn != null) conn.disconnect();
-            }
-        }
-        else {
+        } catch (Exception e) {
+            e.printStackTrace();
             return returnDefaultImg(type);
         }
     }

@@ -12,13 +12,10 @@ import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.movie.repository.*;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -244,7 +241,7 @@ public class MovieInitService {
 
     public static Genre getGenreBykorName(String korName) {
         for (Genre genre : Genre.values()) {
-            if (genre.getgenreKor().equals(korName)) return genre;
+            if (genre.getKor().equals(korName)) return genre;
         }
         return null;
     }

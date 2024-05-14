@@ -32,7 +32,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     List<Movie> findUpcomingList();
 
     @Query("SELECT m FROM Movie m JOIN m.genreList g WHERE g.genre = :genre ORDER BY RANDOM()")
-    Page<Movie> findGenreList(Genre genre, Pageable pageable);
+    List<Movie> findGenreList(Genre genre, Pageable pageable);
 
     @Query("SELECT DISTINCT m FROM Movie m " +
             "LEFT JOIN ActorMovie am ON m = am.movie " +
@@ -41,6 +41,6 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             "WHERE LOWER(m.title) LIKE CONCAT('%', LOWER(:q), '%') " +
             "OR LOWER(d.name) LIKE CONCAT('%', LOWER(:q), '%') " +
             "OR LOWER(a.name) LIKE CONCAT('%', LOWER(:q), '%')")
-    Page<Movie> findSearchList(String q, Pageable pageable);
+    List<Movie> findSearchList(String q, Pageable pageable);
 
 }
