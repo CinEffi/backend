@@ -82,7 +82,8 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/movies/encrypt-test/**",
                                 "/api/users/{user-id}/scrap",
-                                "/api/test"
+                                "/api/test",
+                                "/api/chat/**"
                         ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http
