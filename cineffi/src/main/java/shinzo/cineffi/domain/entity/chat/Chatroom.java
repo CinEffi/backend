@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.chat.redisObject.RedisChatroom;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder(toBuilder = true)
 @Entity
@@ -39,30 +41,4 @@ public class Chatroom extends BaseEntity {
 
     @Column(columnDefinition = "TIMESTAMP(3) WITHOUT TIME ZONE")
     private LocalDateTime closedAt;
-
-
-
-    // @ColumnDefault("false")
-    // private boolean debate;
-
-
-//    userRepository
-//    chatroomTagRepository
-//
-
-
-    public void fromRedisChatroom(RedisChatroom redisChatroom, User owner) {
-
-    }
-
-    public RedisChatroom ChatroomToRedisChatroom() {
-        List<String> redisTagList = this.tagList.stream().map(ChatroomTag::getContent).collect(Collectors.toList());
-
-        return RedisChatroom.builder()
-                .title(this.title)
-                .tags(redisTagList)
-                .createdAt(this.getCreatedAt().toString())
-                .closedAt(this.closedAt.toString())
-                .build();
-    }
 }

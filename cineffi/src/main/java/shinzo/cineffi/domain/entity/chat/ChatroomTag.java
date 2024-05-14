@@ -5,6 +5,7 @@ import lombok.Getter;
 import jakarta.persistence.*;
 
 @Getter
+@Entity
 public class ChatroomTag {
 
     @Column(name = "chatroom_tag_id")
