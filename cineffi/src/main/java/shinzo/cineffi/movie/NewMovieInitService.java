@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +17,8 @@ import shinzo.cineffi.movie.repository.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -40,7 +43,7 @@ public class NewMovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
-    private final RestTemplate restTemplate;
+//    private final RestTemplate restTemplate;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -93,7 +96,7 @@ public class NewMovieInitService {
         return result;
     }
     private List<Movie> requestTMDBdatas(String startDate, String endDate) {
-//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         List<Movie> movies = new ArrayList<>();
         int maxPages = MAX_PAGES;
         int requestCount = 0;  // 요청 횟수를 추적하기 위한 카운터
@@ -102,6 +105,11 @@ public class NewMovieInitService {
             String url = String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
                     TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate);
 
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+            System.out.println("requestTMDBdatas 요청보내기 시작");
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+            requestFactory.setProxy(proxy);
             Map response = restTemplate.getForObject(url, Map.class);
             if (response != null) {
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
@@ -131,7 +139,7 @@ public class NewMovieInitService {
         return movies;
     }
     private List<Movie> requestKobisDatas(int year) {
-//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
         int totalPage = 100; // 초기 추정치
@@ -140,6 +148,11 @@ public class NewMovieInitService {
             String url = String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
                     KOBIS_BASEURL, KOBIS_API_KEY3, year, year, curPage);
 
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+            System.out.println("requestKobisDatas 요청보내기 시작");
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+            requestFactory.setProxy(proxy);
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
@@ -272,7 +285,7 @@ public class NewMovieInitService {
         return result;
     }
     private Map<String, Object> requestData(String urlString, InitType type) {
-//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         Map<String, Object> responseData = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -284,6 +297,11 @@ public class NewMovieInitService {
             }
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+            System.out.println("requestData 요청보내기 시작");
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+            requestFactory.setProxy(proxy);
             String response = restTemplate.getForObject(urlString, String.class, entity);
             int test = 0;
             if (response != null) {
