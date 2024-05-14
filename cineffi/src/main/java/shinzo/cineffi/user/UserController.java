@@ -78,15 +78,15 @@ public class UserController {
      * @return
      */
     @PostMapping("/api/users/profile/edit")
-    public ResponseEntity<ResponseDTO<?>> editMyProfile(MultipartHttpServletRequest request) {
+    public ResponseEntity<ResponseDTO<?>> editMyProfile(MultipartHttpServletRequest request) throws IOException {
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
 
-        String nickname = request.getParameter("nickname");
-        String password = request.getParameter("password");
-        MultipartFile file = request.getFile("file");
+        String nickname = request.getParameter("nickname") == null ? null : request.getParameter("nickname");
+        String password = request.getParameter("password") == null ? null : request.getParameter("password");
+        MultipartFile userProfileImage = request.getFile("userProfileImage") == null ? null : request.getFile("userProfileImage");
 
-        userService.editUserProfile(loginUserId, nickname, password, file);
+        userService.editUserProfile(loginUserId, nickname, password, userProfileImage);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
