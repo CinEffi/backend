@@ -17,8 +17,8 @@ public class ChatController {
 
     @GetMapping("/test")
     public ResponseEntity<ResponseDTO<?>> test() {
-
         System.out.println("ChatController.test");
+        chatService.test();
         return ResponseEntity.ok(ResponseDTO.builder()
                 .message(SuccessMsg.SUCCESS.getDetail())
                 .build());
