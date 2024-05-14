@@ -48,5 +48,8 @@ public class Movie extends BaseEntity {
     private AvgScore avgScore;
 
     private int tmdbId;
+    private String engTitle;
+
+    private String kobisCode;
 
 }

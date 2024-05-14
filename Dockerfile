@@ -14,7 +14,7 @@ RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPor
 RUN ./gradlew bootJar
 
 # app
-FROM openjdk:17.0.2-slim-buster 
+FROM openjdk:17.0.2-slim-buster
 WORKDIR /app
 
 # 필요한 JAR 파일 복사

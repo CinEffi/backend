@@ -43,9 +43,9 @@ public enum ErrorMsg {
         DUPLICATE_FOLLOW(CONFLICT, "이미 팔로우하고 있습니다."),
         REVIEW_LIKE_EXIST(CONFLICT, "이미 좋아요가 존재합니다."),
         REVIEW_LIKE_NOT_EXIST(CONFLICT, "좋아요가 존재하지 않습니다."),
+        ISDELETE_USER(CONFLICT,"이미 삭제된 사용자입니다."),
         SCRAP_EXIST(CONFLICT, "이미 스크랩한 영화입니다."),
         SCRAP_NOT_EXIST(CONFLICT, "영화를 스크랩하지 않았습니다."),
-        ISDELETE_USER(CONFLICT, "이미 삭제된 사용자입니다"),
 
         /*410*/
         ACCESS_TOKEN_EXPIRED(GONE,"액세스 토큰이 만료되었습니다."),

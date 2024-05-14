@@ -6,13 +6,23 @@ public enum Genre {
     HISTORY("역사"), HORROR("공포"), MUSIC("음악"), MYSTERY("미스터리"), ROMANCE("로맨스"),
     SCIENCE_FICTION("SF"), TV_MOVIE("TV 영화"), THRILLER("스릴러"), WAR("전쟁"), WESTERN("서부");
 
-    private String genre;
+    private String genreKor;
 
     Genre(String genre){
-        this.genre = genre;
+        this.genreKor = genre;
     }
 
-    public String getGenre(){
-        return genre;
+    public String getgenreKor() {
+        return genreKor;
+    }
+
+
+    public static Genre getEnum (String genreKor) {
+        for (Genre genre : Genre.values()) {
+            if (genre.getgenreKor().equals(genreKor)) {
+                return genre;
+            }
+        }
+        return null; // 설명이 매칭되는 장르가 없을 경우 null 반환
     }
 }

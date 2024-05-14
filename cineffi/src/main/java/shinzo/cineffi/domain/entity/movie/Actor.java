@@ -28,6 +28,7 @@ public class Actor {
     private byte[] profileImage;
 
     private Integer tmdbId;
+    private String engName;
 
 }
 

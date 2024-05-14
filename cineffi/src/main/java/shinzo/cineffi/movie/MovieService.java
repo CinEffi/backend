@@ -35,7 +35,7 @@ public class MovieService {
 
     public static Genre getEnumGenreBykorGenre(String korName) {
         for (Genre genre : Genre.values()) {
-            if (genre.getGenre().equals(korName)) return genre;
+            if (genre.getgenreKor().equals(korName)) return genre;
         }
         return null;
     }
@@ -76,7 +76,7 @@ public class MovieService {
             dtoList.add(dto);
         }
 
-        return new GenreMovieListDTO(genre.getGenre(), dtoList);
+        return new GenreMovieListDTO(genre.getgenreKor(), dtoList);
     }
 
     public void insertDailyBoxOffice() {
@@ -144,7 +144,7 @@ public class MovieService {
                 .releaseDate(movie.getReleaseDate())
                 .poster(encodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
-                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getGenre).collect(Collectors.toList()))
+                .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getgenreKor).collect(Collectors.toList()))
                 .build();
 
         return MovieDetailDTO.builder()

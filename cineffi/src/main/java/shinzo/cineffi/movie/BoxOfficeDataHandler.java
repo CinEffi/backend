@@ -28,7 +28,7 @@ public class BoxOfficeDataHandler {
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
     private final MovieRepository movieRepository;
 
-    @Value("${kobis.api_key}")
+    @Value("${kobis.api_key1}")
     private String API_KEY;
 
 
