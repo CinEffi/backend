@@ -3,6 +3,7 @@ package shinzo.cineffi.movie;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,14 @@ public class MovieController {
     private final ScrapService scrapService;
     private final MovieInitService movieInitService;
     private final NewMovieInitService newMovieInitService;
+
+    @GetMapping("/test")
+    public ResponseEntity<ResponseDTO<?>> test() {
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .result(newMovieInitService.testMethod())
+                        .build());
+    }
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {

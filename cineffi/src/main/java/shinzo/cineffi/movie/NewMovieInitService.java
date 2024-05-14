@@ -284,7 +284,7 @@ public class NewMovieInitService {
 
         return result;
     }
-    private Map<String, Object> requestData(String urlString, InitType type) {
+    public Map<String, Object> requestData(String urlString, InitType type) {
         RestTemplate restTemplate = new RestTemplate();
         Map<String, Object> responseData = new HashMap<>();
         try {
@@ -551,4 +551,10 @@ public class NewMovieInitService {
         }
     }
 
+    public Map<String, Object> testMethod() {
+        // 범죄도시 영화 불러오기
+        Map<String, Object> response = requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB);
+
+        return (Map<String, Object>) response.get("results");
+    }
 }
