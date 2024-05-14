@@ -1,4 +1,3 @@
-
 ## dev profile (Docker 용)
 spring:
   config:
@@ -18,13 +17,6 @@ spring:
 #    properties:
 #      hibernate:
   #        format_sql: true
-
-
-  data:
-    redis:
-      host: redis
-      port: 6379
-      password: 'mooyaho'
 
   mail:
     host: smtp.gmail.com
@@ -90,11 +82,6 @@ tmdb:
   end-year: 2024
   start-month: 4
   end-month: 4
-
-
-app:
-  encryption:
-    key: "cineffiSecretKey"
 
 #proxy:
 #  host: krmp-proxy.9rum.cc
