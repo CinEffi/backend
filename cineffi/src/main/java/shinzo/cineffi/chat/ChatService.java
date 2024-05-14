@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.chat.redisObject.RedisChatroom;
 import shinzo.cineffi.chat.repository.ChatroomRepository;
+import shinzo.cineffi.chat.repository.ChatroomTagRepository;
+import shinzo.cineffi.chat.repository.UserChatRepository;
 import shinzo.cineffi.domain.entity.chat.Chatroom;
+import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.user.repository.UserRepository;
 
 @Service
@@ -26,20 +29,18 @@ public class ChatService {
     private final UserChatRepository userChatRepository;
     private final ChatroomRepository chatroomRepository;
 
+
+
     public void test() {
         redisTemplate.opsForValue().set("a", "apple");
         redisTemplate.opsForValue().set("b", "banana");
         redisTemplate.opsForValue().set("c", "orange");
     }
 
-
-
-
     public Chatroom redisToChatroom(Long chatroomId, RedisChatroom redisChatroom) {
-
-        chatroomRepository.findById(chatroomId);
-
-
+        Chatroom chatroom = chatroomRepository.findById(chatroomId).orElseThrow();
+        Long ownerId =redisChatroom.getOwnerId();
+        User newOwner = chatroom.getOwner().getId() == ownerId ? null : userRepository.findById(ownerId).get();
+        return chatroomRepository.save(chatroom.fromRedisChatroom(redisChatroom, newOwner);
     }
-
 }
