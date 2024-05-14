@@ -81,9 +81,6 @@ public class UserService {
         if (userRepository.existsByNickname(nickname)) throw new CustomException(DUPLICATE_NICKNAME);
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) throw new CustomException(EMPTY_USER);
-        System.out.println("nickname = "+ nickname);
-        System.out.println("password = "+ password);
-        System.out.println("uploadedFile = " + uploadedFile.getOriginalFilename());
 
         User user = userOptional.get();
         UserAccount userAccount = user.getUserAccount();
