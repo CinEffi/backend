@@ -9,13 +9,12 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 
 @Configuration
-public class RestClientConfig {
+public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setProxy(proxy);
 
         return new RestTemplate(requestFactory);

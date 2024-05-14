@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +17,8 @@ import shinzo.cineffi.movie.repository.*;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -40,6 +43,7 @@ public class NewMovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
+    private final RestTemplate restTemplate;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -256,9 +260,11 @@ public class NewMovieInitService {
 
         return result;
     }
+
     private Object requestData(String urlString, InitType type) {
         RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
@@ -499,4 +505,39 @@ public class NewMovieInitService {
         }
     }
 
+    public Map<String, Object> testMethod() {
+
+        String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
+        InitType type = TMDB;
+        // 범죄도시 영화 불러오기
+//        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+//        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+//        requestFactory.setProxy(proxy);
+
+//        RestTemplate restTemplate = new RestTemplate(requestFactory);
+        Map<String, Object> responseData = new HashMap<>();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.set("Connection", "keep-alive");
+
+            if (type.equals(InitType.TMDB)) {
+                headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
+            }
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            System.out.println("requestData 요청보내기 시작");
+            String response = restTemplate.getForObject(urlString, String.class, entity);
+            System.out.println("requestData 요청보내기 끝!");
+            int test = 0;
+            if (response != null) {
+                responseData = parseJson(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return responseData;
+    }
 }
