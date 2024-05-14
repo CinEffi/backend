@@ -558,7 +558,11 @@ public class NewMovieInitService {
         String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
         InitType type = TMDB;
         // 범죄도시 영화 불러오기
-        RestTemplate restTemplate = new RestTemplate();
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setProxy(proxy);
+
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
         Map<String, Object> responseData = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -570,11 +574,8 @@ public class NewMovieInitService {
             }
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
             System.out.println("requestData 프록시 설정 시작");
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-            requestFactory.setProxy(proxy);
             System.out.println("requestData 요청보내기 시작");
             String response = restTemplate.getForObject(urlString, String.class, entity);
             System.out.println("requestData 요청보내기 끝!");
