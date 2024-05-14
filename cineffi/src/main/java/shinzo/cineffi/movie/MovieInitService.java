@@ -82,7 +82,7 @@ public class MovieInitService {
                                 .path(TMDB_PATH_MOVIE + "/discover/movie")
                                 .queryParam("sort_by", "popularity.asc")
                                 .queryParam("release_date.gte", startDate)
-                                .queryParam("release_date.lte", endDate)
+                                .queryParam("release_date.lte", "2024-04-28")
                                 .queryParam("region", "KR")
                                 .queryParam("page", page)
                                 .queryParam("api_key", TMDB_API_KEY)

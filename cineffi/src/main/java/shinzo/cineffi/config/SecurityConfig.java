@@ -46,7 +46,11 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
-                        configuration.setAllowedOrigins(List.of("http://localhost:3000","http://localhost:3003","https://48fb-175-197-204-117.ngrok-free.app","https://9e54-180-70-193-179.ngrok-free.app"));
+                        configuration.setAllowedOrigins(List.of("http://localhost:3000",
+                                "http://localhost:3003",
+                                "https://48fb-175-197-204-117.ngrok-free.app",
+                                "https://9e54-180-70-193-179.ngrok-free.app",
+                                "https://k7f10638b4382a.user-app.krampoline.com"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);
@@ -82,7 +86,8 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/movies/encrypt-test/**",
                                 "/api/users/{user-id}/scrap",
-                                "/api/test"
+                                "/api/test",
+                                "/api/chat/**"
                         ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http
