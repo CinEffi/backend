@@ -27,7 +27,6 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
-    private final RestTemplate restTemplate;
 
 
     public static void createNumber(){
