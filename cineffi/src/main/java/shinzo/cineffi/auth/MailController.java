@@ -9,35 +9,13 @@ import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ProxySelector;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-
 @RestController
 @RequiredArgsConstructor
 public class MailController {
     private final MailService mailService;
 
     @PostMapping("/api/auth/verify/email")
-    public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO emailRequestDTO) throws URISyntaxException, IOException, InterruptedException {
-//        HttpClient client = HttpClient.newBuilder()
-//                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))
-//                .build();
-//
-//        HttpRequest request = HttpRequest.newBuilder()
-//                .uri(new URI("smtp.gmail.com:587"))
-//                .timeout(Duration.ofMinutes(1))
-//                .header("Content-Type", "application/json")
-//                .GET()
-//                .build();
-//
-//        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO emailRequestDTO) {
 
         int number = mailService.sendMail(emailRequestDTO.getEmail());
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()

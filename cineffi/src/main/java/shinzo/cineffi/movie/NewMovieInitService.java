@@ -43,7 +43,6 @@ public class NewMovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
-    private final RestTemplate restTemplate;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -506,22 +505,17 @@ public class NewMovieInitService {
     }
 
     public Map<String, Object> testMethod() {
+        RestTemplate restTemplate = new RestTemplate();
 
         String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
-        InitType type = TMDB;
-        // 범죄도시 영화 불러오기
-//        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-//        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-//        requestFactory.setProxy(proxy);
-
-//        RestTemplate restTemplate = new RestTemplate(requestFactory);
+        InitType type = TMDB_MOVIE;
         Map<String, Object> responseData = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
             headers.set("Connection", "keep-alive");
 
-            if (type.equals(InitType.TMDB)) {
+            if (type == InitType.TMDB_MOVIE) {
                 headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
             }
 
