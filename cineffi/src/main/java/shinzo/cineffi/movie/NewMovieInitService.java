@@ -105,12 +105,9 @@ public class NewMovieInitService {
             String url = String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
                     TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate);
 
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-
             System.out.println("requestTMDBdatas 요청보내기 시작");
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-            requestFactory.setProxy(proxy);
             Map response = restTemplate.getForObject(url, Map.class);
+            System.out.println("requestTMDBdatas 요청보내기 끝");
             if (response != null) {
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
                 int totalPages = (int) response.get("total_pages");
@@ -148,12 +145,9 @@ public class NewMovieInitService {
             String url = String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
                     KOBIS_BASEURL, KOBIS_API_KEY3, year, year, curPage);
 
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-
             System.out.println("requestKobisDatas 요청보내기 시작");
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-            requestFactory.setProxy(proxy);
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            System.out.println("requestKobisDatas 요청보내기 끝");
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
             totalPage = (totCnt + 99) / 100; // 전체 페이지 수 계산 (올림 처리)
@@ -297,11 +291,7 @@ public class NewMovieInitService {
             }
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
-            System.out.println("requestData 프록시 설정 시작");
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-            requestFactory.setProxy(proxy);
             System.out.println("requestData 요청보내기 시작");
             String response = restTemplate.getForObject(urlString, String.class, entity);
             System.out.println("requestData 요청보내기 끝!");
@@ -558,11 +548,11 @@ public class NewMovieInitService {
         String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
         InitType type = TMDB;
         // 범죄도시 영화 불러오기
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setProxy(proxy);
+//        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+//        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+//        requestFactory.setProxy(proxy);
 
-        RestTemplate restTemplate = new RestTemplate(requestFactory);
+//        RestTemplate restTemplate = new RestTemplate(requestFactory);
         Map<String, Object> responseData = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
