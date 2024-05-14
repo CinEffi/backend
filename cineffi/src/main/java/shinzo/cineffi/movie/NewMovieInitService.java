@@ -299,10 +299,12 @@ public class NewMovieInitService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
             SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
-            System.out.println("requestData 요청보내기 시작");
+            System.out.println("requestData 프록시 설정 시작");
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
             requestFactory.setProxy(proxy);
+            System.out.println("requestData 요청보내기 시작");
             String response = restTemplate.getForObject(urlString, String.class, entity);
+            System.out.println("requestData 요청보내기 끝!");
             int test = 0;
             if (response != null) {
                 responseData = parseJson(response);
@@ -552,9 +554,38 @@ public class NewMovieInitService {
     }
 
     public Map<String, Object> testMethod() {
-        // 범죄도시 영화 불러오기
-        Map<String, Object> response = requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB);
 
-        return (Map<String, Object>) response.get("results");
+        String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
+        InitType type = TMDB;
+        // 범죄도시 영화 불러오기
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> responseData = new HashMap<>();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.set("Connection", "keep-alive");
+
+            if (type.equals(InitType.TMDB)) {
+                headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
+            }
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+            System.out.println("requestData 프록시 설정 시작");
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("krmp-proxy.9rum.cc", 3128));
+            requestFactory.setProxy(proxy);
+            System.out.println("requestData 요청보내기 시작");
+            String response = restTemplate.getForObject(urlString, String.class, entity);
+            System.out.println("requestData 요청보내기 끝!");
+            int test = 0;
+            if (response != null) {
+                responseData = parseJson(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return responseData;
     }
 }
