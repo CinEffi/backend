@@ -12,6 +12,8 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.movie.repository.BoxOfficeMovieRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -40,7 +42,9 @@ public class BoxOfficeDataHandler {
         String targetDt = time.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
 
-        HttpClient client = HttpClient.newHttpClient();
+        HttpClient client = HttpClient.newBuilder()
+                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))  // 프록시 호스트 및 포트
+                .build();
         String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", API_KEY, targetDt);
 
         HttpRequest request = HttpRequest.newBuilder()
