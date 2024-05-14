@@ -565,7 +565,6 @@ public class NewMovieInitService {
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            System.out.println("requestData 프록시 설정 시작");
             System.out.println("requestData 요청보내기 시작");
             String response = restTemplate.getForObject(urlString, String.class, entity);
             System.out.println("requestData 요청보내기 끝!");
