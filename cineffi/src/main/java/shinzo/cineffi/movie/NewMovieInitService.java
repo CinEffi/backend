@@ -40,6 +40,7 @@ public class NewMovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
+    private final RestTemplate restTemplate;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -92,7 +93,7 @@ public class NewMovieInitService {
         return result;
     }
     private List<Movie> requestTMDBdatas(String startDate, String endDate) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         List<Movie> movies = new ArrayList<>();
         int maxPages = MAX_PAGES;
         int requestCount = 0;  // 요청 횟수를 추적하기 위한 카운터
@@ -130,7 +131,7 @@ public class NewMovieInitService {
         return movies;
     }
     private List<Movie> requestKobisDatas(int year) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
         int totalPage = 100; // 초기 추정치
@@ -271,7 +272,7 @@ public class NewMovieInitService {
         return result;
     }
     private Map<String, Object> requestData(String urlString, InitType type) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         Map<String, Object> responseData = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
