@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -15,20 +14,16 @@ import shinzo.cineffi.domain.enums.ImageType;
 import shinzo.cineffi.domain.enums.InitType;
 import shinzo.cineffi.movie.repository.*;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.concurrent.*;
 
 import static shinzo.cineffi.domain.enums.ImageType.POSTER;
 import static shinzo.cineffi.domain.enums.ImageType.PROFILE;
@@ -50,8 +45,10 @@ public class NewMovieInitService {
     private String TMDB_API_KEY;
     @Value("${tmdb.base_url}")
     private String TMDB_BASEURL;
-    @Value("${tmdb.path_image}")
-    private String TMDB_PATH_IMAGE;
+    @Value("${tmdb.path_poster}")
+    private String TMDB_PATH_POSTER;
+    @Value("${tmdb.path_profile}")
+    private String TMDB_PATH_PROFILE;
     @Value("${tmdb.path_movie}")
     private String TMDB_PATH_MOVIE;
     private static final int MAX_PAGES = 500;
@@ -69,12 +66,12 @@ public class NewMovieInitService {
     @Value("${tmdb.end-year}")
     private int END_YEAR;
 
-    private static final int THREAD_COUNT = 10; // 동시에 처리할 스레드 수
+    private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
 
     public void initData(){
         //각 년도마다의 데이터 가져와서 저장
         for (int curYear = END_YEAR; curYear >= START_YEAR; curYear--) {
-            List<Movie> TMDBBasicDatas = requestTMDBDatasByDate(curYear);
+            List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(curYear);
             List<Movie> kobisBasicDatas = requestKobisDatas(curYear);
             List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
 
@@ -83,54 +80,96 @@ public class NewMovieInitService {
         }
     }
 
-    private List<Movie> requestTMDBDatasByDate(int year) {
+    public List<Movie> getTMDBBasicDatasByDate(int year) {
         List<Movie> result = new ArrayList<>();
+        List<Future<List<Movie>>> futures = new ArrayList<>();
+
+        ExecutorService executorService = null;
         for (int month = 1; month <= 12; month++) {
+            executorService = Executors.newFixedThreadPool(THREAD_MAX);
             final int finalMonth = month;
             String startDate = String.format("%d-%02d-01", year, finalMonth);
             String endDate = String.format("%d-%02d-%02d", year, finalMonth, YearMonth.of(year, finalMonth).lengthOfMonth());
-            List<Movie> movies = requestTMDBdatas(startDate, endDate);
-            result.addAll(movies);
+
+            // 각 월별 데이터 요청을 스레드풀에 제출
+            Future<List<Movie>> future = executorService.submit(() -> {
+                return getTMDBBasicDatasInThread(startDate, endDate);
+            });
+            futures.add(future);
+        }
+
+        // 모든 Future 결과를 수집
+        for (Future<List<Movie>> future : futures) {
+            try {
+                result.addAll(future.get());
+            } catch (Exception e) {
+                System.err.println("Error fetching movie data: " + e.getMessage());
+            }
+        }
+        executorService.shutdown();
+
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            // (Re-)Cancel if current thread also interrupted
+            executorService.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+
+        return result;
+    }
+    public List<Movie> getTMDBBasicDatasInThread(String startDate, String endDate) {
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_MAX);
+        List<Movie> movies = new ArrayList<>();
+        List<Future<List<Movie>>> futures = new ArrayList<>();
+
+        for (int page = 1; page <= MAX_PAGES; page++) {
+            final int currentPage = page;
+            Callable<List<Movie>> task = () -> requestTMDBBasicData(currentPage, startDate, endDate);
+            futures.add(executorService.submit(task));
+        }
+
+        for (Future<List<Movie>> future : futures) {
+            try {
+                movies.addAll(future.get());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException ie) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        return movies;
+    }
+    private List<Movie> requestTMDBBasicData(int page, String startDate, String endDate) {
+        List<Movie> result = new ArrayList<>();
+        Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate), TMDB_MOVIE);
+
+        if (response != null) {
+            List<Map<String, Object>> maps = (List<Map<String, Object>>) response.get("results");
+            for (Map<String, Object> map : maps) {
+                if(map == null) continue;
+                Movie movie = TMDBMapToMovie(map);
+                if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
+                    result.add(movie);
+                }
+            }
         }
         return result;
     }
-    private List<Movie> requestTMDBdatas(String startDate, String endDate) {
-        List<Movie> movies = new ArrayList<>();
-        int maxPages = MAX_PAGES;
-        int requestCount = 0;  // 요청 횟수를 추적하기 위한 카운터
-
-        for (int page = 1; page <= maxPages; page++) {
-            Map<String, Object> response = (Map<String, Object>)requestData(String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
-                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate), TMDB_MOVIE);
-
-            if (response != null) {
-                List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
-                int totalPages = (int) response.get("total_pages");
-                maxPages = Math.min(maxPages, totalPages);
-
-                for (Map<String, Object> result : results) {
-                    Movie movie = TMDBMapToMovie(result);
-                    if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
-                        movies.add(movie);
-                    }
-                }
-            }
-
-            // 49번째 요청 후 1초 동안 휴식
-            requestCount++;
-            if (requestCount == 49) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();  // 현재 스레드의 인터럽트 상태를 설정
-                    break;  // 비정상적인 인터럽트 발생 시 반복문 탈출
-                }
-                requestCount = 0;  // 카운터를 초기화
-            }
-        }
-        return movies;
-    }
-    private List<Movie> requestKobisDatas(int year) {
+    public List<Movie> requestKobisDatas(int year) {
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
         int totalPage = 100; // 초기 추정치
@@ -158,82 +197,93 @@ public class NewMovieInitService {
         return result;
     }
 
-    @Transactional
-    public List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies){
-        List<Movie> result = new ArrayList<>();
-        Set<String> deDuplication = new HashSet<>();
-        Map<String, Movie> kobisKorTitleMap = new HashMap<>();
-        Map<String, Movie> kobisEngTitleMap = new HashMap<>();
-        for(Movie kobisMovie : kobisMovies){
-            kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
-            if(kobisMovie.getEngTitle() != null) kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
+    public List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies) {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_MAX);
+        Map<String, Movie> kobisKorTitleMap = new ConcurrentHashMap<>();
+        Map<String, Movie> kobisEngTitleMap = new ConcurrentHashMap<>();
+        Set<String> deDuplication = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
+        for (Movie kobisMovie : kobisMovies) {
+            kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
+            if (kobisMovie.getEngTitle() != null) {
+                kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
+            }
         }
 
-        for (int movieIdx = 0; movieIdx < TMDBMovies.size(); movieIdx++) {
-            Movie movie = null;
-            Movie TMDBMovie = TMDBMovies.get(movieIdx);
-            String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
-            if(deDuplication.contains(korTitleMapKey)) continue;
-            if(kobisKorTitleMap.containsKey(korTitleMapKey)){
+        List<Future<Movie>> futures = new ArrayList<>();
+        for (Movie TMDBMovie : TMDBMovies) {
+            Future<Movie> future = executor.submit(() -> {
+                return processMovie(TMDBMovie, kobisKorTitleMap, kobisEngTitleMap, deDuplication);
+            });
+            futures.add(future);
+        }
+
+        List<Movie> result = new ArrayList<>();
+        for (Future<Movie> future : futures) {
+            try {
+                Movie movie = future.get();
+                if (movie != null) {
+                    result.add(movie);
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown();
+        return totalSave(result); // 데이터베이스 저장 호출
+    }
+    private Movie processMovie(Movie TMDBMovie, Map<String, Movie> kobisKorTitleMap, Map<String, Movie> kobisEngTitleMap, Set<String> deDuplication) {
+        String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
+        if (deDuplication.contains(korTitleMapKey)) return null;
+
+        synchronized (deDuplication) {
+            if (kobisKorTitleMap.containsKey(korTitleMapKey)) {
                 deDuplication.add(korTitleMapKey);
-                movie = kobisKorTitleMap.get(korTitleMapKey)
+                return kobisKorTitleMap.get(korTitleMapKey)
                         .toBuilder()
                         .poster(TMDBMovie.getPoster())
                         .tmdbId(TMDBMovie.getTmdbId())
                         .introduction(TMDBMovie.getIntroduction())
                         .build();
-                result.add(movie);
-                continue;
             }
-            if(TMDBMovie.getEngTitle() == null) continue;
-            String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
-            if(kobisEngTitleMap.containsKey(engTitleMapKey)){
-                deDuplication.add(korTitleMapKey);
-                movie = kobisEngTitleMap.get(engTitleMapKey)
-                        .toBuilder()
-                        .poster(TMDBMovie.getPoster())
-                        .tmdbId(TMDBMovie.getTmdbId())
-                        .build();
-                result.add(movie);
+            if (TMDBMovie.getEngTitle() != null) {
+                String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
+                if (kobisEngTitleMap.containsKey(engTitleMapKey)) {
+                    deDuplication.add(engTitleMapKey);
+                    return kobisEngTitleMap.get(engTitleMapKey)
+                            .toBuilder()
+                            .poster(TMDBMovie.getPoster())
+                            .tmdbId(TMDBMovie.getTmdbId())
+                            .build();
+                }
             }
         }
-        return movieRepo.saveAll(result);
+        return null;
     }
+
     private void requestDetailDatas(List<Movie> movies) {
-        ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_MAX);
         List<Future<Map<String, Object>>> futures = new ArrayList<>();
         List<Movie> result = new ArrayList<>();
         Map<String, Movie> movieMap = new HashMap<>();
-        int requestCount = 0;
 
         for (Movie movie : movies) {
             Future<Map<String, Object>> future = executor.submit(() -> requestDetailData(movie));
             futures.add(future);
             movieMap.put(movie.getKobisCode(), movie);
-
-            // 49번째 요청 후 1초 동안 휴식
-            requestCount++;
-            if (requestCount == 49) {
-                try {
-                    Thread.sleep(1000);  // 1초 동안 일시 정지
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();  // 현재 스레드의 인터럽트 상태를 설정
-                    break;  // 비정상적인 인터럽트 발생 시 반복문 탈출
-                }
-                requestCount = 0;  // 카운터를 초기화
-            }
         }
 
         for (Future<Map<String, Object>> future : futures) {
             try {
-                Map<String, Object> data = future.get(); // 결과가 준비될 때까지 기다림
+                Map<String, Object> data = future.get(30, TimeUnit.SECONDS);// 결과가 준비될 때까지 기다림
                 if (data == null || data.isEmpty()) continue;
                 String movieMapKey = (String) ((Map<String, Object>)((Map<String, Object>) data.get("kobisDetails")).get("movieInfo")).get("movieCd");
                 Movie updatedMovie = detailDataMapToMovie(data, movieMap.get(movieMapKey));
                 if (updatedMovie != null) result.add(updatedMovie);
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt(); // 인터럽트 상태를 복원
+            } catch (TimeoutException e) {
             }
         }
 
@@ -241,6 +291,7 @@ public class NewMovieInitService {
         totalSave(result);
 
     }
+
     private Map<String, Object> requestDetailData(Movie movie){
         Map<String, Object> result = new HashMap<>();
         String kobisCode = movie.getKobisCode();
@@ -259,11 +310,9 @@ public class NewMovieInitService {
 
         return result;
     }
-
     private Object requestData(String urlString, InitType type) {
         RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
-
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
@@ -284,11 +333,12 @@ public class NewMovieInitService {
     }
 
     @Transactional
-    public void totalSave(List<Movie> dataList){
+    public List<Movie> totalSave(List<Movie> dataList){
         for (Movie data : dataList){
             if(data != null) movieRepo.save(data);
 
         }
+        return dataList;
     }
 
     //문자열 검사 혹은 규격에 맞추는 메서드들
@@ -481,7 +531,7 @@ public class NewMovieInitService {
 
         try {
             // Directly get byte array from the restTemplate
-            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath + "?key=" + KOBIS_API_KEY3, TMDB_IMG);
+            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY3, TMDB_IMG);
 
             if (imageBytes == null && imageBytes.length <= 0) return returnDefaultImg(type);
             return imageBytes;
@@ -503,35 +553,31 @@ public class NewMovieInitService {
 
         }
     }
-
-    public Map<String, Object> testMethod() {
-        RestTemplate restTemplate = new RestTemplate();
-
-        String urlString = TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + 1017163 + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits";
-        InitType type = TMDB_MOVIE;
-        Map<String, Object> responseData = new HashMap<>();
+    private byte[] resizeImg(byte[] img){
+        byte[] result = null;
+        //원본 이미지 가져오기
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Accept", "application/json");
-            headers.set("Connection", "keep-alive");
+            BufferedImage originalImg = ImageIO.read(new ByteArrayInputStream(img));
 
-            if (type == InitType.TMDB_MOVIE) {
-                headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
-            }
+            //이미지 리사이즈
+            Image resizeImage = originalImg.getScaledInstance(200, 200, Image.SCALE_SMOOTH);
 
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            //새 이미지 저장
+            BufferedImage newImage = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+            Graphics g = newImage.getGraphics();
+            g.drawImage(resizeImage, 0, 0, null);
+            g.dispose();
 
-            System.out.println("requestData 요청보내기 시작");
-            String response = restTemplate.getForObject(urlString, String.class, entity);
-            System.out.println("requestData 요청보내기 끝!");
-            int test = 0;
-            if (response != null) {
-                responseData = parseJson(response);
-            }
-        } catch (Exception e) {
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            ImageIO.write(newImage, "jpg", output);
+            return output.toByteArray();
+
+        } catch (IOException e) {
             e.printStackTrace();
+
         }
 
-        return responseData;
+        return result;
     }
+
 }
