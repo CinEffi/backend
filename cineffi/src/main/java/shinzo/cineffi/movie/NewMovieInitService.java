@@ -61,23 +61,15 @@ public class NewMovieInitService {
     private String KOBIS_API_KEY3;
     private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
-    @Value("${tmdb.start-year}")
-    private int START_YEAR;
-    @Value("${tmdb.end-year}")
-    private int END_YEAR;
 
     private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
 
-    public void initData(){
-        //각 년도마다의 데이터 가져와서 저장
-        for (int curYear = END_YEAR; curYear >= START_YEAR; curYear--) {
-            List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(curYear);
-            List<Movie> kobisBasicDatas = requestKobisDatas(curYear);
-            List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+    public void initData(int year){
+        List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(year);
+        List<Movie> kobisBasicDatas = requestKobisDatas(year);
+        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+        requestDetailDatas(mixBasicDatas);
 
-            requestDetailDatas(mixBasicDatas);
-
-        }
     }
 
     public List<Movie> getTMDBBasicDatasByDate(int year) {

@@ -65,7 +65,8 @@ tmdb:
   access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjZTc0MjdlODU0YzU2ZjFlMmI0OWE2NWRmNDVjZDNiZSIsInN1YiI6IjY2MGUwN2QwMzU4MThmMDE3YzNjZGI5ZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.744tSvIVxntYL4eGwbl6UZLNEq4yJ4YUgDaUkuTZ4fQ
   api_key: ce7427e854c56f1e2b49a65df45cd3be
   base_url: https://
-  path_image: image.tmdb.org/t/p/w500
+  path_poster: image.tmdb.org/t/p/w500
+  path_profile: image.tmdb.org/t/p/w200
   path_movie: api.themoviedb.org/3
   start-year: 2024
   end-year: 2024
@@ -154,6 +155,8 @@ server:
 #  api_key: ce7427e854c56f1e2b49a65df45cd3be
 #  base_url: https://
 #  path_image: image.tmdb.org/t/p/w500
+#  path_poster: image.tmdb.org/t/p/w500
+#  path_profile: image.tmdb.org/t/p/w200
 #  path_movie: api.themoviedb.org/3
 #  start-year: 2024
 #  end-year: 2024

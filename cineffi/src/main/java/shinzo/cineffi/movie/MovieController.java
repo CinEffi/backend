@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,10 +35,10 @@ public class MovieController {
     private final NewMovieInitService newMovieInitService;
 
     @GetMapping("/init")
-    public ResponseEntity<ResponseDTO<?>> init() {
+    public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
         long beforeTime = System.currentTimeMillis();
 
-        newMovieInitService.initData();
+        newMovieInitService.initData(year);
 
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime)/1000;
