@@ -19,6 +19,12 @@ public class ReviewLookupDTO {
     private String reviewWriterNickname;
     private String reviewContent;
     private Integer likeNumber;
+
+    private Integer level;
+    private Boolean isLiked;
+    private Boolean isCertified;
+    private Boolean isBad;
+
 //    private LocalDateTime createdAt;
     private LocalDate createdAt;
     private Float reviewScore;
