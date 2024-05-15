@@ -1,5 +1,6 @@
 package shinzo.cineffi.chat;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 @Getter
 @Builder
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ChatSession {
     private final WebSocketSession session;
     private Long userId;

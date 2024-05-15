@@ -14,6 +14,8 @@ public interface UserChatRepository extends JpaRepository<UserChat, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE UserChat uc SET uc.userChatStatus = :status WHERE uc.chatroomId = :chatroomId")
+    @Query("UPDATE UserChat uc SET uc.userChatStatus = :status WHERE uc.chatroom = :chatroomId")
     void updateUserChatStatusByChatroomId(Long chatroomId, UserChatStatus status);
+
+
 }

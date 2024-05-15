@@ -46,7 +46,7 @@ public class ChatController {
         queryLookers.put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
     }
 
-}
+
 public void chatSessionQuit(WebSocketSession session) {
     String nickname = getNicknameFromSession(session);
     chatService.chatUserQuit(nickname);

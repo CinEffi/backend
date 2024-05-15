@@ -43,6 +43,8 @@ public class Chatroom extends BaseEntity {
     @Column(columnDefinition = "TIMESTAMP(3) WITHOUT TIME ZONE")
     private LocalDateTime closedAt;
 
+    private boolean isDeleted;
+
     public RedisChatroom toRedisChatroom(List<String> tagList) {
         return RedisChatroom.builder()
                 .title(this.title)

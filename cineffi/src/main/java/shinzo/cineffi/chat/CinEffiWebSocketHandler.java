@@ -2,11 +2,15 @@ package shinzo.cineffi.chat;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import shinzo.cineffi.Utils.CinEffiUtils;
+import shinzo.cineffi.Utils.EncryptUtil;
+import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 
 import java.util.*;
@@ -16,13 +20,19 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     private final ChatController chatController;
+    private final EncryptUtil encryptUtil;
     // 웹소켓 연결 시
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        HttpHeaders headers = session.getHandshakeHeaders();
+        String userId = headers.getFirst("userId");
+        Long loginUserId = encryptUtil.LongDecrypt(userId);
+        System.out.println("find error!!!" + loginUserId);
+        session.getAttributes().put("userId", loginUserId);
 
+        chatController.chatSessionInit(loginUserId, session);
         // JWT로 유저정보 어떻게 가져올지 코드 적어야함. @제욱
-        Long userId = 1L;
-        chatController.chatSessionInit(userId, session);
+//        Long userId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());;
     }
     // 웹소켓 연결 종료 시
     @Override

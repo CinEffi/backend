@@ -1,17 +1,14 @@
 package shinzo.cineffi.domain.entity.chat;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import shinzo.cineffi.domain.entity.user.User;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Builder
 
 public class ChatMessage {

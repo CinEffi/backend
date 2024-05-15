@@ -33,6 +33,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static shinzo.cineffi.exception.message.ErrorMsg.USER_NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -54,8 +56,15 @@ public class ChatService {
         redisTemplate.opsForHash().put("users", nickname, redisUser);
         return nickname;
     }
-    public String chatUserInit(Long userId) { return userToRedis(userRepository.findById(userId).orElseThrow());}
-    public void chatUserQuit(String nickname) { redisTemplate.opsForHash().delete("users", nickname); }
+    public String chatUserInit(Long userId) {
+        return userToRedis(userRepository.findById(userId).orElseThrow(()->
+                new CustomException(USER_NOT_FOUND)));
+    }
+    public void chatUserQuit(String nickname) {
+        if(nickname != null)
+        redisTemplate.opsForHash().delete("users", nickname);
+        else throw new CustomException(USER_NOT_FOUND);
+    }
 
 
 
@@ -112,10 +121,10 @@ public class ChatService {
 
     public void createChatroom(String nickname, String title, List<String> tags) {
         RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
-        if (redisUser == null) throw new CustomException(ErrorMsg.USER_NOT_FOUND);
+        if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
         Chatroom chatroom = chatroomRepository.save(Chatroom.builder()
                 .title(title)
-                .owner(userRepository.findById(redisUser.getId()).orElseThrow(() -> new CustomException(ErrorMsg.USER_NOT_FOUND)))
+                .owner(userRepository.findById(redisUser.getId()).orElseThrow(() -> new CustomException(USER_NOT_FOUND)))
                 .closedAt(null) // 처음에는 닫힌 시간이 없습니다.
                 .build());
         for (String tag : tags){
@@ -210,7 +219,7 @@ public class ChatService {
 
         // 유저 있는지 검증(레디스에서 있는지 찾아보기 -> 없으면 null)
         RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
-        if (redisUser == null) throw new CustomException(ErrorMsg.USER_NOT_FOUND);
+        if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
 
         // Redis에서 채팅방 정보 확인
         RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", chatroomId.toString());
@@ -228,7 +237,7 @@ public class ChatService {
         } else {  // RedisUserChat이 없다 -> UserChat이 없다 -> 들어온적이 없다 -> 처음들어온거다. -> UserChat을 만들어 줘야함 -> 만들고 레디스 userChat에도 저장
             UserChat userChat = userChatRepository.save(UserChat.builder()
                     .user(creator != null ? creator : userRepository.findByNickname(nickname)
-                            .orElseThrow(() -> {throw new CustomException(ErrorMsg.USER_NOT_FOUND);}))
+                            .orElseThrow(() -> {throw new CustomException(USER_NOT_FOUND);}))
                     .chatroom(chatroomRepository.findById(chatroomId)
                             .orElseThrow(() -> {throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);}))
                     .userChatStatus(UserChatStatus.JOINED)
