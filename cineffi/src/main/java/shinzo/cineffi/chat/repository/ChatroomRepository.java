@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
     List<Chatroom> findAllByIsDeletedTrueOrderByIdDesc();
+
+    void updateIsDeleteById(Long chatroomId, boolean b);
 }

@@ -289,4 +289,22 @@ public class ChatService {
 *
 * */
     }
+
+    @Transactional
+    public void closeChatroom(Long chatroomId) {
+        // 1. 백업
+        backupToDatabase();
+
+        // 2. Redis에서 채팅방 데이터 삭제
+        redisTemplate.delete("chatroom:" + chatroomId);
+
+        // 3. Postgres userchat DB에서 userchat 테이블의 user_chat_status 상태 변경
+        userChatRepository.updateUserChatStatusByChatroomId(chatroomId, UserChatStatus.LEAVED);
+
+        // 4. Postgres DB에서 chatroom 테이블의 isdelete 필드 변경
+        chatroomRepository.updateIsDeleteById(chatroomId, true);
+
+        // 5. Redis에서 "userlist:{chatroomId}" 키를 삭제
+        redisTemplate.delete("userlist:" + chatroomId);
+    }
 }
