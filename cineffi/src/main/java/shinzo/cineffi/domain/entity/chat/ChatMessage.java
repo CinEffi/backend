@@ -31,5 +31,5 @@ public class ChatMessage {
     private String content;
 
     @Column(name = "timestamp")
-    private LocalDateTime timestamp;
+    private String timestamp;
 }

@@ -8,17 +8,18 @@ import lombok.Getter;
 @Builder
 @Getter
 public class RedisChatMessage {
-    private Long userId;
+    private String sender;
+//    private Long userId;
     private String content;
     private String timestamp;
 
     @JsonCreator
     public RedisChatMessage(
-            @JsonProperty("userId") Long userId,
+            @JsonProperty("sender") String sender,
             @JsonProperty("content") String content,
             @JsonProperty("timestamp") String timestamp
     ) {
-        this.userId = userId;
+        this.sender = sender;
         this.content = content;
         this.timestamp = timestamp;
     }

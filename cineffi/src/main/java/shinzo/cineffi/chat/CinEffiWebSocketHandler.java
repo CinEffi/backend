@@ -7,6 +7,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import shinzo.cineffi.Utils.CinEffiUtils;
+import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +19,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     // 웹소켓 연결 시
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+
         // JWT로 유저정보 어떻게 가져올지 코드 적어야함. @제욱
         Long userId = 1L;
         chatController.chatSessionInit(userId, session);
@@ -36,21 +38,31 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         String type = webSocketMessage.getType();
         switch(type) {
             case "LIST" :
-                chatController.chatroomList(session, webSocketMessage.getData());
+                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
                 break;
             case "CREATE" :
-                chatController.chatroomCreate(session, webSocketMessage.getData());//session, textMessage);
+                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
                 break;
-            case "JOIN" :
-                chatController.chatroomJoin(session, webSocketMessage.getData().toString());
-                break;
-            case "LEAVE" :
-                chatController.leaveChatroom(session);
             case "SEND" :
-                chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString());
+//                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
                 break;
+                ////////////////////////////////////////////////////////
+            case "JOIN" :
+//                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
+                break;
+            case "EXIT" :
+//                sendToSession(session, chatController.leaveChatroom(session));
+                ////////////////////////////////////////////////////////
             default :
                 System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
+        }
+    }
+
+    public static void sendToSession(WebSocketSession session, WebSocketMessage message) throws Exception {
+        if (ChatController.isSessionOK(session)) {session.sendMessage(new TextMessage(CinEffiUtils.getString(message)));}
+        else {ChatController.sessionDelete(session);
+            System.out.println("[FATAL_ERROR] = sendToSession Failed, session " + session.getId() + " deleted.");
+            System.out.println("message.type = " + message.getType() + ", message.data = " + message.getData());
         }
     }
 

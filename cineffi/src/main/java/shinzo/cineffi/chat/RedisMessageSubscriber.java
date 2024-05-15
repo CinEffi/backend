@@ -5,20 +5,28 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import shinzo.cineffi.Utils.CinEffiUtils;
 
 @RequiredArgsConstructor
 @Component
 public class RedisMessageSubscriber implements MessageListener {
 
     private final RedisTemplate<String, Object> redisTemplate;
+
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        // 여가서,
         System.out.println("onMessage(message = " + message + ", pattern = " + pattern + "); just called");
 
         String channel = new String(message.getChannel());
-        String[] parts = new String(message.getBody()).split(":");
+        String[] parts = CinEffiUtils.extractSegments(new String(message.getBody()), ':');
+        String chatroomId = parts[0];
+        String content = parts[1];
+        String timeStamp = parts[2];
+        ////////////////////////////////////////////////
+        // 채널에, 메시지가 도착 했을 때! 그 서버는 채널에 있는 모든 유저에게 sendToSession을 갈겨줘야합니다.
         String userlist = "userlist:" + channel.split(":")[1];
+
+
 
 //        for (RedisUserChat redisUserChat :
 //                redisTemplate.opsForHash().entries(userlist).values().stream()

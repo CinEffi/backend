@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import shinzo.cineffi.chat.redisObject.RedisUserChat;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.enums.UserChatRole;
@@ -35,4 +36,16 @@ public class UserChat extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserChatRole userChatRole;
     // OWNER, OPERATOR, MEMBER
+
+    public RedisUserChat userChatToRedis() {
+        return RedisUserChat.builder()
+                .userId(this.user.getId())
+                .nickname(this.user.getNickname())
+                .chatroomId(this.chatroom.getId())
+                .redisUserChatRole(this.userChatRole)
+                .redisUserChatStatus(this.userChatStatus)
+                .isMuted(false)
+                .build();
+    }
+
 }

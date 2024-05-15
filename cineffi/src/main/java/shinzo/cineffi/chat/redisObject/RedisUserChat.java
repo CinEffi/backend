@@ -15,8 +15,7 @@ import shinzo.cineffi.domain.enums.UserChatStatus;
 public class RedisUserChat {
     private Long userId; // 두개 다 필요없을 가능성 농후
     private Long chatroomId; // 두개 다 필요없을 가능성 농후
-
-//    private String nickname;
+    private String nickname;
     private UserChatStatus redisUserChatStatus;
     private UserChatRole redisUserChatRole;
     private Boolean isMuted;
@@ -24,14 +23,14 @@ public class RedisUserChat {
     public RedisUserChat(
             @JsonProperty("userId") Long userId,
             @JsonProperty("chatroomId") Long chatroomId,
-//            @JsonProperty("nickname") String nickname,
+            @JsonProperty("nickname") String nickname,
             @JsonProperty("status") UserChatStatus status,
             @JsonProperty("role") UserChatRole role,
             @JsonProperty("isMuted") Boolean isMuted
     ) {
         this.userId = userId;
         this.chatroomId = chatroomId;
-//        this.nickname = nickname;
+        this.nickname = nickname;
         this.redisUserChatStatus = status;
         this.redisUserChatRole = role;
         this.isMuted = isMuted;

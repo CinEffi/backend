@@ -19,6 +19,15 @@ public class CinEffiUtils {
         return objectMapper.writeValueAsString(message);
     }
 
+    public static String[] extractSegments(String input, char delimChar) {
+        int firstIndex = input.indexOf(delimChar);
+        int lastIndex = input.lastIndexOf(delimChar);
+        String[] segments = new String[3];
+        segments[0] = firstIndex != -1 ? input.substring(0, firstIndex) : input;
+        segments[2] = lastIndex != -1 ? input.substring(lastIndex + 1) : input;
+        segments[1] = firstIndex != lastIndex ? input.substring(firstIndex + 1, lastIndex) : "";
+        return segments;
+    }
 
 
 }

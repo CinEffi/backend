@@ -44,15 +44,13 @@ public class Chatroom extends BaseEntity {
     private LocalDateTime closedAt;
 
     public RedisChatroom toRedisChatroom(List<String> tagList) {
-
         return RedisChatroom.builder()
-                .title(title)
+                .title(this.title)
                 .tags(tagList)
-                .memberNum(1) // 새로운 채팅방이 생성되면 최소한 한 명의 멤버가 있습니다.
-                .createdAt(LocalDateTime.now().toString()) // 현재 시간으로 생성 시간 설정
-                .closedAt(null)// 처음에는 닫힌 시간이 없습니다.
+                .memberNum(0) // 새로운 채팅방이 생성되면 최소한 한 명의 멤버가 있습니다.
+                .createdAt(this.getCreatedAt().toString()) // 현재 시간으로 생성 시간 설정
+                .closedAt(this.getClosedAt().toString())// 처음에는 닫힌 시간이 없습니다.
                 .ownerId(owner.getId())//생성자
                 .build();
-
     }
 }

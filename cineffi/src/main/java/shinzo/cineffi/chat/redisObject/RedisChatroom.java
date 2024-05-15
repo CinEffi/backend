@@ -7,7 +7,7 @@ import lombok.Getter;
 
 import java.util.List;
 
-@Builder
+@Builder(toBuilder = true)
 @Getter
 public class RedisChatroom { //    private Long id;
     private String title;
