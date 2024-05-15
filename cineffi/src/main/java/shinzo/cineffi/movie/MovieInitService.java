@@ -49,8 +49,10 @@ public class MovieInitService {
     private String TMDB_API_KEY;
     @Value("${tmdb.base_url}")
     private String TMDB_BASEURL;
-    @Value("${tmdb.path_image}")
-    private String TMDB_PATH_IMAGE;
+    @Value("${tmdb.path_poster}")
+    private String TMDB_PATH_POSTER;
+    @Value("${tmdb.path_profile}")
+    private String TMDB_PATH_PROFILE;
     @Value("${tmdb.path_movie}")
     private String TMDB_PATH_MOVIE;
     private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -194,7 +196,7 @@ public class MovieInitService {
         if (imagePath != null) {
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(TMDB_BASEURL + TMDB_PATH_IMAGE + imagePath);
+                URL url = new URL(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 

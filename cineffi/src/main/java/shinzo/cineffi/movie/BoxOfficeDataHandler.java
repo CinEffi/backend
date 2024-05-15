@@ -42,10 +42,9 @@ public class BoxOfficeDataHandler {
         String targetDt = time.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
 
-        System.out.println("==================================================");
-        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
+//        System.out.println("==================================================");
+//        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
         HttpClient client = HttpClient.newBuilder()
-                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))  // 프록시 호스트 및 포트
                 .build();
         String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", API_KEY, targetDt);
 
@@ -58,9 +57,9 @@ public class BoxOfficeDataHandler {
         try {
             boxOfficeMovieRepository.deleteByTargetDt(targetDt);  //해당날의 데이터를 삭제하고 시작
 
-            System.out.println("박스오피스 BoxOfficeDataHandler 요청 보내기");
+//            System.out.println("박스오피스 BoxOfficeDataHandler 요청 보내기");
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println("박스오피스 BoxOfficeDataHandler 요청 보내기 완료");
+//            System.out.println("박스오피스 BoxOfficeDataHandler 요청 보내기 완료");
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(response.body());
             JSONObject boxOfficeResult = (JSONObject) jsonObject.get("boxOfficeResult");

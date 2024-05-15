@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 import shinzo.cineffi.domain.dto.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -32,14 +31,6 @@ public class MovieController {
     private final ScrapService scrapService;
     private final MovieInitService movieInitService;
     private final NewMovieInitService newMovieInitService;
-
-    @GetMapping("/test")
-    public ResponseEntity<ResponseDTO<?>> test() {
-        return ResponseEntity.ok(
-                ResponseDTO.builder()
-                        .result(newMovieInitService.testMethod())
-                        .build());
-    }
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init() {
