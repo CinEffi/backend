@@ -222,7 +222,7 @@ public class ReviewService {
                     .movieId(movie.getId())
                     .movieTitle(movie.getTitle())
                     .moviePoster(encodeImage(movie.getPoster()))
-                    .reviewScore(score.getScore())
+                    .reviewScore(score != null ? score.getScore() : null)
                     .reviewId(review.getId())
                     .reviewWriterId(user.getId())
                     .reviewWriterNickname(user.getNickname())
