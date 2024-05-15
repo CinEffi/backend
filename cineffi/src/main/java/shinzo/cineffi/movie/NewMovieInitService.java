@@ -121,14 +121,25 @@ public class NewMovieInitService {
 
         return result;
     }
+
     public List<Movie> getTMDBBasicDatasInThread(String startDate, String endDate) {
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_MAX);
         List<Movie> movies = new ArrayList<>();
         List<Future<List<Movie>>> futures = new ArrayList<>();
+        int maxPage = MAX_PAGES;
 
-        for (int page = 1; page <= MAX_PAGES; page++) {
+        //첫 요청은 그냥 보내서 응답의 총페이지 확인
+        Object[] firstPageMovies = requestTMDBBasicData(1, startDate, endDate);
+        futures.add(executorService.submit(() -> (List<Movie>) firstPageMovies[0]));
+
+        //위 응답의 총페이지 값을 확인하고 maxPage를 업데이트
+        int totalPage = (int) firstPageMovies[1]; // API 응답에서 max_page 추출
+        maxPage = Math.min(MAX_PAGES, totalPage);
+
+        //남은 페이지 모두 요청
+        for (int page = 2; page <= maxPage; page++) {
             final int currentPage = page;
-            Callable<List<Movie>> task = () -> requestTMDBBasicData(currentPage, startDate, endDate);
+            Callable<List<Movie>> task = () -> (List<Movie>) requestTMDBBasicData(currentPage, startDate, endDate)[0];
             futures.add(executorService.submit(task));
         }
 
@@ -152,22 +163,24 @@ public class NewMovieInitService {
 
         return movies;
     }
-    private List<Movie> requestTMDBBasicData(int page, String startDate, String endDate) {
-        List<Movie> result = new ArrayList<>();
+    private Object[] requestTMDBBasicData(int page, String startDate, String endDate) {
+        List<Movie> resultMovie = new ArrayList<>();
+        int maxPage = 0;
         Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s%s/discover/movie?api_key=%s&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
                 TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate), TMDB_MOVIE);
 
         if (response != null) {
             List<Map<String, Object>> maps = (List<Map<String, Object>>) response.get("results");
+            maxPage = (int) response.get("total_pages");
             for (Map<String, Object> map : maps) {
                 if(map == null) continue;
                 Movie movie = TMDBMapToMovie(map);
                 if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
-                    result.add(movie);
+                    resultMovie.add(movie);
                 }
             }
         }
-        return result;
+        return new Object[]{resultMovie, maxPage};
     }
     public List<Movie> requestKobisDatas(int year) {
         List<Movie> result = new ArrayList<>();
@@ -175,8 +188,8 @@ public class NewMovieInitService {
         int totalPage = 100; // 초기 추정치
 
         while (curPage <= totalPage) {
-            Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%d&openEndDt=%d&itemPerPage=100&curPage=%d",
-                    KOBIS_BASEURL, KOBIS_API_KEY3, year, year, curPage), KOBIS);
+            Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d",
+                    KOBIS_BASEURL, KOBIS_API_KEY1, year, year, curPage), KOBIS);
 
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
@@ -262,34 +275,46 @@ public class NewMovieInitService {
         return null;
     }
 
-    private void requestDetailDatas(List<Movie> movies) {
+    public void requestDetailDatas(List<Movie> movies) {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_MAX);
         List<Future<Map<String, Object>>> futures = new ArrayList<>();
-        List<Movie> result = new ArrayList<>();
-        Map<String, Movie> movieMap = new HashMap<>();
+        List<Movie> result = Collections.synchronizedList(new ArrayList<>());
+        Map<String, Movie> movieMap = new ConcurrentHashMap<>();
 
         for (Movie movie : movies) {
+            movieMap.put(movie.getKobisCode(), movie);
             Future<Map<String, Object>> future = executor.submit(() -> requestDetailData(movie));
             futures.add(future);
-            movieMap.put(movie.getKobisCode(), movie);
         }
 
-        for (Future<Map<String, Object>> future : futures) {
+        futures.parallelStream().forEach(future -> {
             try {
-                Map<String, Object> data = future.get(30, TimeUnit.SECONDS);// 결과가 준비될 때까지 기다림
-                if (data == null || data.isEmpty()) continue;
-                String movieMapKey = (String) ((Map<String, Object>)((Map<String, Object>) data.get("kobisDetails")).get("movieInfo")).get("movieCd");
+                Map<String, Object> data = future.get(30, TimeUnit.SECONDS); // 결과가 준비될 때까지 기다림
+                if (data == null || data.isEmpty()) return;
+
+                String movieMapKey = (String) ((Map<String, Object>) ((Map<String, Object>) data.get("kobisDetails")).get("movieInfo")).get("movieCd");
                 Movie updatedMovie = detailDataMapToMovie(data, movieMap.get(movieMapKey));
                 if (updatedMovie != null) result.add(updatedMovie);
-            } catch (InterruptedException | ExecutionException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // 인터럽트 상태를 복원
+            } catch (ExecutionException e) {
             } catch (TimeoutException e) {
             }
+        });
+
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
         }
 
-        executor.shutdown(); // 모든 작업이 완료된 후 스레드 풀 종료
         totalSave(result);
-
     }
 
     private Map<String, Object> requestDetailData(Movie movie){
@@ -298,7 +323,7 @@ public class NewMovieInitService {
         int tmdbId = movie.getTmdbId();
 
         // KOBIS 요청 수행
-        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY3 + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
+        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY1 + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
 
         // TMDB 요청 수행
         Map<String, Object> tmdbDetails = (Map<String, Object>) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
@@ -531,7 +556,7 @@ public class NewMovieInitService {
 
         try {
             // Directly get byte array from the restTemplate
-            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY3, TMDB_IMG);
+            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY1, TMDB_IMG);
 
             if (imageBytes == null && imageBytes.length <= 0) return returnDefaultImg(type);
             return imageBytes;
