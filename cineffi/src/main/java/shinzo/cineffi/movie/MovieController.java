@@ -34,6 +34,18 @@ public class MovieController {
     private final MovieInitService movieInitService;
     private final NewMovieInitService newMovieInitService;
 
+    @GetMapping("/test")
+    public ResponseEntity<ResponseDTO<?>> test() {
+
+//        newMovieInitService.test();
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(newMovieInitService.test())
+                        .build());
+    }
+
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
         long beforeTime = System.currentTimeMillis();
