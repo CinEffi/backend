@@ -549,14 +549,13 @@ public class NewMovieInitService {
         try {
             // Directly get byte array from the restTemplate
             byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY1, TMDB_IMG);
-
-            if (imageBytes == null && imageBytes.length <= 0) return returnDefaultImg(type);
-            return imageBytes;
+            if(imageBytes != null && imageBytes.length > 0) return imageBytes;
 
         } catch (Exception e) {
             e.printStackTrace();
-            return returnDefaultImg(type);
         }
+
+        return returnDefaultImg(type);
     }
     private byte[] returnDefaultImg(ImageType type) {
         if (type.equals(POSTER)) {

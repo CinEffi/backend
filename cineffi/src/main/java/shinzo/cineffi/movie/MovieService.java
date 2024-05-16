@@ -19,6 +19,7 @@ import shinzo.cineffi.score.repository.ScoreRepository;
 import java.util.*;
 import java.util.stream.Collectors;
 import static shinzo.cineffi.domain.enums.Genre.*;
+import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service
 @Transactional
@@ -41,7 +42,7 @@ public class MovieService {
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(encodeImage(movie.getPoster()))
+                    .poster(decodeImage(movie.getPoster()))
                     .build();
             result.add(dto);
         }
@@ -61,7 +62,7 @@ public class MovieService {
                     .movieId(movie.getId())
                     .title(movie.getTitle())
                     .releaseDate(movie.getReleaseDate())
-                    .poster(encodeImage(movie.getPoster()))
+                    .poster(decodeImage(movie.getPoster()))
                     .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                     .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                     .build();
@@ -94,7 +95,7 @@ public class MovieService {
                         .movieId(movie.getId())
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(encodeImage(movie.getPoster()))
+                        .poster(decodeImage(movie.getPoster()))
                         .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                         .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                         .build())
@@ -109,7 +110,7 @@ public class MovieService {
                             .movieId(movie.getId())
                             .title(movie.getTitle())
                             .releaseDate(movie.getReleaseDate())
-                            .poster(encodeImage(movie.getPoster()))
+                            .poster(decodeImage(movie.getPoster()))
                             .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
                             .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
                             .build())
@@ -142,7 +143,7 @@ public class MovieService {
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
                 .releaseDate(movie.getReleaseDate())
-                .poster(encodeImage(movie.getPoster()))
+                .poster(decodeImage(movie.getPoster()))
                 .originCountry(movie.getOriginCountry())
                 .genre(movie.getGenreList().stream().map(MovieGenre::getGenre).map(Genre::getKor).collect(Collectors.toList()))
                 .build();
@@ -170,7 +171,7 @@ public class MovieService {
         if (movie != null && movie.getDirector() != null) {
             crewList.add(CrewListDTO.builder()
                     .name(movie.getDirector().getName())
-                    .profile(encodeImage(movie.getDirector().getProfileImage()))
+                    .profile(decodeImage(movie.getDirector().getProfileImage()))
                     .job("Director")
                     .character("")
                     .build());
@@ -180,7 +181,7 @@ public class MovieService {
                 .stream()
                 .map(am -> CrewListDTO.builder()
                         .name(am.getActor().getName())
-                        .profile(encodeImage(am.getActor().getProfileImage()))
+                        .profile(decodeImage(am.getActor().getProfileImage()))
                         .job("Actor")
                         .character(am.getCharacter())
                         .build())
@@ -198,12 +199,6 @@ public class MovieService {
         return (score != null) ? score.getScore() : null;
     }
 
-    public String encodeImage(byte[] imageData) {
-        String baseImgStr = "data:image/png;base64,";
-        String result = Base64.getEncoder().encodeToString(imageData);
-
-        return baseImgStr + result;
-    }
 
 }
 

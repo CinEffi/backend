@@ -24,6 +24,7 @@ import java.util.Random;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 import static shinzo.cineffi.jwt.JWTUtil.REFRESH_PERIOD;
+import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service
 @Transactional
@@ -244,7 +245,7 @@ public class AuthService {
                 .userId(encryptUtil.LongEncrypt(userId))
                 .nickname(nick)
                 .level(level)
-                .profileImage(profileImage)
+                .profileImage(decodeImage(profileImage))
                 .isBad(isBad)
                 .isCertified(isCertified)
                 .isKakao(isKakao)

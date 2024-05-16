@@ -13,7 +13,7 @@ public class LoginResponseDTO {
     private String userId;
     private String nickname;
     private Integer level;
-    private byte[] profileImage;
+    private String profileImage;
     private Boolean isBad;
     private Boolean isCertified;
     private Boolean isKakao;
