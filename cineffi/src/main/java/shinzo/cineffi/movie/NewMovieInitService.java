@@ -75,19 +75,6 @@ public class NewMovieInitService {
 
     private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
 
-    public List<Movie> test(){
-
-        return requestKobisDatas(2024);
-
-//        List<Movie> THREAD_MAXDBBasicDatas = getTMDBBasicDatasByDate(2024);
-//        List<Movie> kobisBasicDatas = requestKobisDatas(2024);
-//        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
-//        requestDetailDatas(mixBasicDatas);
-//
-//        if(LocalDate.now().getYear() <= year) boxOfficeDataHandler.dailyBoxOffice();
-
-    }
-
     public void initData(int year){
         List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(year);
         List<Movie> kobisBasicDatas = requestKobisDatas(year);
