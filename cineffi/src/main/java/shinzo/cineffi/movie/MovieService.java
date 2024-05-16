@@ -78,7 +78,6 @@ public class MovieService {
     }
 
     public List<BoxOfficeMovie> getEnhancedDailyMovies() {
-        boxOfficeDataHandler.processDailyBoxOfficeData();
         return boxOfficeMovieRepository.findAll();
     }
 

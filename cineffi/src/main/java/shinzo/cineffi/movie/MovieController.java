@@ -3,6 +3,7 @@ package shinzo.cineffi.movie;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,18 +34,27 @@ public class MovieController {
     private final ScrapService scrapService;
     private final MovieInitService movieInitService;
     private final NewMovieInitService newMovieInitService;
+    private final BoxOfficeDataHandler boxOfficeDataHandler;
 
-    @GetMapping("/test")
-    public ResponseEntity<ResponseDTO<?>> test() {
-
-//        newMovieInitService.test();
-
-        return ResponseEntity.ok(
-                ResponseDTO.builder()
-                        .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(newMovieInitService.test())
-                        .build());
-    }
+//    @GetMapping("/update") //미완성: 어차피 안쓸 로직인데 이시간에 딴걸 만들자
+//    public ResponseEntity<ResponseDTO<?>> update() {
+//        int nowYear = LocalDate.now().getYear();
+//        int nextYear = nowYear + 1;
+//        int initYear = LocalDate.now().getMonthValue() > 11 ? nextYear : nowYear;
+//
+//        List<Movie> TMDBBasicDatas = newMovieInitService.getTMDBBasicDatasByDate(initYear);
+//        List<Movie> kobisBasicDatas = newMovieInitService.requestKobisDatas(initYear);
+//
+//        List<Movie> mixBasicDatas = newMovieInitService.returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+//        newMovieInitService.requestDetailDatas(mixBasicDatas);
+//        boxOfficeDataHandler.dailyBoxOffice();
+//
+//        return ResponseEntity.ok(
+//                ResponseDTO.builder()
+//                        .message(SuccessMsg.SUCCESS.getDetail())
+//                        .result(null)
+//                        .build());
+//    }
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
