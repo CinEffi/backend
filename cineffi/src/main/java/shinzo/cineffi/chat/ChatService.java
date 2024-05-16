@@ -52,8 +52,16 @@ public class ChatService {
 
     public String userToRedis(User user) {
         RedisUser redisUser = user.getRedisUser();
+        System.out.println("redisUser = " + redisUser);
+        System.out.println("redisUser.getIsBad() = " + redisUser.getIsBad());
+        System.out.println("redisUser.getIsCertified() = " + redisUser.getIsCertified());
+        System.out.println("redisUser.getId() = " + redisUser.getId());
+
         String nickname = user.getNickname();
-        redisTemplate.opsForHash().put("users", nickname, redisUser);
+        System.out.println("nickname = " + nickname);
+        redisTemplate.opsForHash().put("redisUsers", nickname, redisUser);
+        System.out.println("redisTemplate.opsForHash().get(\"users\", nickname) = " + (RedisUser)redisTemplate.opsForHash().get("redisUsers", nickname));
+
         return nickname;
     }
     public String chatUserInit(Long userId) {
@@ -61,7 +69,7 @@ public class ChatService {
                 new CustomException(USER_NOT_FOUND)));
     }
     public void chatUserQuit(String nickname) {
-        if(nickname != null && redisTemplate.hasKey("users")) redisTemplate.opsForHash().delete("users", nickname);
+        if(nickname != null && redisTemplate.hasKey("redisUsers")) redisTemplate.opsForHash().delete("redisUsers", nickname);
         else throw new CustomException(USER_NOT_FOUND);
     }
 
@@ -119,7 +127,7 @@ public class ChatService {
     }
 
     public Long createChatroom(String nickname, String title, List<String> tags) {
-        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
+        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", nickname);
         if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
         User creator = userRepository.findById(redisUser.getId()).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         Chatroom chatroom = chatroomRepository.save(Chatroom.builder()
@@ -243,7 +251,7 @@ public class ChatService {
 
     public List<ChatLogDTO> joinChatroom(String nickname, Long chatroomId) {
         // 유저 있는지 검증(레디스에서 있는지 찾아보기 -> 없으면 null)
-        if (!redisTemplate.hasKey("users") || redisTemplate.opsForHash().get("users", nickname) == null)
+        if (!redisTemplate.hasKey("redisUsers") || redisTemplate.opsForHash().get("redisUsers", nickname) == null)
             throw new CustomException(USER_NOT_FOUND);
         // Redis에서 채팅방 정보 확인
         RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", chatroomId.toString());
@@ -270,7 +278,7 @@ public class ChatService {
 
     public Long leaveChatroom (Long chatroomId, String  nickname) {
         //유저 있는지 검증(레디스에서 확인 -> 없으면 null)
-        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
+        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", nickname);
         if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
         //채팅방도 존재하는지 검증
         RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", chatroomId.toString());

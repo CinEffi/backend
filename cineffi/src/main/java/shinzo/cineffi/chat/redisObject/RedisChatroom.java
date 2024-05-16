@@ -2,11 +2,14 @@ package shinzo.cineffi.chat.redisObject;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.util.List;
-
+@RedisHash("chatroom")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @Builder(toBuilder = true)
 @Getter
 public class RedisChatroom { //    private Long id;

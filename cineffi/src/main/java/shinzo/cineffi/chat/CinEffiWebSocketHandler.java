@@ -34,6 +34,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             String userId = uri.getQuery().split("=")[1];
             System.out.println("userID!!!!!" + userId);
             Long loginUserId = encryptUtil.LongDecrypt(userId);
+            System.out.println("loginUserId = " + loginUserId);
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
         } catch (CustomException e) {
@@ -49,8 +50,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             System.out.println("CinEffiWebSocketHandler.afterConnectionClosed [status] : " + status);
             chatController.chatSessionQuit(session);
         } catch (CustomException e) {
-            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
-                    .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
+            System.out.println("[CustomException Occurs] : " + e.getErrorMsg().getDetail());
         }
     }
 
