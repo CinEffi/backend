@@ -28,17 +28,15 @@ public class WebSocketConfiguration implements WebSocketConfigurer {
 
     private final ChatController chatController;
     private final EncryptUtil encryptUtil;
-//    @Override
-//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-//        registry
-//                .addHandler(signalingSocketHandler(chatController), "/chat")
-//                .setAllowedOrigins("*");
-//    }
+
 @Override
 public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-    registry.addHandler(signalingSocketHandler(chatController,encryptUtil), "/chat")
+    registry
+            .addHandler(signalingSocketHandler(chatController,encryptUtil), "/chat")
             .addInterceptors(new HttpSessionHandshakeInterceptor())
-            .setHandshakeHandler(new DefaultHandshakeHandler());
+            .setHandshakeHandler(new DefaultHandshakeHandler())
+            .setAllowedOrigins("*");
+
 }
 
     @Bean

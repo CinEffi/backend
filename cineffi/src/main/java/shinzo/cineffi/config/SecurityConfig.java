@@ -37,6 +37,7 @@ public class SecurityConfig {
 
         return configuration.getAuthenticationManager();
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         //CORS 설정
@@ -50,7 +51,8 @@ public class SecurityConfig {
                                 "http://localhost:3003",
                                 "https://48fb-175-197-204-117.ngrok-free.app",
                                 "https://9e54-180-70-193-179.ngrok-free.app",
-                                "https://k7f10638b4382a.user-app.krampoline.com"));
+                                "https://k7f10638b4382a.user-app.krampoline.com",
+                                "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);
@@ -88,7 +90,8 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/test",
                                 "/api/chat/**",
-                                "/chat"
+                                "/chat/**",
+                                "/ws/**"
                         ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http

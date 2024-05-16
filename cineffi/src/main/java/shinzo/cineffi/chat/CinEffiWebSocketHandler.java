@@ -14,6 +14,7 @@ import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 import shinzo.cineffi.domain.dto.SendChatMessageDTO;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,8 +26,9 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     // 웹소켓 연결 시
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        HttpHeaders headers = session.getHandshakeHeaders();
-        String userId = headers.getFirst("userId");
+        URI uri = session.getUri();
+        String userId = uri.getQuery().split("=")[1];
+        System.out.println("userID!!!!!"+userId);
         Long loginUserId = encryptUtil.LongDecrypt(userId);
         session.getAttributes().put("userId", loginUserId);
         chatController.chatSessionInit(loginUserId, session);
@@ -42,9 +44,15 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
-
         WebSocketMessage webSocketMessage = CinEffiUtils.getObject(textMessage.getPayload());
 
+        System.out.println("webSocketMessage = " + webSocketMessage);
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getType());
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getSender());
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getData());
+        System.out.println("session.getUri() = "+ session.getUri());
+        System.out.println("session.getId() = " + session.getId());
+        System.out.println("session.getPrincipal() = " + session.getPrincipal());
         String type = webSocketMessage.getType();
         String nickname = ChatController.getNicknameFromSession(session);
         switch(type) {
