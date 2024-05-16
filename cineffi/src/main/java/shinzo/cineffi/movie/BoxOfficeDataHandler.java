@@ -23,6 +23,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 
+import static shinzo.cineffi.user.ImageConverter.decodeImage;
+
 @Component
 @RequiredArgsConstructor
 public class BoxOfficeDataHandler {
@@ -104,7 +106,7 @@ public class BoxOfficeDataHandler {
                         .title(boxOfficeMovie.getTitle())
                         .targetDt(boxOfficeMovie.getTargetDt())
                         .releaseDate(movie.getReleaseDate())
-                        .poster(encodeImage(movie.getPoster()))
+                        .poster(decodeImage(movie.getPoster()))
                         .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
                         .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
                         .build();
@@ -113,13 +115,6 @@ public class BoxOfficeDataHandler {
             }
 
         }
-    }
-
-    public String encodeImage(byte[] imageData) {
-        String baseImgStr = "data:image/png;base64,";
-        String result = Base64.getEncoder().encodeToString(imageData);
-
-        return (baseImgStr + result);
     }
 
 }
