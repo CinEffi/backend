@@ -80,14 +80,14 @@ public class ChatService {
         for (Map.Entry<Object, Object> entry : chatrooms.entrySet()) {
             sortedChatrooms.put((String) entry.getKey(), (RedisChatroom)entry.getValue());
         }
-
         for (Map.Entry<String, RedisChatroom> entry : sortedChatrooms.entrySet()) {
             RedisChatroom redisChatroom = entry.getValue();
             chatroomDTOList.add(ChatroomDTO.builder()
+                    .chatroomId(Long.parseLong(entry.getKey()))
                     .title(redisChatroom.getTitle())
                     .tags(redisChatroom.getTags())
-                    .createdAt(LocalDateTime.parse(redisChatroom.getCreatedAt()))
-                    .closedAt(LocalDateTime.parse(redisChatroom.getClosedAt()))
+                    .createdAt(redisChatroom.getCreatedAt())
+                    .closedAt(redisChatroom.getClosedAt())
                     .userCount(redisChatroom.getMemberNum())
                     .build()
             );
@@ -100,10 +100,11 @@ public class ChatService {
         List<Chatroom> closedChatroomList = chatroomRepository.findAllByIsDeletedTrueOrderByIdDesc();
         for (Chatroom chatroom : closedChatroomList) {
             chatroomDTOList.add(ChatroomDTO.builder()
+                    .chatroomId(chatroom.getId())
                     .title(chatroom.getTitle())
                     .tags(chatroom.getTagList().stream().map(ChatroomTag::getContent).collect(Collectors.toList()))
-                    .createdAt(chatroom.getCreatedAt())
-                    .closedAt(chatroom.getClosedAt())
+                    .createdAt(chatroom.getCreatedAt().toString())
+                    .closedAt(chatroom.getClosedAt().toString())
                     .userCount(null)
                     .build()
             );
@@ -121,7 +122,7 @@ public class ChatService {
                 throw new CustomException(ErrorMsg.USER_MUTED);
         }
         LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
-        redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + ":" + content + ":" + now);
+        redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + "|" + content + "|" + now);
         redisTemplate.opsForList().rightPush("chatlog:" + chatroomId, RedisChatMessage.builder()
                 .sender(nickname).content(content).timestamp(now.toString()).build()); ;
     }
@@ -177,6 +178,7 @@ public class ChatService {
     }
 
     private void backupUserChat() {
+        System.out.println("ChatService.backupUserChat");
         stringRedisTemplate.opsForSet().members("updatedUserChat").stream().map(String.class::cast).toList()
                 .forEach(entry -> {
                     String[] parts = entry.split(":");
@@ -189,15 +191,23 @@ public class ChatService {
                 });
         // mute 하는걸로는 update목록에 올리면 안되겠군
         stringRedisTemplate.delete("updatedUserChat");
+        System.out.println("ChatService.backupUserChat");
     }
 
     private void backupChatLog() {
+        System.out.println("ChatService.backupChatLog"); // [TMP]
         for (String id : stringRedisTemplate.opsForHash().keys("chatroom").stream().map(String.class::cast).collect(Collectors.toSet())) {
             Chatroom chatroom = chatroomRepository.findById(Long.parseLong(id)).get();
             for (Object messageObj : Objects.requireNonNull(redisTemplate.opsForList().range("chatlog:" + id, 0, -1))) {
                 RedisChatMessage message = (RedisChatMessage)messageObj;
-                User sender = userRepository.findByNickname(message.getSender()).orElseThrow(() ->
-                        new IllegalArgumentException("User not found with nickname: " + message.getSender()));
+                System.out.println("message.getSender() = " + message.getSender());
+                if (message.getSender() == "SERVER")
+                    System.out.println("message.getSender() == \"SERVER\"");
+                else
+                    System.out.println("message.getSender() == \"" + message.getSender() + "\"");
+                
+                User sender = message.getSender() == "SERVER" ? null : userRepository.findByNickname(message.getSender())
+                        .orElseThrow(() -> new IllegalArgumentException("User not found with nickname: " + message.getSender()));
                 ChatMessage chatMessage = ChatMessage.builder()
                         .sender(sender)
                         .chatroom(chatroom)
@@ -208,6 +218,7 @@ public class ChatService {
             }
             redisTemplate.delete("chatlog:" + id);
         }
+        System.out.println("ChatService.backupChatLog"); // [TMP]
     }
 
     public void backupToDatabase() { // 레디스 -> DB
@@ -219,6 +230,7 @@ public class ChatService {
         //  chatroom 백업 (그러나 쓰이지 않는다)
         //    backupChatroom();
         //UserChat 백업
+        System.out.println("ChatService.backupToDatabase"); // [TMP]
         backupUserChat();
         //chatlog 백업
         backupChatLog();
@@ -228,7 +240,8 @@ public class ChatService {
         // 입장 멤버의 소켓에 보내줄 채팅 로그 모으기
         List<ChatLogDTO> chatlogList = new ArrayList<>();// db에서 메시지 받아오자
         for (ChatMessage message : chatMessageRepository.findAllByChatroomIdOrderByTimestampAsc(chatroomId)) {
-            String sender = message.getSender().getNickname();
+            User senderObj = message.getSender();
+            String sender = senderObj == null ? "SERVER" : senderObj.getNickname();
             chatlogList.add(ChatLogDTO.builder()
                     .nickname(sender)
                     .content(message.getContent())
@@ -288,7 +301,7 @@ public class ChatService {
         if (redisUserChat == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
         if (redisUserChat.getRedisUserChatStatus() != UserChatStatus.JOINED) throw new CustomException(ErrorMsg.NOT_JOINED_CHATROOM);
         //레디스에서 UserChat의 상태를 LEAVE로 변경
-        redisUserChat = redisUserChat.toBuilder().redisUserChatStatus(UserChatStatus.LEAVED).build();
+        redisUserChat = redisUserChat.toBuilder().redisUserChatStatus(UserChatStatus.LEFT).build();
         redisTemplate.opsForHash().put("userlist:" + chatroomId, nickname, redisUserChat);
         stringRedisTemplate.opsForSet().add("updatedUserChat", chatroomId + ":" + nickname);
         // 레디스채팅룸에서 멤버수 1명 감소
@@ -299,6 +312,11 @@ public class ChatService {
 
     @Transactional
     public void closeChatroom(Long chatroomId) {
+
+        if (redisTemplate.opsForHash().get("chatroom", chatroomId.toString()) == null) {// [TMP]
+            System.out.println("[FATAL ERROR] : ChatService.closeChatroom has NOT_FOUND_CHATROOM No." + chatroomId);;// [TMP]
+            return;// [TMP]
+        } ////////////////// 이런일은 안일어나지만 적절한 에러처리로 바꾸거나 없애야겠다.// [TMP]
         // 0. 삭제합니다 공지
         sendMessageToChatroom(chatroomId, "SERVER", "채팅방이 종료됩니다. 이후 종료된 채팅방 목록에서 찾아보실 수 있습니다.");
         // 1. 다 LEAVED 만들기

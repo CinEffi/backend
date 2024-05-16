@@ -26,8 +26,8 @@ public class RedisMessageSubscriber implements MessageListener {
         System.out.println("onMessage(message = " + message + ", pattern = " + pattern + "); just called");
         String channel = new String(message.getChannel());
         String chatroomIdStr = channel.substring(channel.lastIndexOf(':') + 1);
+        String[] parts = CinEffiUtils.extractSegments(new String(message.getBody()), '|');
 
-        String[] parts = CinEffiUtils.extractSegments(new String(message.getBody()), ':');
         String sender = parts[0];
         String content = parts[1];
         String timeStamp = parts[2];

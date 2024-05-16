@@ -15,6 +15,7 @@ import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.SendChatMessageDTO;
 import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
 
 import java.net.URI;
 import java.util.*;
@@ -32,14 +33,15 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         try {
             URI uri = session.getUri();
             String userId = uri.getQuery().split("=")[1];
-            System.out.println("userID!!!!!" + userId);
+            System.out.println("userID!!!!!" + userId); // [TMP]
             Long loginUserId = encryptUtil.LongDecrypt(userId);
-            System.out.println("loginUserId = " + loginUserId);
+            System.out.println("loginUserId = " + loginUserId);// [TMP]
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
         } catch (CustomException e) {
             sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
+            session.close(CloseStatus.SERVER_ERROR);
         }
     }
 
@@ -61,10 +63,6 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             String type = CinEffiUtils.getObject(payload, "type", String.class);
             String nickname = ChatController.getNicknameFromSession(session);
 
-            System.out.println("session.getUri() = " + session.getUri());
-            System.out.println("session.getId() = " + session.getId());
-            System.out.println("session.getPrincipal() = " + session.getPrincipal());
-
             if (type.equals("LIST")) {
                 Boolean isOpen = CinEffiUtils.getObject(payload, "data", Boolean.class);
                 sendToSession(session, chatController.chatroomListSend(isOpen));
@@ -81,18 +79,23 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             } else if (type.equals("EXIT")) {
                 Long exitChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
                 sendToSession(session, chatController.chatroomLeave(exitChatroomId, nickname));
-            } else if (type.equals("BACKUP")) {
-                System.out.println("Backup");
-            } else {
-                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
+            } else if (type.equals("BACKUP")) { // [TMP]이렇게 하면 안되지만 테스트를 위하여
+                chatController.tmpForBackupTest(); // [TMP]이 메서드도 지울거임
+            } else if (type.equals("CLOSE")) { // [TMP]
+                chatController.tmpForChatroomClose(); // [TMP]
+            }
+            else {
+                throw new CustomException(ErrorMsg.INVALID_TYPE_CALL);
             }
         } catch (CustomException e) {
             sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
+        } catch (Exception e) {
+            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data("[Unhandled Error]" + e.getMessage()).build());
         }
     }
 
-    public static void sendToSession(WebSocketSession session, WebSocketMessage message) throws Exception {
+    public static void sendToSession(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
         if (ChatController.isSessionOK(session)) {
             session.sendMessage(new TextMessage(CinEffiUtils.getString(message)));
         } else {

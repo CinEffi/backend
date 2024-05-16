@@ -25,6 +25,7 @@ public class CinEffiUtils {
     }
 
     public static String[] extractSegments(String input, char delimChar) {
+        input = input.replaceAll("^\"|\"$", ""); // 문자열의 시작과 끝에 있는 큰따옴표를 제거
         int firstIndex = input.indexOf(delimChar);
         int lastIndex = input.lastIndexOf(delimChar);
         String[] segments = new String[3];

@@ -12,10 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import shinzo.cineffi.Utils.CinEffiUtils;
-import shinzo.cineffi.domain.dto.ChatLogDTO;
-import shinzo.cineffi.domain.dto.ChatroomListDTO;
-import shinzo.cineffi.domain.dto.CreateChatroomDTO;
-import shinzo.cineffi.domain.dto.ResponseDTO;
+import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.chat.ChatroomTag;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
@@ -40,8 +37,10 @@ public class ChatController {
     public static boolean isSessionOK(WebSocketSession session) { return session != null && session.isOpen(); }
     public static void sessionDelete(WebSocketSession session) throws Exception {
         String nickname  = getNicknameFromSession(session);
-        queryLookers.remove(nickname);
-        sessions.remove(nickname);
+        if (nickname != null) {
+            queryLookers.remove(nickname);
+            sessions.remove(nickname);
+        }
         sessionIds.remove(session.getId());
     }
 
@@ -55,31 +54,33 @@ public class ChatController {
     public void chatSessionQuit(WebSocketSession session) {
         String nickname = getNicknameFromSession(session);
         //   chatService.chatUserQuit(nickname); 안 씁니다.
-        queryLookers.remove(nickname);
-        sessions.remove(nickname);
+        if (nickname!= null) {
+            queryLookers.remove(nickname);
+            sessions.remove(nickname);
+        }
         sessionIds.remove(session.getId());
     }
 
-    public WebSocketMessage chatroomListSend(boolean isOpen) throws Exception { //, Object queryData
+    public WebSocketMessage<ResponseDTO<ChatroomListDTO>> chatroomListSend(boolean isOpen) throws Exception { //, Object queryData
         ChatroomListDTO chatroomListDTO = isOpen ? chatService.listOpenChatroom() : chatService.listClosedChatroom();
-        return WebSocketMessage.builder().type("LIST").sender("SERVER").data(ResponseDTO.builder()
+        return WebSocketMessage.<ResponseDTO<ChatroomListDTO>>builder().type("LIST").sender("SERVER").data(ResponseDTO.<ChatroomListDTO>builder()
                 .isSuccess(true).message("처리완료").result(chatroomListDTO).build()).build();
     }
 
-    public WebSocketMessage chatroomCreate(String nickname, CreateChatroomDTO createChatroomDTO) throws Exception {
+    public WebSocketMessage<?> chatroomCreate(String nickname, CreateChatroomDTO createChatroomDTO) throws Exception {
         Long chatroomId = chatService.createChatroom(nickname, createChatroomDTO.getTitle(), createChatroomDTO.getTags());
         return WebSocketMessage.builder().type("CREATE").sender("SERVER").data(ResponseDTO.builder()
                 .isSuccess(true).message("처리완료").result(chatroomId).build()).build();
         // join은 여기서 하지 않고, create 통보를 받았을 시에 프론트에서 바로 join을 요청하게끔 되어있어야한다.
     }
 
-    public WebSocketMessage chatroomJoin(String nickname, Long chatroomId) throws Exception {
+    public WebSocketMessage<?> chatroomJoin(String nickname, Long chatroomId) throws Exception {
         List<ChatLogDTO> chatLogDTOS = chatService.joinChatroom(nickname, chatroomId);
         return WebSocketMessage.builder().type("JOIN").sender("SERVER").data(ResponseDTO.builder()
                 .isSuccess(true).message("처리완료").result(chatLogDTOS).build()).build();
     }
 
-    public WebSocketMessage chatroomLeave(Long chatroomId, String nickname) throws Exception {
+    public WebSocketMessage<?> chatroomLeave(Long chatroomId, String nickname) throws Exception {
         Long leavedChatroomId = chatService.leaveChatroom(chatroomId, nickname);
         chatService.sendMessageToChatroom(chatroomId, "SERVER", "[notice] : " + nickname + "님이 퇴장하셨습니다.");
         return WebSocketMessage.builder().type("EXIT").sender("SERVER").data(ResponseDTO.builder()
@@ -89,5 +90,12 @@ public class ChatController {
     public void messageToChatroom(Long chatroomId, String nickname, String message) throws Exception {
         chatService.sendMessageToChatroom(chatroomId, nickname, message);
     }
+
+    public void tmpForBackupTest() {// [TMP] // 컨트롤러 호출 안할 가능성이 농후하니, 지우거나 이름을 바꾸시길
+        chatService.backupToDatabase();// [TMP]
+    }// [TMP]
+    public void tmpForChatroomClose() {// [TMP] // 컨트롤러 호출 안할 가능성이 농후하니, 지우거나 이름을 바꾸시길
+        chatService.closeChatroom(1L);// [TMP]
+    }// [TMP]
 
 }

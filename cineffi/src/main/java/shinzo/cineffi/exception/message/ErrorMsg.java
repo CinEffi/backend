@@ -24,6 +24,7 @@ public enum ErrorMsg {
         REVIEW_EXIST(BAD_REQUEST, "해당 영화에 대해 이미 작성된 리뷰가 있습니다."),
         NOT_JOINED_CHATROOM(BAD_REQUEST, "접속한 채팅방이 아닙니다."),
         NOT_LEFT_CHATROOM(BAD_REQUEST, "퇴장 상태가 아닙니다."),
+        INVALID_TYPE_CALL(BAD_REQUEST, "서버에 전달된 메시지의 type이 유효하지 않습니다."),
 
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
