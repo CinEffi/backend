@@ -123,7 +123,7 @@ public class MovieService {
                 }
         }
 
-        result.addAll(dtoList.subList(0, Math.min(20, dtoList.size() - 1)));
+        if(!dtoList.isEmpty()) result.addAll(dtoList.subList(0, Math.min(20, dtoList.size() - 1)));
 
         return result;
     }

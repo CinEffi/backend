@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
@@ -40,8 +41,14 @@ public class BoxOfficeDataHandler {
     private String KOBIS_API_KEY3;
     @Value("${kobis.api_key4}")
     private String KOBIS_API_KEY4;
-
-
+    @Value("${kobis.api_key5}")
+    private String KOBIS_API_KEY5;
+    @Value("${kobis.api_key6}")
+    private String KOBIS_API_KEY6;
+    @Value("${kobis.api_key7}")
+    private String KOBIS_API_KEY7;
+    @Value("${kobis.api_key8}")
+    private String KOBIS_API_KEY8;
 
     public void dailyBoxOffice() {
         //요청 인터페이스들
@@ -54,7 +61,7 @@ public class BoxOfficeDataHandler {
 //        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
         HttpClient client = HttpClient.newBuilder()
                 .build();
-        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY4, targetDt);
+        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY6, targetDt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -78,6 +85,8 @@ public class BoxOfficeDataHandler {
             for (int i = 0; i < limit; i++) {
                 JSONObject dailyBoxOffice = (JSONObject) dailyBoxOfficeList.get(i);
 
+                if(!movieRepository.existsMovieByTitle(dailyBoxOffice.get("movieNm").toString())) continue;
+
                 //JSON obiject -> java Object(Entity) 변환
                 BoxOfficeMovie boxOfficeMovie = BoxOfficeMovie.builder()
                         .rank(dailyBoxOffice.get("rank").toString())
@@ -95,19 +104,18 @@ public class BoxOfficeDataHandler {
         }
     }
 
-
-
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
     public void processDailyBoxOfficeData() {
         List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
         for (BoxOfficeMovie boxOfficeMovie : boxOfficeMovies) {
-            List<Movie> movies = movieRepository.findByTitleIgnoringSpaces(boxOfficeMovie.getTitle());
-            if (!movies.isEmpty()) {
-                Movie movie = movies.get(0); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
+            Optional<Movie> movieOpt = movieRepository.findByTitle(boxOfficeMovie.getTitle());
+           if (!movieOpt.isEmpty()) {
+                Movie movie = movieOpt.get(); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
                 AvgScore avgScore = movie.getAvgScore();
 
                 BoxOfficeMovie updateBoxOfficeMovie = BoxOfficeMovie.builder()
-                        .id(boxOfficeMovie.getId()) //기존 DailyMovie의 id 유지
+                        .id(boxOfficeMovie.getId())
+                        .movieId(movie.getId())
                         .rank(boxOfficeMovie.getRank())
                         .title(boxOfficeMovie.getTitle())
                         .targetDt(boxOfficeMovie.getTargetDt())
