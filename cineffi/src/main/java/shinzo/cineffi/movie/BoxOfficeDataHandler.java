@@ -38,6 +38,12 @@ public class BoxOfficeDataHandler {
     private String KOBIS_API_KEY2;
     @Value("${kobis.api_key3}")
     private String KOBIS_API_KEY3;
+    @Value("${kobis.api_key4}")
+    private String KOBIS_API_KEY4;
+    @Value("${kobis.api_key5}")
+    private String KOBIS_API_KEY5;
+
+
 
     public void dailyBoxOffice() {
         //요청 인터페이스들
@@ -50,7 +56,7 @@ public class BoxOfficeDataHandler {
 //        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
         HttpClient client = HttpClient.newBuilder()
                 .build();
-        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY3, targetDt);
+        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY4, targetDt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))

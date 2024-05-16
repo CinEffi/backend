@@ -60,6 +60,8 @@ public class NewMovieInitService {
     private String KOBIS_API_KEY2;
     @Value("${kobis.api_key3}")
     private String KOBIS_API_KEY3;
+    @Value("${kobis.api_key4}")
+    private String KOBIS_API_KEY4;
     private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
