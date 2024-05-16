@@ -26,15 +26,16 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-//        if (
-//                request.getRequestURI().startsWith("/api/auth")
-//
-//        )
-//        {
-//            System.out.println("filter check!!!");
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
+        if (
+                request.getRequestURI().startsWith("/api/auth")||
+                request.getRequestURI().startsWith("/chat")
+
+        )
+        {
+            System.out.println("filter check!!!");
+            filterChain.doFilter(request, response);
+            return;
+        }
         try{
 
             String access = JWTUtil.resolveAccessToken(request);

@@ -13,6 +13,7 @@ import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -24,8 +25,9 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     // 웹소켓 연결 시
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        HttpHeaders headers = session.getHandshakeHeaders();
-        String userId = headers.getFirst("userId");
+        URI uri = session.getUri();
+        String userId = uri.getQuery().split("=")[1];
+        System.out.println("userID!!!!!"+userId);
         Long loginUserId = encryptUtil.LongDecrypt(userId);
         System.out.println("find error!!!" + loginUserId);
         session.getAttributes().put("userId", loginUserId);
@@ -45,27 +47,34 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
         WebSocketMessage webSocketMessage = CinEffiUtils.getObject(textMessage.getPayload());
 
+        System.out.println("webSocketMessage = " + webSocketMessage);
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getType());
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getSender());
+        System.out.println("webSocketMessage.getType() = " + webSocketMessage.getData());
+        System.out.println("session.getUri() = "+ session.getUri());
+        System.out.println("session.getId() = " + session.getId());
+        System.out.println("session.getPrincipal() = " + session.getPrincipal());
         String type = webSocketMessage.getType();
-        switch(type) {
-            case "LIST" :
-                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
-                break;
-            case "CREATE" :
-                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
-                break;
-            case "SEND" :
+//        switch(type) {
+//            case "LIST" :
+//                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
+//                break;
+//            case "CREATE" :
+//                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
+//                break;
+//            case "SEND" :
 //                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
-                break;
-                ////////////////////////////////////////////////////////
-            case "JOIN" :
+//                break;
+//                ////////////////////////////////////////////////////////
+//            case "JOIN" :
 //                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
-                break;
-            case "EXIT" :
+//                break;
+//            case "EXIT" :
 //                sendToSession(session, chatController.leaveChatroom(session));
-                ////////////////////////////////////////////////////////
-            default :
-                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
-        }
+//                ////////////////////////////////////////////////////////
+//            default :
+//                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
+//        }
     }
 
     public static void sendToSession(WebSocketSession session, WebSocketMessage message) throws Exception {
@@ -77,5 +86,15 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {} //TODO:
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+        // 에러 메시지를 로깅합니다.
+        System.err.println("WebSocket 전송 오류 발생: " + exception.getMessage());
+        System.out.println("error 발생!!!!!!!!!!!!!!!!!!!!!!");
+        // 클라이언트에게 에러 메시지를 전송합니다.
+        String errorMessage = "WebSocket 전송 중 오류가 발생했습니다.";
+        session.sendMessage(new TextMessage(errorMessage));
+
+        // 원하는 경우 연결을 닫을 수도 있습니다.
+        // session.close();
+    }
 }
