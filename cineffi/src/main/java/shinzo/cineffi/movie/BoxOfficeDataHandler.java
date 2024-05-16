@@ -43,8 +43,6 @@ public class BoxOfficeDataHandler {
     @Value("${kobis.api_key5}")
     private String KOBIS_API_KEY5;
 
-
-
     public void dailyBoxOffice() {
         //요청 인터페이스들
         //전날 박스오피스 조회
@@ -96,8 +94,6 @@ public class BoxOfficeDataHandler {
             e.printStackTrace();
         }
     }
-
-
 
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
     public void processDailyBoxOfficeData() {
