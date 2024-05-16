@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import shinzo.cineffi.Utils.CinEffiUtils;
 
+import java.util.Map;
+
 @RequiredArgsConstructor
 @Component
 public class RedisMessageSubscriber implements MessageListener {
@@ -22,6 +24,13 @@ public class RedisMessageSubscriber implements MessageListener {
         String chatroomId = parts[0];
         String content = parts[1];
         String timeStamp = parts[2];
+
+
+        Map<String, ChatSession> sessions = ChatController.getSessions();
+        Map<String, String> sessionIds = ChatController.getSessionIds();
+
+
+
         ////////////////////////////////////////////////
         // 채널에, 메시지가 도착 했을 때! 그 서버는 채널에 있는 모든 유저에게 sendToSession을 갈겨줘야합니다.
         String userlist = "userlist:" + channel.split(":")[1];

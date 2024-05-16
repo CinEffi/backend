@@ -55,6 +55,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         System.out.println("session.getId() = " + session.getId());
         System.out.println("session.getPrincipal() = " + session.getPrincipal());
         String type = webSocketMessage.getType();
+
 //        switch(type) {
 //            case "LIST" :
 //                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
@@ -63,14 +64,14 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
 //                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
 //                break;
 //            case "SEND" :
-//                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
+////                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
 //                break;
 //                ////////////////////////////////////////////////////////
 //            case "JOIN" :
-//                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
+////                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
 //                break;
 //            case "EXIT" :
-//                sendToSession(session, chatController.leaveChatroom(session));
+////                sendToSession(session, chatController.leaveChatroom(session));
 //                ////////////////////////////////////////////////////////
 //            default :
 //                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
@@ -86,15 +87,5 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        // 에러 메시지를 로깅합니다.
-        System.err.println("WebSocket 전송 오류 발생: " + exception.getMessage());
-        System.out.println("error 발생!!!!!!!!!!!!!!!!!!!!!!");
-        // 클라이언트에게 에러 메시지를 전송합니다.
-        String errorMessage = "WebSocket 전송 중 오류가 발생했습니다.";
-        session.sendMessage(new TextMessage(errorMessage));
-
-        // 원하는 경우 연결을 닫을 수도 있습니다.
-        // session.close();
-    }
+    public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {} //TODO:
 }

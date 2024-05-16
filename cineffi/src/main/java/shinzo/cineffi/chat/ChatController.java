@@ -30,6 +30,10 @@ public class ChatController {
     private final static Map<String, ChatQuery> queryLookers = new ConcurrentHashMap<>();
     private final ChatService chatService;
 
+    public static Map<String, ChatSession> getSessions() { return sessions;}
+    public static Map<String, String> getSessionIds() { return sessionIds;}
+    public static Map<String, ChatQuery> getQueryLookers() { return queryLookers;}
+
     public static String getNicknameFromSession(WebSocketSession session) { return sessionIds.get(session.getId()); }
     public static boolean isSessionOK(WebSocketSession session) { return session != null && session.isOpen(); }
     public static void sessionDelete(WebSocketSession session) throws Exception {
