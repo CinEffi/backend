@@ -208,7 +208,8 @@ public class ReviewService {
     }
 
     public ReviewLookupListDTO sortReviewByHot(Pageable pageable, Long myUserId) {
-        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByLikeNumDesc(pageable), myUserId);
+//        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByLikeNumDesc(pageable), myUserId);
+        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseAndLikeNumGreaterThanOrderByLikeNumDesc(pageable, 1), myUserId);
     }
 
     public ReviewLookupListDTO lookupReviewList(Page<Review> reviewPage, Long myUserId) {
