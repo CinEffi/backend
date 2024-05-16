@@ -54,7 +54,7 @@ public class ChatController {
 
     public void chatSessionQuit(WebSocketSession session) {
         String nickname = getNicknameFromSession(session);
-        chatService.chatUserQuit(nickname);
+        //   chatService.chatUserQuit(nickname); 안 씁니다.
         queryLookers.remove(nickname);
         sessions.remove(nickname);
         sessionIds.remove(session.getId());

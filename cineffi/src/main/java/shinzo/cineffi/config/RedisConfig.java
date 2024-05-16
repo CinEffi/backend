@@ -54,6 +54,7 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        redisTemplate.getConnectionFactory().getConnection().flushAll(); // 서버를 재시작할때마다 Redis 내부 데이터를 싹 지워주는 설정입니다.
         return redisTemplate;
     }
     // 문자열에 특화한 메소드 제공
