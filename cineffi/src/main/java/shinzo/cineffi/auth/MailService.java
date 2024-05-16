@@ -27,7 +27,6 @@ public class MailService {
     private final JavaMailSender javaMailSender;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
-    private final RestTemplate restTemplate;
 
 
     public static void createNumber(){
@@ -85,21 +84,6 @@ public class MailService {
     //생성한 메일을 전송
     public int sendMail(String request){
         MimeMessage message = CreateMail(request);
-        Properties props = System.getProperties();
-        props.put("mail.smtp.host", "smtp.example.com");  // SMTP 서버 주소
-        props.put("mail.smtp.port", "587");               // SMTP 서버 포트
-        props.put("mail.smtp.auth", "true");              // SMTP 인증 필요시
-        props.put("mail.smtp.starttls.enable", "true");   // TLS 필요시
-
-        // 프록시 서버 설정
-        props.put("mail.smtp.proxy.host", "프록시서버주소");
-        props.put("mail.smtp.proxy.port", "포트번호");
-
-        // 프록시 인증이 필요한 경우
-        props.put("mail.smtp.proxy.user", "사용자이름");
-        props.put("mail.smtp.proxy.password", "비밀번호");
-
-        Session session = Session.getInstance(props);
         javaMailSender.send(message);
         return number;
     }

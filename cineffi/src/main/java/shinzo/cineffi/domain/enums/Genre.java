@@ -12,14 +12,14 @@ public enum Genre {
         this.genreKor = genre;
     }
 
-    public String getgenreKor() {
+    public String getKor() {
         return genreKor;
     }
 
 
     public static Genre getEnum (String genreKor) {
         for (Genre genre : Genre.values()) {
-            if (genre.getgenreKor().equals(genreKor)) {
+            if (genre.getKor().equals(genreKor)) {
                 return genre;
             }
         }

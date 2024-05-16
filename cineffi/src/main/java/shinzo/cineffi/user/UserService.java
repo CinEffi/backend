@@ -76,7 +76,7 @@ public class UserService {
 
     }
 
-    public void editUserProfile(Long userId, String nickname, String password, MultipartFile profileImage) {
+    public void editUserProfile(Long userId, String nickname, String password, MultipartFile uploadedFile) throws IOException {
         // 중복 닉네임 검사
         if (userRepository.existsByNickname(nickname)) throw new CustomException(DUPLICATE_NICKNAME);
         Optional<User> userOptional = userRepository.findById(userId);
@@ -87,9 +87,9 @@ public class UserService {
 
         try {
             userRepository.save(user.toBuilder()
-                    .nickname(( nickname == null || nickname.isEmpty() ) ? user.getNickname() : nickname)
-                    .profileImage( (profileImage == null || nickname.isEmpty() ) ? user.getProfileImage() : profileImage.getBytes())
-                    .userAccount( (password == null || password.isEmpty() ) ? user.getUserAccount() : userAccount.toBuilder().password(BCrypt.hashpw(password, BCrypt.gensalt())).build()) // 비밀번호 암호화하여 저장
+                    .nickname( nickname == null || nickname.isEmpty() ? user.getNickname() : nickname)
+                    .profileImage( uploadedFile == null || uploadedFile.isEmpty() ? user.getProfileImage() : uploadedFile.getBytes())
+                    .userAccount( password == null || password.isEmpty() ? user.getUserAccount() : userAccount.toBuilder().password(BCrypt.hashpw(password, BCrypt.gensalt())).build()) // 비밀번호 암호화하여 저장
                     .build());
         } catch (IOException e) {
             throw new CustomException(FAIDED_TO_CONVERT_IMAGE);

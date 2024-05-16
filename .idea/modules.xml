@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/backend.iml" filepath="$PROJECT_DIR$/.idea/backend.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cineffi.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cineffi.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shinzo.cineffi.main.iml" filepath="$PROJECT_DIR$/.idea/modules/shinzo.cineffi.main.iml" />
     </modules>
   </component>
 </project>

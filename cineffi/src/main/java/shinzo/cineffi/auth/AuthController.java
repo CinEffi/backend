@@ -28,36 +28,8 @@ import static shinzo.cineffi.exception.message.ErrorMsg.*;
 public class AuthController {
     private final AuthService authService;
 
-//    @GetMapping("/auth/login/kakao")
-//    public RedirectView loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) {
-//
-//        //인가코드로 카카오 토큰 발급
-//        KakaoToken kakaoToken = authService.requestKakaoToken(code);
-//        //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
-//        Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
-//        LoginResponseDTO userInfo = authService.userInfo(userId);
-//        ResponseEntity<ResponseDTO<Object>> result = null;
-//
-//        try {
-//            result = authLogin(userId);
-//            ResponseDTO<Object> obj = result.getBody().toBuilder()
-//                    .message(SuccessMsg.SUCCESS.getDetail())
-//                    .result(userInfo)
-//                    .build();
-//            ResponseEntity.ok(obj);
-//
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException(e);
-//        }
-//        ResponseEntity<ResponseDTO<Object>> a = result;
-//
-//        redirectAttributes.addFlashAttribute("result", result);
-//
-//        // Redirect to another page
-//        return new RedirectView("http://localhost:3000");
-//    }
 @GetMapping("/auth/login/kakao")
-public ResponseEntity<ResponseDTO<Object>> loginKakao(@RequestParam final String code, RedirectAttributes redirectAttributes) throws JsonProcessingException {
+public ResponseEntity<ResponseDTO<Object>> loginKakao(@RequestParam final String code) throws JsonProcessingException {
 
     //인가코드로 카카오 토큰 발급
     KakaoToken kakaoToken = authService.requestKakaoToken(code);
@@ -66,7 +38,6 @@ public ResponseEntity<ResponseDTO<Object>> loginKakao(@RequestParam final String
     LoginResponseDTO userInfo = authService.userInfo(userId);
 
         return redirectauthLogin(userId,userInfo);
-
 
 }
 

@@ -204,14 +204,15 @@ public class ReviewService {
     }
 
     public ReviewLookupListDTO sortReviewByNew(Pageable pageable, Long myUserId) {
-        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc(pageable));
+        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByCreatedAtDesc(pageable), myUserId);
     }
 
     public ReviewLookupListDTO sortReviewByHot(Pageable pageable, Long myUserId) {
-        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByLikeNumDesc(pageable));
+//        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseOrderByLikeNumDesc(pageable), myUserId);
+        return lookupReviewList(reviewRepository.findAllByIsDeleteFalseAndLikeNumGreaterThanOrderByLikeNumDesc(pageable, 1), myUserId);
     }
 
-    public ReviewLookupListDTO lookupReviewList(Page<Review> reviewPage) {
+    public ReviewLookupListDTO lookupReviewList(Page<Review> reviewPage, Long myUserId) {
         List<ReviewLookupDTO> reviewLookupDTOList = new ArrayList<>();
         for (Review review : reviewPage) {
             Movie movie = review.getMovie();
@@ -222,12 +223,16 @@ public class ReviewService {
                     .movieId(movie.getId())
                     .movieTitle(movie.getTitle())
                     .moviePoster(encodeImage(movie.getPoster()))
-                    .reviewScore(score.getScore())
+                    .reviewScore(score != null ? score.getScore() : null)
                     .reviewId(review.getId())
-                    .reviewWriterId(user.getId())
+                    .reviewWriterId(encryptUtil.LongEncrypt(user.getId()))
                     .reviewWriterNickname(user.getNickname())
                     .reviewContent(review.getContent())
                     .likeNumber(review.getLikeNum())
+                    .isLiked(myUserId != null ? reviewLikeRepository.findByReviewAndUserId(review, myUserId) != null : false)
+                    .isCertified(user.getIsCertified())
+                    .isBad(user.getIsBad())
+                    .level(user.getLevel())
                     .createdAt(review.getCreatedAt().toLocalDate()).build();
             reviewLookupDTOList.add(reviewLookupDTO);
         }

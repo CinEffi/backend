@@ -15,10 +15,16 @@ public class ReviewLookupDTO {
     private String movieTitle;
     private String moviePoster;
     private Long reviewId;
-    private Long reviewWriterId;
+    private String reviewWriterId;
     private String reviewWriterNickname;
     private String reviewContent;
     private Integer likeNumber;
+
+    private Integer level;
+    private Boolean isLiked;
+    private Boolean isCertified;
+    private Boolean isBad;
+
 //    private LocalDateTime createdAt;
     private LocalDate createdAt;
     private Float reviewScore;
