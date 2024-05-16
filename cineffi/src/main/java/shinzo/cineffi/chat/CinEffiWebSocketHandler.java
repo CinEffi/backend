@@ -43,29 +43,32 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
+
         WebSocketMessage webSocketMessage = CinEffiUtils.getObject(textMessage.getPayload());
 
+
         String type = webSocketMessage.getType();
-        switch(type) {
-            case "LIST" :
-                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
-                break;
-            case "CREATE" :
-                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
-                break;
-            case "SEND" :
-//                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
-                break;
-                ////////////////////////////////////////////////////////
-            case "JOIN" :
-//                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
-                break;
-            case "EXIT" :
-//                sendToSession(session, chatController.leaveChatroom(session));
-                ////////////////////////////////////////////////////////
-            default :
-                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
-        }
+
+//        switch(type) {
+//            case "LIST" :
+//                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
+//                break;
+//            case "CREATE" :
+//                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
+//                break;
+//            case "SEND" :
+////                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
+//                break;
+//                ////////////////////////////////////////////////////////
+//            case "JOIN" :
+////                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
+//                break;
+//            case "EXIT" :
+////                sendToSession(session, chatController.leaveChatroom(session));
+//                ////////////////////////////////////////////////////////
+//            default :
+//                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
+//        }
     }
 
     public static void sendToSession(WebSocketSession session, WebSocketMessage message) throws Exception {

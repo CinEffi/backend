@@ -8,7 +8,7 @@ import lombok.Setter;
 import shinzo.cineffi.domain.enums.UserChatRole;
 import shinzo.cineffi.domain.enums.UserChatStatus;
 
-@Builder
+@Builder(toBuilder = true)
 @Getter
 @Setter
 

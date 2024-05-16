@@ -159,7 +159,7 @@ public class ChatService {
         //  backupUserChat();레디스 채팅 유저 목록(HASH)
         //  backupChatlog();레디스 메세지 리스트 chatMessage
 //        chatroom 백업
-        stringRedisTemplate.opsForSet().members("updateChatroom").stream().map(String.class::cast).collect(Collectors.toList())
+        stringRedisTemplate.opsForSet().members("updatedChatroom").stream().map(String.class::cast).collect(Collectors.toList())
                 .forEach(id -> {
                     RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", id);
                     if (redisChatroom != null) {
@@ -173,12 +173,12 @@ public class ChatService {
                         System.out.println("redisChatroom is null");
                     // tag를 재설정하는 로직도 삽입해야함.
                 });
-        redisTemplate.delete("updateChatroom");
+        redisTemplate.delete("updatedChatroom");
 
 
 
         //UserChat 백업
-        stringRedisTemplate.opsForSet().members("updateUserChat").stream().map(String.class::cast).toList()
+        stringRedisTemplate.opsForSet().members("updatedUserChat").stream().map(String.class::cast).toList()
                 .forEach(entry -> {
                     String[] parts = entry.split(":");
                     Long chatroomId = Long.parseLong(parts[0]);
@@ -191,7 +191,7 @@ public class ChatService {
                 });
         // 여기서, 업데이트가 아무것도 안되고 있다. { 원래는 userChatStatus의 업데이트를 갈겨야 한다. }
         // mute 하는걸로는 update목록에 올리면 안되겠군
-        stringRedisTemplate.delete("updateUserChat");
+        stringRedisTemplate.delete("updatedUserChat");
 
 
         //chatlog 백업
@@ -249,6 +249,8 @@ public class ChatService {
         }
         //RedisUserChat의 멤버 수 증가
         redisTemplate.opsForHash().put("chatroom", chatroomId.toString(), redisChatroom.toBuilder().memberNum(redisChatroom.getMemberNum() + 1).build());
+        stringRedisTemplate.opsForSet().add("updatedChatroom", chatroomId.toString());
+
 
         // 입장 멤버의 소켓에 보내줄 채팅 로그 모으기
         List<ChatLogDTO> chatlogList = new ArrayList<>();
@@ -301,9 +303,9 @@ public class ChatService {
 
     @Transactional
     public void closeChatroom(Long chatroomId) {
+
         // 1. 백업
         backupToDatabase();
-
         // 2. Redis에서 채팅방 데이터 삭제
         redisTemplate.delete("chatroom:" + chatroomId);
 
@@ -315,5 +317,33 @@ public class ChatService {
 
         // 5. Redis에서 "userlist:{chatroomId}" 키를 삭제
         redisTemplate.delete("userlist:" + chatroomId);
+    }
+
+    public void leaveChatroom (Long chatroomId, String  nickname) {
+
+        //유저 있는지 검증(레디스에서 확인 -> 없으면 null)
+        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
+        if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
+
+        //채팅방도 존재하는지 검증
+        RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", chatroomId.toString());
+        if (redisChatroom == null) throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);
+
+        //레디스에서 UserChat 정보 확인
+        RedisUserChat redisUserChat = (RedisUserChat) redisTemplate.opsForHash().get("userlist:" + chatroomId, nickname);
+        if (redisUserChat == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
+        if (redisUserChat.getRedisUserChatStatus() != UserChatStatus.JOINED) throw new CustomException(ErrorMsg.NOT_JOINED_CHATROOM);
+
+        //레디스에서 UserChat의 상태를 LEAVE로 변경
+        redisUserChat = redisUserChat.toBuilder().redisUserChatStatus(UserChatStatus.LEAVED).build();
+        redisTemplate.opsForHash().put("userlist:" + chatroomId, nickname, redisUserChat);
+        stringRedisTemplate.opsForSet().add("updatedUserChat", chatroomId + ":" + nickname);
+
+        // 레디스채팅룸에서 멤버수 1명 감소
+        redisTemplate.opsForHash().put("chatroom", chatroomId.toString(), redisChatroom.toBuilder().memberNum(redisChatroom.getMemberNum() - 1).build());
+        stringRedisTemplate.opsForSet().add("updatedChatroom", chatroomId.toString());
+
+        //퇴장 메시지 전송
+        sendMessageToChatroom(chatroomId, nickname, "[notice] : " + nickname + "님이 퇴장하셨습니다.");
     }
 }
