@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface UserChatRepository extends JpaRepository<UserChat, Long> {
     UserChat findByUserIdAndChatroomId(Long userId, Long chatroomId);
+    UserChat findByUserNicknameAndChatroomId(String userNickname, Long chatroomId);
 
     @Modifying
     @Transactional

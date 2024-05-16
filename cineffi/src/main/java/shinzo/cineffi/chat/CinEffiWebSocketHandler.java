@@ -12,6 +12,7 @@ import shinzo.cineffi.Utils.CinEffiUtils;
 import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.domain.dto.CreateChatroomDTO;
+import shinzo.cineffi.domain.dto.SendChatMessageDTO;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,9 +28,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         HttpHeaders headers = session.getHandshakeHeaders();
         String userId = headers.getFirst("userId");
         Long loginUserId = encryptUtil.LongDecrypt(userId);
-        System.out.println("find error!!!" + loginUserId);
         session.getAttributes().put("userId", loginUserId);
-
         chatController.chatSessionInit(loginUserId, session);
         // JWT로 유저정보 어떻게 가져올지 코드 적어야함. @제욱
 //        Long userId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());;
@@ -46,29 +45,33 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
 
         WebSocketMessage webSocketMessage = CinEffiUtils.getObject(textMessage.getPayload());
 
-
         String type = webSocketMessage.getType();
-
-//        switch(type) {
-//            case "LIST" :
-//                sendToSession(session, chatController.sendChatroomList(session, (Boolean)webSocketMessage.getData()));
-//                break;
-//            case "CREATE" :
-//                sendToSession(session, chatController.createChatroom(session, (CreateChatroomDTO)webSocketMessage.getData()));//session, textMessage);
-//                break;
-//            case "SEND" :
-////                sendToSession(session, chatController.sendMessageToChatroom(session, webSocketMessage.getData().toString()));
-//                break;
-//                ////////////////////////////////////////////////////////
-//            case "JOIN" :
-////                sendToSession(session, chatController.chatroomJoin(session, webSocketMessage.getData().toString()));
-//                break;
-//            case "EXIT" :
-////                sendToSession(session, chatController.leaveChatroom(session));
-//                ////////////////////////////////////////////////////////
-//            default :
-//                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
-//        }
+        String nickname = ChatController.getNicknameFromSession(session);
+        switch(type) {
+            case "LIST" :
+                sendToSession(session, chatController.chatroomListSend((Boolean)webSocketMessage.getData()));
+                break;
+            case "CREATE" :
+                sendToSession(session, chatController.chatroomCreate(nickname, (CreateChatroomDTO)webSocketMessage.getData()));
+                break;
+            case "SEND" :
+                SendChatMessageDTO messageDTO = (SendChatMessageDTO) webSocketMessage.getData();
+                chatController.messageToChatroom(messageDTO.getChatroomId(), nickname, messageDTO.getMessage());
+                break;
+            case "JOIN" :
+                Long joinChatroomId = (Long)webSocketMessage.getData();
+                sendToSession(session, chatController.chatroomJoin(nickname, joinChatroomId));
+                chatController.messageToChatroom(joinChatroomId, "SERVER", "[notice] : " + nickname + " 님이 입장하셨습니다.");
+                break;
+            case "EXIT" :
+                Long exitChatroomId = (Long)webSocketMessage.getData();
+                sendToSession(session, chatController.chatroomLeave(exitChatroomId, nickname));
+                break;
+            case "BACKUP" :
+                break;
+            default :
+                System.out.println("[FATAL ERROR] Unknown type from Client [type] : " + type);
+        }
     }
 
     public static void sendToSession(WebSocketSession session, WebSocketMessage message) throws Exception {
