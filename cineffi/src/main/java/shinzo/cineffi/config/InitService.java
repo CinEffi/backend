@@ -48,17 +48,17 @@ public class InitService {
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
-//    @PostConstruct
+    @PostConstruct
     @Transactional
     public void initialize() {
         // 테스트 유저 생성
-//        authService.authUser(AuthRequestDTO.builder()
-//                .nickname("첫째희석")
-//                .email("test@test.com")
-//                .password("test123!")
-//                .isauthentication(true)
-//                .build());
-//
+        authService.authUser(AuthRequestDTO.builder()
+                .nickname("첫째희석")
+                .email("test@test.com")
+                .password("test123!")
+                .isauthentication(true)
+                .build());
+
 //        authService.authUser(AuthRequestDTO.builder()
 //                .nickname("둘째민희")
 //                .email("minn@test.com")
@@ -77,14 +77,15 @@ public class InitService {
 //        Optional<User> 둘째민희 = userRepository.findById(2L);
 //        Optional<User> 셋째제욱 = userRepository.findById(3L);
 //
-//        for (int i = 4; i < 54; i++) {
-//            authService.authUser(AuthRequestDTO.builder()
-//                    .nickname("유저" + i)
-//                    .email("유저" + i + "@test.com")
-//                    .password("test123!")
-//                    .isauthentication(true)
-//                    .build());
-//        }
+        for (long i = 2L; i <= 299; i++) {
+            authService.authUser(AuthRequestDTO.builder()
+                    .nickname("유저" + i)
+                    .email("유저" + i + "@test.com")
+                    .password("test123!")
+                    .isauthentication(true)
+                    .build());
+            followService.followUser(1L, i);
+        }
 
         // 과거 영화데이터 추가
 //        for (int i = 0; i < 30; i++) {
