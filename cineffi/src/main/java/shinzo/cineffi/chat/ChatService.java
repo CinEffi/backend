@@ -61,8 +61,7 @@ public class ChatService {
                 new CustomException(USER_NOT_FOUND)));
     }
     public void chatUserQuit(String nickname) {
-        if(nickname != null)
-        redisTemplate.opsForHash().delete("users", nickname);
+        if(nickname != null && redisTemplate.hasKey("users")) redisTemplate.opsForHash().delete("users", nickname);
         else throw new CustomException(USER_NOT_FOUND);
     }
 
@@ -244,8 +243,8 @@ public class ChatService {
 
     public List<ChatLogDTO> joinChatroom(String nickname, Long chatroomId) {
         // 유저 있는지 검증(레디스에서 있는지 찾아보기 -> 없으면 null)
-        RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("users", nickname);
-        if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
+        if (!redisTemplate.hasKey("users") || redisTemplate.opsForHash().get("users", nickname) == null)
+            throw new CustomException(USER_NOT_FOUND);
         // Redis에서 채팅방 정보 확인
         RedisChatroom redisChatroom = (RedisChatroom) redisTemplate.opsForHash().get("chatroom", chatroomId.toString());
         if (redisChatroom == null) throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);

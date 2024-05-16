@@ -6,10 +6,10 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class WebSocketMessage {
+public class WebSocketMessage<T> {
     private String sender;
     private String type;
-    private Object data;
+    private T data;
     private String path;
 
     public void setSender(String sender) {
