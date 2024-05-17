@@ -24,7 +24,6 @@ import shinzo.cineffi.user.repository.UserAccountRepository;
 import java.util.Collections;
 import java.util.List;
 
-
 @Configuration
 @EnableWebSecurity(debug = true)
 @RequiredArgsConstructor
@@ -47,11 +46,12 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
-                        configuration.setAllowedOrigins(List.of("http://localhost:3000",
+                        configuration.setAllowedOrigins(List.of(
+                                "https://k7f10638b4382a.user-app.krampoline.com",
+                                "http://localhost:3000",
                                 "http://localhost:3003",
                                 "https://48fb-175-197-204-117.ngrok-free.app",
                                 "https://9e54-180-70-193-179.ngrok-free.app",
-                                "https://k7f10638b4382a.user-app.krampoline.com",
                                 "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
