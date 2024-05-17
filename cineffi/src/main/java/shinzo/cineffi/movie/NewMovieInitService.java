@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -60,6 +61,23 @@ public class NewMovieInitService {
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
+
+    //자정마다 새 영화데이터 업데이트 로직
+    @Scheduled(cron = "0 0 0 * * ?")
+    public List<String> updateData(){
+        int nowYear = LocalDate.now().getYear();
+        int nextYear = nowYear + 1;
+        int initYear = LocalDate.now().getMonthValue() > 11 ? nextYear : nowYear;
+
+        List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(initYear);
+        List<Movie> kobisBasicDatas = requestKobisDatas(initYear);
+        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+
+        requestDetailDatas(mixBasicDatas);
+        boxOfficeDataHandler.dailyBoxOffice();
+
+        return mixBasicDatas.stream().map(Movie::getTitle).toList();
+    }
 
     public void initData(int year){
         List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(year);
