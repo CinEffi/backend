@@ -2,6 +2,7 @@ package shinzo.cineffi.domain.entity.movie;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -13,27 +14,26 @@ import shinzo.cineffi.Utils.CinEffiUtils;
 @Getter
 @SuperBuilder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@DynamicInsert
 public class AvgScore {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "avg_score_id")
     private Long id;
 
-    @ColumnDefault("0")
-    private Float allScoreSum;
-    @ColumnDefault("0")
-    private Integer allScoreCount;
+    @Builder.Default
+    private Float allScoreSum = 0f;
+    @Builder.Default
+    private Integer allScoreCount = 0;
 
-    @ColumnDefault("0")
-    private Float levelScoreSum;
-    @ColumnDefault("0")
-    private Integer levelScoreCount;
+    @Builder.Default
+    private Float levelScoreSum = 0f;
+    @Builder.Default
+    private Integer levelScoreCount = 0;
 
-    @ColumnDefault("0")
-    private Float cinephileScoreSum;
-    @ColumnDefault("0")
-    private Integer cinephileScoreCount;
+    @Builder.Default
+    private Float cinephileScoreSum = 0f;
+    @Builder.Default
+    private Integer cinephileScoreCount = 0;
 
     public void setAllAvgScore(Float deltaSum, Integer deltaCount) {
         this.allScoreSum += deltaSum;

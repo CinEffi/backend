@@ -54,22 +54,8 @@ public class NewMovieInitService {
     private String TMDB_PATH_MOVIE;
     private static final int MAX_PAGES = 500;
 
-    @Value("${kobis.api_key1}")
-    private String KOBIS_API_KEY1;
-    @Value("${kobis.api_key2}")
-    private String KOBIS_API_KEY2;
-    @Value("${kobis.api_key3}")
-    private String KOBIS_API_KEY3;
-    @Value("${kobis.api_key4}")
-    private String KOBIS_API_KEY4;
-    @Value("${kobis.api_key5}")
-    private String KOBIS_API_KEY5;
-    @Value("${kobis.api_key6}")
-    private String KOBIS_API_KEY6;
-    @Value("${kobis.api_key7}")
-    private String KOBIS_API_KEY7;
-    @Value("${kobis.api_key8}")
-    private String KOBIS_API_KEY8;
+    @Value("${kobis.api_key}")
+    private String KOBIS_API_KEY;
     private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -196,7 +182,7 @@ public class NewMovieInitService {
 
         while (curPage <= totalPage) {
             Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d",
-                    KOBIS_BASEURL, KOBIS_API_KEY6, year, year, curPage), KOBIS);
+                    KOBIS_BASEURL, KOBIS_API_KEY, year, year, curPage), KOBIS);
 
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
@@ -337,7 +323,7 @@ public class NewMovieInitService {
         int tmdbId = movie.getTmdbId();
 
         // KOBIS 요청 수행
-        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY6 + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
+        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
 
         // TMDB 요청 수행
         Map<String, Object> tmdbDetails = (Map<String, Object>) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
@@ -570,7 +556,7 @@ public class NewMovieInitService {
 
         try {
             // Directly get byte array from the restTemplate
-            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY6, TMDB_IMG);
+            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath + "?key=" + KOBIS_API_KEY, TMDB_IMG);
             if(imageBytes != null && imageBytes.length > 0) return imageBytes;
 
         } catch (Exception e) {

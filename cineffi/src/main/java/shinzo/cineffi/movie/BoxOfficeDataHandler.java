@@ -12,14 +12,13 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.movie.repository.BoxOfficeMovieRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 
-import java.net.InetSocketAddress;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -33,35 +32,22 @@ public class BoxOfficeDataHandler {
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
     private final MovieRepository movieRepository;
 
-    @Value("${kobis.api_key1}")
-    private String KOBIS_API_KEY1;
-    @Value("${kobis.api_key2}")
-    private String KOBIS_API_KEY2;
-    @Value("${kobis.api_key3}")
-    private String KOBIS_API_KEY3;
-    @Value("${kobis.api_key4}")
-    private String KOBIS_API_KEY4;
-    @Value("${kobis.api_key5}")
-    private String KOBIS_API_KEY5;
-    @Value("${kobis.api_key6}")
-    private String KOBIS_API_KEY6;
-    @Value("${kobis.api_key7}")
-    private String KOBIS_API_KEY7;
-    @Value("${kobis.api_key8}")
-    private String KOBIS_API_KEY8;
+    @Value("${kobis.api_key}")
+    private String KOBIS_API_KEY;
 
     public void dailyBoxOffice() {
         //요청 인터페이스들
         //전날 박스오피스 조회
         LocalDateTime time = LocalDateTime.now().minusDays(1);
         String targetDt = time.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        List<BoxOfficeMovie> paramList = new ArrayList<>();
 
 
 //        System.out.println("==================================================");
 //        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
         HttpClient client = HttpClient.newBuilder()
                 .build();
-        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY6, targetDt);
+        String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY, targetDt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
@@ -94,10 +80,11 @@ public class BoxOfficeDataHandler {
                         .targetDt(targetDt)
                         .build();
 
-                boxOfficeMovieRepository.save(boxOfficeMovie);
+                paramList.add(boxOfficeMovie);
+//                boxOfficeMovieRepository.save(boxOfficeMovie);
             }
 
-            processDailyBoxOfficeData(); //데이터 병합 메서드 호출
+            processDailyBoxOfficeData(paramList); //데이터 병합 메서드 호출
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,28 +92,25 @@ public class BoxOfficeDataHandler {
     }
 
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
-    public void processDailyBoxOfficeData() {
-        List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
+    public void processDailyBoxOfficeData(List<BoxOfficeMovie> boxOfficeMovies) {
+//        List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
         for (BoxOfficeMovie boxOfficeMovie : boxOfficeMovies) {
             Optional<Movie> movieOpt = movieRepository.findByTitle(boxOfficeMovie.getTitle());
-           if (!movieOpt.isEmpty()) {
-                Movie movie = movieOpt.get(); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
-                AvgScore avgScore = movie.getAvgScore();
+            if (movieOpt.isEmpty()) continue;
 
-                BoxOfficeMovie updateBoxOfficeMovie = BoxOfficeMovie.builder()
-                        .id(boxOfficeMovie.getId())
-                        .movieId(movie.getId())
-                        .rank(boxOfficeMovie.getRank())
-                        .title(boxOfficeMovie.getTitle())
-                        .targetDt(boxOfficeMovie.getTargetDt())
-                        .releaseDate(movie.getReleaseDate())
-                        .poster(decodeImage(movie.getPoster()))
-                        .cinephileAvgScore(avgScore != null ? avgScore.getCinephileAvgScore() : null)
-                        .levelAvgScore(avgScore != null ? avgScore.getLevelAvgScore() : null)
-                        .build();
-
-                boxOfficeMovieRepository.save(updateBoxOfficeMovie);
-            }
+            Movie movie = movieOpt.get(); //일피하는 첫 번째 영화 선택 (가정: 가장 관련성 높은 영화)
+            AvgScore avgScore = movie.getAvgScore();
+            BoxOfficeMovie updateBoxOfficeMovie = BoxOfficeMovie.builder()
+                    .movieId(movie.getId())
+                    .rank(boxOfficeMovie.getRank())
+                    .title(boxOfficeMovie.getTitle())
+                    .targetDt(boxOfficeMovie.getTargetDt())
+                    .releaseDate(movie.getReleaseDate())
+                    .poster(decodeImage(movie.getPoster()))
+                    .cinephileAvgScore(avgScore.getCinephileAvgScore() != null ? avgScore.getCinephileAvgScore() : null)
+                    .levelAvgScore(avgScore.getLevelAvgScore() != null ? avgScore.getLevelAvgScore() : null)
+                    .build();
+            boxOfficeMovieRepository.save(updateBoxOfficeMovie);
 
         }
     }

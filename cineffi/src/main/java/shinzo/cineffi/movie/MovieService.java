@@ -86,7 +86,7 @@ public class MovieService {
         List<MovieDTO> result = new ArrayList<>();
         Set<String> titleSet = new HashSet<>();
         Pageable pageable = PageRequest.of(0, totalResultNum);
-        q=q.trim();
+        q = makeNoBlankStr(q);
 
         List<Movie> searchList = movieRepo.findSearchList(q, pageable);
         List<MovieDTO> dtoList = searchList.stream()
@@ -122,11 +122,18 @@ public class MovieService {
                 }
         }
 
-        if(!dtoList.isEmpty()) result.addAll(dtoList.subList(0, Math.min(20, dtoList.size() - 1)));
+        if(!dtoList.isEmpty()) result.addAll(dtoList.subList(0, Math.min(20, dtoList.size())));
 
         return result;
     }
-
+    private String makeNoBlankStr(String blankStr){
+        if(blankStr == null) return null;
+        String result = "";
+        for (int i = 0; i < blankStr.length(); i++) {
+            if(blankStr.charAt(i) != ' ') result += blankStr.charAt(i);
+        }
+        return result;
+    }
 
     public MovieDetailDTO findMovieDetails(Long movieId, Long userId) {
         Movie movie = movieRepo.findById(movieId)
