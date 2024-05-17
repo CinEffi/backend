@@ -340,7 +340,7 @@ public class NewMovieInitService {
         return result;
     }
     private Object requestData(String urlString, InitType type) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
