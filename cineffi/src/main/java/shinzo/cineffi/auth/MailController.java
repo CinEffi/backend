@@ -6,8 +6,11 @@ import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.dto.EmailRequestDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
+import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.exception.message.SuccessMsg;
+
+import static shinzo.cineffi.exception.message.ErrorMsg.FAIL_TO_SEND_EMAIL;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ public class MailController {
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO emailRequestDTO) {
 
         int number = mailService.sendMail(emailRequestDTO.getEmail());
+        if (number == -1) throw new CustomException(FAIL_TO_SEND_EMAIL);
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                 .isSuccess(true)
                 .message(SuccessMsg.SUCCESS.getDetail())
