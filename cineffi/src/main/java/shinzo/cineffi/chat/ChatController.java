@@ -2,21 +2,9 @@ package shinzo.cineffi.chat;
 
 
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.checkerframework.checker.units.qual.A;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import shinzo.cineffi.Utils.CinEffiUtils;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.chat.ChatroomTag;
-import shinzo.cineffi.exception.CustomException;
-import shinzo.cineffi.exception.message.ErrorMsg;
-import shinzo.cineffi.exception.message.SuccessMsg;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,9 +40,17 @@ public class ChatController {
     }
 
     public void chatSessionQuit(WebSocketSession session) {
+
         String nickname = getNicknameFromSession(session);
-        //   chatService.chatUserQuit(nickname); 안 씁니다.
-        if (nickname!= null) {
+        if (nickname != null) {
+            ChatSession chatSession = sessions.get(nickname);
+            if (chatSession != null) {
+                Long chatroomId = chatSession.getChatroomId();
+                if (chatroomId != 0L) {
+                    try { if (chatroomId != 0L) chatroomLeave(chatroomId, nickname);
+                        } catch (Exception e) { System.out.println("chatroomLeave in chatSessionQuit got exception"); }
+                }
+            }//   chatService.chatUserQuit(nickname); 안 씁니다.
             queryLookers.remove(nickname);
             sessions.remove(nickname);
         }
@@ -75,14 +71,16 @@ public class ChatController {
     }
 
     public WebSocketMessage<?> chatroomJoin(String nickname, Long chatroomId) throws Exception {
-        List<ChatLogDTO> chatLogDTOS = chatService.joinChatroom(nickname, chatroomId);
+        InChatroomInfoDTO inChatroomInfoDTO = chatService.joinChatroom(nickname, chatroomId);
+        sessions.put(nickname, sessions.get(nickname).toBuilder().chatroomId(chatroomId).build());
         return WebSocketMessage.builder().type("JOIN").sender("SERVER").data(ResponseDTO.builder()
-                .isSuccess(true).message("처리완료").result(chatLogDTOS).build()).build();
+                .isSuccess(true).message("처리완료").result(inChatroomInfoDTO).build()).build();
     }
 
     public WebSocketMessage<?> chatroomLeave(Long chatroomId, String nickname) throws Exception {
         Long leavedChatroomId = chatService.leaveChatroom(chatroomId, nickname);
         chatService.sendMessageToChatroom(chatroomId, "SERVER", "[notice] : " + nickname + "님이 퇴장하셨습니다.");
+        sessions.put(nickname, sessions.get(nickname).toBuilder().chatroomId(0L).build());
         return WebSocketMessage.builder().type("EXIT").sender("SERVER").data(ResponseDTO.builder()
                 .isSuccess(true).message("처리완료").result(leavedChatroomId).build()).build();
     }

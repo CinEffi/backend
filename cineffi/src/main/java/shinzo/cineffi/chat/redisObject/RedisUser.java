@@ -16,14 +16,17 @@ public class RedisUser {
     private Boolean isBad;
     private Boolean isCertified;
     private Long id;
+    private Integer level;
     @JsonCreator
     public RedisUser(
             @JsonProperty("isBad") Boolean idBad,
             @JsonProperty("isCertified") Boolean isCertified,
-            @JsonProperty("id") Long id
+            @JsonProperty("id") Long id,
+            @JsonProperty("level") Integer level
     ) {
         this.isBad = idBad;
         this.isCertified = isCertified;
         this.id = id;
+        this.level = level;
     }
 }

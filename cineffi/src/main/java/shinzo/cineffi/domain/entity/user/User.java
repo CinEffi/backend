@@ -93,6 +93,7 @@ public class User extends BaseEntity {
                 .isBad(isBad)
                 .isCertified(isCertified)
                 .id(this.id)
+                .level(this.level)
                 .build();
     }
 
