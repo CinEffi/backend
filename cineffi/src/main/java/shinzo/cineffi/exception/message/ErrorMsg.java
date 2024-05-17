@@ -22,10 +22,14 @@ public enum ErrorMsg {
         FILE_NOT_IMAGE(BAD_REQUEST, "이미지 파일이 아닙니다."),
         INVALID_SCORE_VALUE(BAD_REQUEST, "평점 값이 유효하지 않습니다."),
         REVIEW_EXIST(BAD_REQUEST, "해당 영화에 대해 이미 작성된 리뷰가 있습니다."),
+        NOT_JOINED_CHATROOM(BAD_REQUEST, "접속한 채팅방이 아닙니다."),
+        NOT_LEFT_CHATROOM(BAD_REQUEST, "퇴장 상태가 아닙니다."),
+        INVALID_TYPE_CALL(BAD_REQUEST, "서버에 전달된 메시지의 type이 유효하지 않습니다."),
 
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),
+        USER_MUTED(BAD_REQUEST, "뮤트된 사용자입니다."),
 
         /* 403 FORBIDDEN : 권한 없음 */
         Invalid_token(FORBIDDEN,"잘못된 토큰입니다."),
@@ -36,6 +40,8 @@ public enum ErrorMsg {
         MOVIE_NOT_FOUND(NOT_FOUND, "영화를 찾을 수 없습니다."),
         REVIEW_NOT_FOUND(NOT_FOUND, "리뷰를 찾을 수 없습니다." ),
         TOKEN_NOT_FOUND(NOT_FOUND,"토큰을 찾을 수 없습니다."),
+        USERCHAT_NOT_FOUND(NOT_FOUND, "채팅정보를 찾을 수 없습니다."),
+        CHATROOM_NON_FOUND(NOT_FOUND, "채팅방이 존재하지 않습니다."),
         /* 409 CONFLICT : Resource 의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
         DUPLICATE_USER(CONFLICT,"이미 가입된 사용자입니다."),
         DUPLICATE_NICKNAME(CONFLICT,"중복 닉네임입니다."),

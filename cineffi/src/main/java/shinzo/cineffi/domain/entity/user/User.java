@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
+import shinzo.cineffi.chat.redisObject.RedisUser;
 import shinzo.cineffi.domain.entity.BaseEntity;
 
 import java.util.Base64;
@@ -85,4 +86,14 @@ public class User extends BaseEntity {
     public void changeUserCertifiedStatus(Boolean flag) {
         this.isCertified = flag;
     }
+
+    public RedisUser getRedisUser() {
+        return RedisUser.builder()
+//                .nickname(this.nickname) // Redis에서는 nickname이 식별자인데, key로 담기니까 그거 가져가셈
+                .isBad(isBad)
+                .isCertified(isCertified)
+                .id(this.id)
+                .build();
+    }
+
 }

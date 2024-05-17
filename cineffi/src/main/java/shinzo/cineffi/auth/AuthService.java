@@ -19,6 +19,7 @@ import shinzo.cineffi.jwt.JWTUtil;
 import shinzo.cineffi.jwt.JWToken;
 import shinzo.cineffi.user.repository.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -36,6 +37,7 @@ public class AuthService {
     private final UserActivityNumRepository userActivityNumRepository;
     private final UserAnalysisRepository userAnalysisRepository;
     private final GenreRecordRepository genreRecordRepository;
+    private final FollowRepository followRepository;
     private final EncryptUtil encryptUtil;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
@@ -343,6 +345,19 @@ public class AuthService {
                     .nickname(null)
                     .build();
             userRepository.save(updateUser);
+
+            List<Follow> allByFollower = followRepository.findAllByFollowerId(user.getId());
+            List<Follow> allByFollowing = followRepository.findAllByFollowingId(user.getId());
+            followRepository.deleteAll(allByFollower);
+            followRepository.deleteAll(allByFollowing);
+
+            for (Follow follower : allByFollower){
+                if(!follower.getFollowing().getIsCertified()) continue;
+                int certifiedNum = followRepository.findAllByFollowingId(follower.getFollowing().getId()).size();
+                if(certifiedNum < 300) follower.getFollowing().changeUserCertifiedStatus(false);
+
+            }
+
             return true;
         }
         else{

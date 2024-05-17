@@ -37,6 +37,7 @@ public class SecurityConfig {
 
         return configuration.getAuthenticationManager();
     }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         //CORS 설정
@@ -50,7 +51,8 @@ public class SecurityConfig {
                                 "http://localhost:3003",
                                 "https://48fb-175-197-204-117.ngrok-free.app",
                                 "https://9e54-180-70-193-179.ngrok-free.app",
-                                "https://k7f10638b4382a.user-app.krampoline.com/"));
+                                "https://k7f10638b4382a.user-app.krampoline.com",
+                                "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);
@@ -64,17 +66,16 @@ public class SecurityConfig {
                 .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
                 .httpBasic(AbstractHttpConfigurer::disable)//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
                 .logout(customizer -> customizer
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessUrl("/")
-                .permitAll()
+                        .logoutUrl("/api/auth/logout")
+                        .logoutSuccessUrl("/")
+                        .permitAll()
                 );
 
         http
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers(
                                 "/favicon.ico",
-                               "/api/auth/**",
-                                "/api/auth/*",
+                                "/api/auth/**",
                                 "/api/movies/**",
                                 "/api/reviews/hot",
                                 "/api/reviews/new",
@@ -86,7 +87,10 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/movies/encrypt-test/**",
                                 "/api/users/{user-id}/scrap",
-                                "/api/test"
+                                "/api/test",
+                                "/api/chat/**",
+                                "/chat/**",
+                                "/ws/**"
                         ).permitAll()//토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http

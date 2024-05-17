@@ -21,6 +21,8 @@ public class BoxOfficeMovie {
     @Column(name = "daily_box_Office_id")
     private Long id; // 영화
 
+    private Long movieId;
+
     private String rank; //박스오피스 순위
 
     //DB 저장 일자

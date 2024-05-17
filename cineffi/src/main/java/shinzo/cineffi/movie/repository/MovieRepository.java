@@ -20,6 +20,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
 
     Optional<Movie> findByTitle(String title);
+    Boolean existsMovieByTitle(String title);
 
 
     @Query("SELECT m FROM Movie m WHERE REPLACE(m.title, ' ', '') = REPLACE(:title, ' ', '')")
