@@ -7,6 +7,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,6 +38,9 @@ public class MailService {
     private final RestTemplate restTemplate;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
+
+    @Value("${email.proxy-url}")
+    private String cineffiProxyServer;
 
 
     public static void createNumber(){
@@ -99,7 +103,6 @@ public class MailService {
         createNumber();
 
         // 프록시 서버 url 지정
-        String cineffiProxyServer = "https://1e81-59-12-233-239.ngrok-free.app";
         String url = cineffiProxyServer + "/mail-send";
 
         // 요청 객체 생성

@@ -12,6 +12,8 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.movie.repository.BoxOfficeMovieRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
