@@ -83,6 +83,8 @@ tmdb:
   end-year: 2024
   start-month: 4
   end-month: 4
+email:
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
 ---
 
 ## dev profile (Docker 용)
@@ -104,10 +106,10 @@ spring:
       port: 6379
       password: mooyaho
 kobis:
-  api_key: ${KOBIS_API_KEY}
+  api_key: 7af2e7f58134765d4308a5096295d274
   base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
 email:
-  proxy-url: ${EMAIL_PROXY_SERVER_URL}
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
 
 server:
   port: 4000
