@@ -25,8 +25,9 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: skwd1012@gmail.com
-    password: tboxbeusjvbysajd
+    username: cineffi24@gmail.com
+    password: hlpzfpccpypynyme
+
     properties:
       mail:
         smtp:
@@ -54,21 +55,27 @@ logging:
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
-  redirect_url: https://k7f10638b4382a.user-app.krampoline.com/api/auth/login/kakao
+  redirect_base_url: http://localhost:8080
 app:
   encryption:
     key: "cineffiSecretKey"
 
 
 kobis:
-#  api_key: 5b5979d8f9822605465799f4de0d864a
-  api_key: f97089e51098e3098753d84bea65f507
-#  api_key: 5873d607725ac6c9564a8954da0c178a
-#  api_key: 7af2e7f58134765d4308a5096295d274
-#  api_key: 2a45813037fb723c2d8b3dbd808e1328
-#  api_key: 4564a256f40c78acde5f8406a7b65dc6
-#  api_key: ac0934e1fbde3331f44992550b1e1d9d
-#  api_key: ab9624b11878afc7bbcafef6409d81c1
+  #  api_key: 5b5979d8f9822605465799f4de0d864a
+  #  api_key: f97089e51098e3098753d84bea65f507
+  #  api_key: 5873d607725ac6c9564a8954da0c178a
+  #  api_key: 7af2e7f58134765d4308a5096295d274
+  #  api_key: 2a45813037fb723c2d8b3dbd808e1328
+  #  api_key: 4564a256f40c78acde5f8406a7b65dc6
+  #  api_key: ac0934e1fbde3331f44992550b1e1d9d
+  #  api_key: ab9624b11878afc7bbcafef6409d81c1
+  #  api_key: c305d916b8f8d83032f21878c3db1c16
+  #  api_key: 333eabf2df141a538e910bae70243fc1
+  api_key: 0994d8ac050005fb257070390088ea85
+  #  api_key: eb64f7ff5664a19e68063e2369de4cda
+
+
   base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
 
 
@@ -83,100 +90,42 @@ tmdb:
   end-year: 2024
   start-month: 4
   end-month: 4
+email:
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
 ---
 
 ## dev profile (Docker 용)
+server:
+  port: 4000
+
 spring:
   config:
     activate:
       on-profile:
         - dev
+  # Postgres
   datasource:
     url: jdbc:postgresql://db:5432/cineffi
     username: root
     password: n1234
     driver-class-name: org.postgresql.Driver
-server:
-  port: 4000
-#
-#  jpa:
-#    database-platform: org.hibernate.dialect.PostgreSQLDialect
-#    hibernate:
-#      ddl-auto: create
-##    properties:
-##      hibernate:
-#  #        format_sql: true
-#
-#  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: skwd1012@gmail.com
-#    password: tboxbeusjvbysajd
-#    properties:
-#      mail:
-#        smtp:
-#          auth: true
-#          starttls:
-#            enable: true
-##          proxy:
-##            host: krmp-proxy.9rum.cc
-##            port: 3128
-#          timeout: 5000
-#          connectiontimeout: 5000
-#          writetimeout: 5000
-#    auth-code-expiration-millis: 300000 //5분
-#
-##  jwt:
-##    expiration_time : 300,000
-#
-##logging:
-##  level:
-##    org.hibernate.SQL: INFO
-##    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
-#
-#logging:
-#  level:
-#    root: WARN
-#    org.springframework.mail: DEBUG
-#    org.springframework.web: DEBUG
-#  file:
-#    name: logs/app.log
-#    max-size: 10MB
-#    max-history: 10
-#
-#kakao:
-#  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
-#  redirect_url: https://k7f10638b4382a.user-app.krampoline.com/api/auth/login/kakao
-#app:
-#  encryption:
-#    key: "cineffiSecretKey"
-#server:
-#  port: 4000
-#
-#
-#kobis:
-#  api_key1: 5b5979d8f9822605465799f4de0d864a
-#  api_key2: f97089e51098e3098753d84bea65f507
-#  api_key3: 5873d607725ac6c9564a8954da0c178a
-#  api_key4: 7af2e7f58134765d4308a5096295d274
-#  api_key5: 2a45813037fb723c2d8b3dbd808e1328
-#  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
-#
-#
-#tmdb:
-#  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjZTc0MjdlODU0YzU2ZjFlMmI0OWE2NWRmNDVjZDNiZSIsInN1YiI6IjY2MGUwN2QwMzU4MThmMDE3YzNjZGI5ZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.744tSvIVxntYL4eGwbl6UZLNEq4yJ4YUgDaUkuTZ4fQ
-#  api_key: ce7427e854c56f1e2b49a65df45cd3be
-#  base_url: https://
-#  path_image: image.tmdb.org/t/p/w500
-#  path_poster: image.tmdb.org/t/p/w500
-#  path_profile: image.tmdb.org/t/p/w200
-#  path_movie: api.themoviedb.org/3
-#  start-year: 2024
-#  end-year: 2024
-#  start-month: 4
-#  end-month: 4
-#
-##proxy:
-##  host: krmp-proxy.9rum.cc
-##  port: 3128
+  #Redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: mooyaho
 
+email:
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
+
+logging:
+  level:
+    org.springframework.mail: ERROR
+    org.springframework.web: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+
+kakao:
+  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
+  redirect_base_url: https://k7f10638b4382a.user-app.krampoline.com

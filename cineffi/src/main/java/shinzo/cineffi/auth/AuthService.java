@@ -41,8 +41,8 @@ public class AuthService {
     private final EncryptUtil encryptUtil;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
-    @Value("${kakao.redirect_url}")
-    private String redirectUrl;
+    @Value("${kakao.redirect_base_url}")
+    private String REDIRECT_BASE_URL;
     private EmailRequestDTO request;
 
     //필요하다면 카카오 회원가입, 유저아이디 반환
@@ -70,7 +70,7 @@ public class AuthService {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", restApiKey);
-        params.add("redirect_uri", redirectUrl);
+        params.add("redirect_uri", REDIRECT_BASE_URL + "/api/auth/login/kakao");
         params.add("code", code);
         //헤더 바디 합치기
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
@@ -191,7 +191,7 @@ public class AuthService {
         }
     }
 
-     static public Long getLoginUserId(Object principal) {
+    static public Long getLoginUserId(Object principal) {
         Long loginUserId = null;
         if(principal != "anonymousUser")
             loginUserId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
