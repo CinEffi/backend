@@ -26,37 +26,9 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserAccountRepository userAccountRepository;
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (
-                request.getRequestURI().startsWith("/api/auth")||
-                        request.getRequestURI().startsWith("/api/movies")||
-                        request.getRequestURI().startsWith("/api/users")||
-                        request.getRequestURI().startsWith("/api/movies")||
-                        request.getRequestURI().matches("/api/reviews/\\d+")||
-                        request.getRequestURI().equals("/api/reviews/hot")||
-                        request.getRequestURI().equals("/api/reviews/new")
-        ) {
-            if (    request.getRequestURI().equals("/api/auth/userInfo")||
-                    request.getRequestURI().equals("/api/auth/user/check")||
-                    request.getRequestURI().equals("/api/auth/logout")||
-                    request.getRequestURI().equals("/api/users/follow")||
-                    request.getRequestURI().equals("/api/users/report")||
-                    request.getRequestURI().equals("/api/users/profile")||
-                    request.getRequestURI().equals("/api/users/profile/edit")||
-                    request.getRequestURI().equals("/api/reviews/create")||
-                    request.getRequestURI().matches("/api/movies/\\d+/likes")
-            ) {
-                try{
-                    jwtFiltering(request,response);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                doFilter(request, response, filterChain);
-            }
-            filterChain.doFilter(request, response);
-            return;
-        }
-        try{
-            jwtFiltering(request,response);
+
+        try {
+            jwtFiltering(request, response);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,4 +75,3 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
 }
-
