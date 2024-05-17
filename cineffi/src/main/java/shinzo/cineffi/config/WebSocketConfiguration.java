@@ -27,12 +27,12 @@ import java.util.Map;
 public class WebSocketConfiguration implements WebSocketConfigurer {
 
     private final ChatController chatController;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
 @Override
 public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
     registry
-            .addHandler(signalingSocketHandler(chatController,encryptUtil), "/chat")
+            .addHandler(signalingSocketHandler(chatController), "/chat")
             .addInterceptors(new HttpSessionHandshakeInterceptor())
             .setHandshakeHandler(new DefaultHandshakeHandler())
             .setAllowedOrigins("*");
@@ -40,8 +40,8 @@ public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 }
 
     @Bean
-    public org.springframework.web.socket.WebSocketHandler signalingSocketHandler(ChatController chatController, EncryptUtil encryptUtil) {
-        return new CinEffiWebSocketHandler(chatController,encryptUtil);
+    public org.springframework.web.socket.WebSocketHandler signalingSocketHandler(ChatController chatController) {
+        return new CinEffiWebSocketHandler(chatController);
     }
 
 }

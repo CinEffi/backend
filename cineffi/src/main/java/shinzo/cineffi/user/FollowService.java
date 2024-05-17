@@ -30,7 +30,7 @@ public class FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserActivityNumRepository uanRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
     @Transactional
     // 유저 팔로우
@@ -99,8 +99,8 @@ public class FollowService {
                 }
             }
             FollowerResList.add(FollowDto.builder()
-                    .followId(encryptUtil.LongEncrypt(f.getId()))
-                    .userId(encryptUtil.LongEncrypt(follower.getId()))
+                    .followId(EncryptUtil.LongEncrypt(f.getId()))
+                    .userId(EncryptUtil.LongEncrypt(follower.getId()))
                     .nickname(follower.getNickname())
                     .profileImage(decodeImage(follower.getProfileImage()))
                     .level(follower.getLevel())
@@ -134,8 +134,8 @@ public class FollowService {
                     isFollowed = true;
             }
             FollowingResList.add(FollowDto.builder()
-                    .followId(encryptUtil.LongEncrypt(f.getId()))
-                    .userId(encryptUtil.LongEncrypt(following.getId()))
+                    .followId(EncryptUtil.LongEncrypt(f.getId()))
+                    .userId(EncryptUtil.LongEncrypt(following.getId()))
                     .nickname(following.getNickname())
                     .profileImage(decodeImage(following.getProfileImage()))
                     .level(following.getLevel())

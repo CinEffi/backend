@@ -48,7 +48,7 @@ public class ChatService {
     private final UserChatRepository userChatRepository;
     private final ChatroomRepository chatroomRepository;
     private final ChatMessageRepository chatMessageRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
     public String userToRedis(User user) {
         RedisUser redisUser = user.getRedisUser();
@@ -156,7 +156,6 @@ public class ChatService {
         String chatroomTitle = chatroom.getTitle();
         String channelName = "chatroom:" + chatroomId;
         String notificationMessage = "새로운 채팅방이 생성되었습니다: " + chatroomTitle;
-
         // 채팅방 생성에 대한 알림 // 다중 서버에서는 추가 로직 필요 //
         listenerContainer.addMessageListener(subscriber, new ChannelTopic(channelName));
         sendMessageToChatroom(chatroomId, "SERVER", notificationMessage);
@@ -174,7 +173,7 @@ public class ChatService {
                 if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
                 joinedChatUserDTOList.add(JoinedChatUserDTO.builder()
                         .nickname((String)k)
-                        .userId(encryptUtil.LongEncrypt(redisUser.getId()))
+                        .userId(EncryptUtil.LongEncrypt(redisUser.getId()))
                         .level(redisUser.getLevel())
                         .isBad(redisUser.getIsBad())
                         .isCertified(redisUser.getIsCertified())
@@ -342,23 +341,14 @@ public class ChatService {
     }
 
     public void backupToDatabase() { // 레디스 -> DB
-
-        //  backupChatroom();채팅방
-        //  backupUserChat();레디스 채팅 유저 목록(HASH)
-        //  backupChatlog();레디스 메세지 리스트 chatMessage
-
-        //  chatroom 백업 (그러나 쓰이지 않는다)
-        //    backupChatroom();
-        //UserChat 백업
         System.out.println("ChatService.backupToDatabase"); // [TMP]
-        backupUserChat();
-        //chatlog 백업
-        backupChatLog();
+        //    backupChatroom(); //  chatroom 백업 (그러나 쓰이지 않는다)
+        backupUserChat();//UserChat 백업 : 레디스 채팅 유저 목록(HASH)
+        backupChatLog(); //chatlog 백업 : 레디스 메세지 리스트 -> chatMessage
     }
 
     @Transactional
     public void closeChatroom(Long chatroomId) {
-
         if (redisTemplate.opsForHash().get("chatroom", chatroomId.toString()) == null) {// [TMP]
             System.out.println("[FATAL ERROR] : ChatService.closeChatroom has NOT_FOUND_CHATROOM No." + chatroomId);;// [TMP]
             return;// [TMP]

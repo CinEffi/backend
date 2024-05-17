@@ -31,7 +31,7 @@ public class UserService {
     private UserAccountRepository userAccountRepository;
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
     public GetMyPageRes getMyPage(Long userId, Long loginUserId) {
 
@@ -50,7 +50,7 @@ public class UserService {
         }
 
         GetMyPageRes getMyPageRes = GetMyPageRes.builder()
-                .userId(encryptUtil.LongEncrypt(targetUser.getId()))
+                .userId(EncryptUtil.LongEncrypt(targetUser.getId()))
                 .nickname(targetUser.getNickname())
                 .userProfileImage(decodeImage(targetUser.getProfileImage()))
                 .exp(targetUser.getExp())

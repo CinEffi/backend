@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     private final ChatController chatController;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
     // 웹소켓 연결 시
 
     @Override
@@ -34,7 +34,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             URI uri = session.getUri();
             String userId = uri.getQuery().split("=")[1];
             System.out.println("userID!!!!!" + userId); // [TMP]
-            Long loginUserId = encryptUtil.LongDecrypt(userId);
+            Long loginUserId = EncryptUtil.LongDecrypt(userId);
             System.out.println("loginUserId = " + loginUserId);// [TMP]
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
@@ -72,6 +72,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             } else if (type.equals("JOIN")) {
                 Long joinChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
                 sendToSession(session, chatController.chatroomJoin(nickname, joinChatroomId));
+                chatController.messageToChatroom(joinChatroomId, "SERVER", "[notice] : " + nickname + " 님이 입장하셨습니다.");
                 chatController.messageToChatroom(joinChatroomId, "SERVER", "[notice] : " + nickname + " 님이 입장하셨습니다.");
             } else if (type.equals("SEND")) {
                 SendChatMessageDTO dto = CinEffiUtils.getObject(payload, "data", SendChatMessageDTO.class);
