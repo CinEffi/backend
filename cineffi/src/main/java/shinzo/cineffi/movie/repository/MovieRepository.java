@@ -36,12 +36,12 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     List<Movie> findGenreList(Genre genre, Pageable pageable);
 
     @Query("SELECT DISTINCT m FROM Movie m " +
+            "LEFT JOIN FETCH m.director d " +
             "LEFT JOIN ActorMovie am ON m = am.movie " +
-            "LEFT JOIN Director d ON m.director = d " +
             "LEFT JOIN Actor a ON am.actor = a " +
-            "WHERE LOWER(m.title) LIKE CONCAT('%', LOWER(:q), '%') " +
-            "OR LOWER(d.name) LIKE CONCAT('%', LOWER(:q), '%') " +
-            "OR LOWER(a.name) LIKE CONCAT('%', LOWER(:q), '%')")
+            "WHERE LOWER(REPLACE(m.title, ' ', '')) LIKE '%' || LOWER(REPLACE(:q, ' ', '')) || '%' " +
+            "OR LOWER(REPLACE(d.name, ' ', '')) LIKE '%' || LOWER(REPLACE(:q, ' ', '')) || '%' " +
+            "OR LOWER(REPLACE(a.name, ' ', '')) LIKE '%' || LOWER(REPLACE(:q, ' ', '')) || '%'")
     List<Movie> findSearchList(String q, Pageable pageable);
 
 }

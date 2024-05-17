@@ -34,7 +34,8 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().startsWith("/api/movies") ||
                         request.getRequestURI().matches("/api/reviews/\\d+") ||
                         request.getRequestURI().equals("/api/reviews/hot") ||
-                        request.getRequestURI().equals("/api/reviews/new")
+                        request.getRequestURI().equals("/api/reviews/new") ||
+                        request.getRequestURI().startsWith("/chat")
         ) {
             if (request.getRequestURI().equals("/api/auth/userInfo") ||
                     request.getRequestURI().equals("/api/auth/user/check") ||
@@ -46,7 +47,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().equals("/api/reviews/create") ||
                     request.getRequestURI().matches("/api/movies/\\d+/likes")
             ) {
-                    jwtFiltering(request, response);
+                jwtFiltering(request, response);
                 doFilter(request, response, filterChain);
                 return;
             }
@@ -54,7 +55,7 @@ public class JWTFilter extends OncePerRequestFilter {
         }
         else{
             jwtFiltering(request, response);
-        doFilter(request, response, filterChain);
+            doFilter(request, response, filterChain);
         }
     }
 

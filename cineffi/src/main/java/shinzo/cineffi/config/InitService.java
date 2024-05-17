@@ -87,11 +87,25 @@ public class InitService {
 //            followService.followUser(1L, i);
 //        }
 //
-//        // 과거 영화데이터 추가
-////        for (int i = 0; i < 30; i++) {
-////            AvgScore avgScore = avgScoreRepository.save(AvgScore.builder().build());
-////            Director director = directorRepository.save(Director.builder().name("감독" + i).build());
-////            Movie movie = movieRepository.save(Movie.builder()
+//        Optional<User> 첫째희석 = userRepository.findById(1L);
+//        Optional<User> 둘째민희 = userRepository.findById(2L);
+//        Optional<User> 셋째제욱 = userRepository.findById(3L);
+//
+//        for (long i = 2L; i <= 299; i++) {
+//            authService.authUser(AuthRequestDTO.builder()
+//                    .nickname("유저" + i)
+//                    .email("유저" + i + "@test.com")
+//                    .password("test123!")
+//                    .isauthentication(true)
+//                    .build());
+//            followService.followUser(1L, i);
+//        }
+
+        // 과거 영화데이터 추가
+//        for (int i = 0; i < 30; i++) {
+//            AvgScore avgScore = avgScoreRepository.save(AvgScore.builder().build());
+//            Director director = directorRepository.save(Director.builder().name("감독" + i).build());
+//            Movie movie = movieRepository.save(Movie.builder()
 //                    .avgScore(avgScore)
 //                    .title("영화제목" + i)
 //                    .director(director)
