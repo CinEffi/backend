@@ -63,16 +63,17 @@ public class NewMovieInitService {
     private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
 
     public void initData(int year){
-        System.out.println("================== 영화 데이터 불러오기 시작! ====================");
+        System.out.println("=========== 영화 데이터 불러오기 시작 ============");
         List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(year);
         List<Movie> kobisBasicDatas = requestKobisDatas(year);
         List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
         requestDetailDatas(mixBasicDatas);
 
+
         if(LocalDate.now().getYear() == year) {
             boxOfficeDataHandler.dailyBoxOffice();
         }
-        System.out.println("================== 끝! ====================");
+        System.out.println("=========== 영화 데이터 불러오기 끝 ============");
 
     }
 
@@ -339,6 +340,7 @@ public class NewMovieInitService {
         return result;
     }
     private Object requestData(String urlString, InitType type) {
+        RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
