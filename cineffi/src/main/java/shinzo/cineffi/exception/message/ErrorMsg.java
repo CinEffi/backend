@@ -64,7 +64,9 @@ public enum ErrorMsg {
         FAILED_TO_COMPILE_FILE(INTERNAL_SERVER_ERROR, "파일 컴파일에 실패했습니다."),
         FAILED_TO_MOVIE_PROCESS(INTERNAL_SERVER_ERROR, "영화 데이터 가공에 실패했습니다."),
 
-        FAIDED_TO_CONVERT_IMAGE(INTERNAL_SERVER_ERROR, "이미지 파일 업로드에 실패했습니다.");
+        FAIDED_TO_CONVERT_IMAGE(INTERNAL_SERVER_ERROR, "이미지 파일 업로드에 실패했습니다."),
+
+        FAIL_TO_SEND_EMAIL(INTERNAL_SERVER_ERROR, "이메일 전송에 실패했지롱");
 
 
 
