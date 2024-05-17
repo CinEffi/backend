@@ -63,12 +63,12 @@ public class MovieController {
         newMovieInitService.initData(year);
 
         long afterTime = System.currentTimeMillis();
-        long secDiffTime = (afterTime - beforeTime)/1000;
+        float diffTime = (afterTime - beforeTime) /1000;
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(secDiffTime)
+                        .result(diffTime)
                         .build());
     }
 
