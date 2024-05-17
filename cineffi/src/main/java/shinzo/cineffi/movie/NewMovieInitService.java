@@ -39,6 +39,7 @@ public class NewMovieInitService {
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
     private final BoxOfficeDataHandler boxOfficeDataHandler;
+    private final RestTemplate restTemplate;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -350,7 +351,6 @@ public class NewMovieInitService {
         return result;
     }
     private Object requestData(String urlString, InitType type) {
-        RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();

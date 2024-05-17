@@ -91,11 +91,18 @@ spring:
     activate:
       on-profile:
         - dev
+  # Postgres
   datasource:
     url: jdbc:postgresql://db:5432/cineffi
     username: root
     password: n1234
     driver-class-name: org.postgresql.Driver
+  #Redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: mooyaho
 server:
   port: 4000
 #

@@ -57,9 +57,8 @@ public class BoxOfficeDataHandler {
         String targetDt = time.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
 
-//        System.out.println("==================================================");
-//        System.out.println("박스오피스 BoxOfficeDataHandler.dailyBoxOffice() 시작");
         HttpClient client = HttpClient.newBuilder()
+                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))  // 프록시 호스트 및 포트
                 .build();
         String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", KOBIS_API_KEY6, targetDt);
 
