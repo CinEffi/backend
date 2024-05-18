@@ -15,8 +15,6 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserAccountRepository;
 
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static shinzo.cineffi.jwt.JWTUtil.ACCESS_PERIOD;
 
@@ -27,30 +25,35 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override@Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (
-
                 request.getRequestURI().startsWith("/api/auth") ||
                         request.getRequestURI().startsWith("/api/movies") ||
                         request.getRequestURI().startsWith("/api/users") ||
                         request.getRequestURI().startsWith("/api/movies") ||
-                        request.getRequestURI().matches("/api/reviews/\\d+") ||
-                        request.getRequestURI().equals("/api/reviews/hot") ||
-                        request.getRequestURI().equals("/api/reviews/new") ||
+                        request.getRequestURI().equals("/api/reviews/new")||
+                        request.getRequestURI().startsWith("/wss")||
                         request.getRequestURI().startsWith("/chat")
         ) {
             if (request.getRequestURI().equals("/api/auth/userInfo") ||
                     request.getRequestURI().equals("/api/auth/user/check") ||
                     request.getRequestURI().equals("/api/auth/logout") ||
                     request.getRequestURI().equals("/api/users/follow") ||
+                    request.getRequestURI().matches("/api/users/\\d") ||
                     request.getRequestURI().equals("/api/users/report") ||
                     request.getRequestURI().equals("/api/users/profile") ||
+                    request.getRequestURI().matches("/api/users/\\d+/reviews")||
+                    request.getRequestURI().matches("/api/users/\\d+/scrap")||
+                    request.getRequestURI().matches("/api/users/\\d+/followers")||
+                    request.getRequestURI().matches("/api/users/\\d+/followings")||
+                    request.getRequestURI().matches("/api/movies/\\d")||
                     request.getRequestURI().equals("/api/users/profile/edit") ||
                     request.getRequestURI().equals("/api/reviews/create") ||
-                    request.getRequestURI().matches("/api/movies/\\d+/likes")
+                    request.getRequestURI().matches("/api/movies/\\d/likes")
             ) {
                 jwtFiltering(request, response);
                 doFilter(request, response, filterChain);
                 return;
             }
+            jwtFiltering(request, response);
             doFilter(request, response, filterChain);
         }
         else{
@@ -100,4 +103,3 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
 }
-
