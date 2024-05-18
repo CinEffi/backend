@@ -33,7 +33,9 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().startsWith("/wss")||
                         request.getRequestURI().startsWith("/chat")
         ) {
-            if (request.getRequestURI().equals("/api/auth/userInfo") ||
+            if (
+                    //
+                    request.getRequestURI().equals("/api/auth/userInfo") ||
                     request.getRequestURI().equals("/api/auth/user/check") ||
                     request.getRequestURI().equals("/api/auth/logout") ||
                     request.getRequestURI().equals("/api/users/follow") ||
@@ -47,7 +49,14 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().matches("/api/movies/\\d")||
                     request.getRequestURI().equals("/api/users/profile/edit") ||
                     request.getRequestURI().equals("/api/reviews/create") ||
-                    request.getRequestURI().matches("/api/movies/\\d/likes")
+                    request.getRequestURI().matches("/api/movies/\\d/likes") ||
+                    request.getRequestURI().matches("/api/users/\\d") ||
+                    request.getRequestURI().matches("/api/reviews/\\d/edit") ||
+                    request.getRequestURI().matches("/api/reviews/\\d/delete") ||
+                    request.getRequestURI().matches("/api/reviews/\\d") ||
+                    request.getRequestURI().equals("/api/reviews/hot") ||
+                    request.getRequestURI().matches("/api/reviews/\\d/likes")
+//                    request.getRequestURI().equals("/api/score/movie/")
             ) {
                 jwtFiltering(request, response);
                 doFilter(request, response, filterChain);
