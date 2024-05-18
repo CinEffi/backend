@@ -53,7 +53,6 @@ public class JWTFilter extends OncePerRequestFilter {
                 doFilter(request, response, filterChain);
                 return;
             }
-            jwtFiltering(request, response);
             doFilter(request, response, filterChain);
         }
         else{
