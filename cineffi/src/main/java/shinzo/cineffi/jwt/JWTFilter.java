@@ -39,13 +39,13 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().equals("/api/auth/user/check") ||
                     request.getRequestURI().equals("/api/auth/logout") ||
                     request.getRequestURI().equals("/api/users/follow") ||
-                    request.getRequestURI().matches("/api/users/[\\w\\W]") ||
+                    request.getRequestURI().matches("/api/users/[^/]+") || // '/'을 제외한 모든 문자(문자+숫자+특수문자)
                     request.getRequestURI().equals("/api/users/report") ||
                     request.getRequestURI().equals("/api/users/profile") ||
-                    request.getRequestURI().matches("/api/users/[\\w\\W]/reviews")||
-                    request.getRequestURI().matches("/api/users/[\\w\\W]/scrap")||
-                    request.getRequestURI().matches("/api/users/[\\w\\W]/followers")||
-                    request.getRequestURI().matches("/api/users/[\\w\\W]/followings")|| // 이러면 무슨 의미지...?
+                    request.getRequestURI().matches("/api/users/[^/]+/reviews")||
+                    request.getRequestURI().matches("/api/users/[^/]+/scrap")||
+                    request.getRequestURI().matches("/api/users/[^/]+/followers")||
+                    request.getRequestURI().matches("/api/users/[^/]+/followings")|| // 이러면 무슨 의미지...?
                     request.getRequestURI().matches("/api/movies/\\d+")||
                     request.getRequestURI().equals("/api/users/profile/edit") ||
                     request.getRequestURI().equals("/api/reviews/create") ||
