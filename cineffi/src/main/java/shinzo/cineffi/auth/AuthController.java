@@ -74,12 +74,12 @@ public class AuthController {
         System.out.println("Login Start");
         Long userId = authService.getUserIdByEmail(request.getEmail());
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        if(loginUserId==null) {
+        if (loginUserId == null) {
             if (userId == null) {
                 return createErrorResponse(ErrorMsg.EMPTY_USER);
             }
         }else{
-            authService.logout(loginUserId);
+        authService.logout(loginUserId);
         }
         boolean loginSuccess = authService.emailLogin(request);
         if (loginSuccess) {
