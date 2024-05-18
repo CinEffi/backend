@@ -39,6 +39,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             System.out.println("loginUserId = " + loginUserId);// [TMP]
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
+
         } catch (CustomException e) {
             sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
@@ -76,7 +77,6 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
                 Long joinChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
                 sendToSession(session, chatController.chatroomJoin(nickname, joinChatroomId));
                 chatController.messageToChatroom(joinChatroomId, "SERVER:COME", nickname);
-                ChatController.getQueryLookers().remove(nickname);
             } else if (type.equals("SEND")) {
                 SendChatMessageDTO dto = CinEffiUtils.getObject(payload, "data", SendChatMessageDTO.class);
                 chatController.messageToChatroom(dto.getChatroomId(), nickname, dto.getMessage());
@@ -88,7 +88,8 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             } else if (type.equals("BACKUP")) { // [TMP]이렇게 하면 안되지만 테스트를 위하여
                 chatController.tmpForBackupTest(); // [TMP]이 메서드도 지울거임
             } else if (type.equals("CLOSE")) { // [TMP]
-                chatController.tmpForChatroomClose(); // [TMP]
+                Long chatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
+                chatController.tmpForChatroomClose(chatroomId); // [TMP]
             }
             else {
                 throw new CustomException(ErrorMsg.INVALID_TYPE_CALL);

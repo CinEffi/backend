@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @AllArgsConstructor
 @Builder
-
+@NoArgsConstructor
 public class ChatMessage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")

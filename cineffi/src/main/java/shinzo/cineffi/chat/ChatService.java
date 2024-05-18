@@ -98,8 +98,9 @@ public class ChatService {
     }
 
     public ChatroomListDTO listClosedChatroom() {
+        System.out.println("ChatService.listClosedChatroom");
         List<ChatroomDTO> chatroomDTOList = new ArrayList<>();
-        List<Chatroom> closedChatroomList = chatroomRepository.findAllByIsDeletedTrueOrderByIdDesc();
+        List<Chatroom> closedChatroomList = chatroomRepository.findAllByIsDeleteTrueOrderByIdDesc();
         for (Chatroom chatroom : closedChatroomList) {
             chatroomDTOList.add(ChatroomDTO.builder()
                     .chatroomId(chatroom.getId())
@@ -329,13 +330,7 @@ public class ChatService {
             Chatroom chatroom = chatroomRepository.findById(Long.parseLong(id)).get();
             for (Object messageObj : Objects.requireNonNull(redisTemplate.opsForList().range("chatlog:" + id, 0, -1))) {
                 RedisChatMessage message = (RedisChatMessage)messageObj;
-                System.out.println("message.getSender() = " + message.getSender());
-                if (message.getSender() == "SERVER")
-                    System.out.println("message.getSender() == \"SERVER\"");
-                else
-                    System.out.println("message.getSender() == \"" + message.getSender() + "\"");
-
-                User sender = message.getSender() == "SERVER" ? null : userRepository.findByNickname(message.getSender())
+                User sender = message.getSender().equals("SERVER") ? null : userRepository.findByNickname(message.getSender())
                         .orElseThrow(() -> new IllegalArgumentException("User not found with nickname: " + message.getSender()));
                 ChatMessage chatMessage = ChatMessage.builder()
                         .sender(sender)
@@ -359,9 +354,9 @@ public class ChatService {
 
     @Transactional
     public void closeChatroom(Long chatroomId) {
-        if (redisTemplate.opsForHash().get("chatroom", chatroomId.toString()) == null) {// [TMP]
-            System.out.println("[FATAL ERROR] : ChatService.closeChatroom has NOT_FOUND_CHATROOM No." + chatroomId);;// [TMP]
-            return;// [TMP]
+        if (redisTemplate.opsForHash().get("chatroom", chatroomId.toString()) == null) {
+            throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);
+            //System.out.println("[FATAL ERROR] : ChatService.closeChatroom has NOT_FOUND_CHATROOM No." + chatroomId);;// [TMP]
         } ////////////////// 이런일은 안일어나지만 적절한 에러처리로 바꾸거나 없애야겠다.// [TMP]
         // 0. 삭제합니다 공지
         sendMessageToChatroom(chatroomId, "SERVER", "채팅방이 종료됩니다. 이후 종료된 채팅방 목록에서 찾아보실 수 있습니다.");
