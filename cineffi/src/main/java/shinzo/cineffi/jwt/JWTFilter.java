@@ -46,7 +46,7 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().matches("/api/users/\\d+/scrap")||
                     request.getRequestURI().matches("/api/users/\\d+/followers")||
                     request.getRequestURI().matches("/api/users/\\d+/followings")||
-                    request.getRequestURI().matches("/api/movies/\\d")||
+                    request.getRequestURI().matches("/api/movies/\\d+")||
                     request.getRequestURI().equals("/api/users/profile/edit") ||
                     request.getRequestURI().equals("/api/reviews/create") ||
                     request.getRequestURI().matches("/api/movies/\\d+/likes") ||
