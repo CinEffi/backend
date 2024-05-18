@@ -38,6 +38,14 @@ public class AuthController {
         KakaoToken kakaoToken = authService.requestKakaoToken(code);
         //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
+        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if(loginUserId==null) {
+            if (userId == null) {
+                return createErrorResponse(ErrorMsg.EMPTY_USER);
+            }
+        }else{
+            authService.logout(loginUserId);
+        }
         LoginResponseDTO userInfo = authService.userInfo(userId);
 
         return redirectauthLogin(userId,userInfo);
@@ -64,12 +72,15 @@ public class AuthController {
     @PostMapping("/auth/login/email")
     public ResponseEntity<ResponseDTO<Object>> emailLogin(@RequestBody LoginRequestDTO request) throws JsonProcessingException {
         System.out.println("Login Start");
-
         Long userId = authService.getUserIdByEmail(request.getEmail());
-        if (userId == null) {
-            return createErrorResponse(ErrorMsg.EMPTY_USER);
+        Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if(loginUserId==null) {
+            if (userId == null) {
+                return createErrorResponse(ErrorMsg.EMPTY_USER);
+            }
+        }else{
+            authService.logout(loginUserId);
         }
-
         boolean loginSuccess = authService.emailLogin(request);
         if (loginSuccess) {
             System.out.println("Login Success");
@@ -78,6 +89,7 @@ public class AuthController {
             System.out.println("Login Failed");
             return createErrorResponse(ErrorMsg.ACCOUNT_MISMATCH);
         }
+
     }
 
     private ResponseEntity<ResponseDTO<Object>> createErrorResponse(ErrorMsg errorMsg) {
