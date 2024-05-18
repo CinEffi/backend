@@ -3,6 +3,7 @@ package shinzo.cineffi.chat;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import shinzo.cineffi.Utils.CinEffiUtils;
@@ -36,14 +37,32 @@ public class ChatController {
     }
 
     public void chatSessionInit(Long userId, WebSocketSession session) {
-        String nickname = chatService.chatUserInit(userId);
+        String nickname = chatService.chatUserInit(userId); // 내부적으로 redisUser를 갱신해 주면서, 존재하는 유저가 맞는지 확인
+        // 기존에 nickname으로 등록되었는지 찾아내기
+        if (sessions.containsKey(nickname) || sessionIds.containsValue(nickname)) {
+            WebSocketSession existingSession = sessions.get(nickname).getSession();
+            try {
+                existingSession.sendMessage(new TextMessage(CinEffiUtils.getString(
+                        WebSocketMessage.builder().type("QUIT").sender("SEVER")
+                                .data("외부 접속이 감지되어 현재 세션을 종료합니다.").build()
+                )));
+            } catch (Exception e) { e.printStackTrace();
+                System.out.println("Exception occurs while resolving duplicated Chat Session");
+                System.out.println("Sending Message to existing Session failed");
+            }
+            chatSessionQuit(existingSession);
+            try { existingSession.close(CloseStatus.SERVER_ERROR);}
+            catch (Exception e) { e.printStackTrace();
+                System.out.println("Exception occurs while resolving duplicated Chat Session");
+                System.out.println("Closing existing Session failed");
+            }
+        }
         sessionIds.put(session.getId(), nickname);
         sessions.put(nickname, ChatSession.builder().session(session).userId(userId).chatroomId(0L).build());
 //        queryLookers.put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
     }
 
     public void chatSessionQuit(WebSocketSession session) {
-
         String nickname = getNicknameFromSession(session);
         if (nickname != null) {
             ChatSession chatSession = sessions.get(nickname);
@@ -51,6 +70,7 @@ public class ChatController {
                 Long chatroomId = chatSession.getChatroomId();
                 if (chatroomId != 0L) {
                     try { if (chatroomId != 0L) chatroomLeave(chatroomId, nickname);
+                        messageToChatroom(chatroomId, "SERVER:LEAVE", nickname);
                         } catch (Exception e) { System.out.println("chatroomLeave in chatSessionQuit got exception"); }
                 }
             }//   chatService.chatUserQuit(nickname); 안 씁니다.
@@ -77,6 +97,8 @@ public class ChatController {
     public WebSocketMessage<InChatroomInfoDTO> chatroomJoin(String nickname, Long chatroomId) throws Exception {
         InChatroomInfoDTO inChatroomInfoDTO = chatService.joinChatroom(nickname, chatroomId);
         sessions.put(nickname, sessions.get(nickname).toBuilder().chatroomId(chatroomId).build());
+        queryLookers.remove(nickname);
+
         updateToChatList("JOIN", ChatroomDTO.builder().chatroomId(chatroomId).build());
         return WebSocketMessage.<InChatroomInfoDTO>builder().type("JOIN").sender("SERVER").data(inChatroomInfoDTO).build();
     }
@@ -130,8 +152,9 @@ public class ChatController {
     public void tmpForBackupTest() {// [TMP] // 컨트롤러 호출 안할 가능성이 농후하니, 지우거나 이름을 바꾸시길
         chatService.backupToDatabase();// [TMP]
     }// [TMP]
-    public void tmpForChatroomClose() {// [TMP] // 컨트롤러 호출 안할 가능성이 농후하니, 지우거나 이름을 바꾸시길
-        chatService.closeChatroom(1L);// [TMP]
+    public void tmpForChatroomClose(Long chatroomId) {// [TMP] // 컨트롤러 호출 안할 가능성이 농후하니, 지우거나 이름을 바꾸시길
+        chatService.closeChatroom(chatroomId);// [TMP]
+        updateToChatList("CLOSE", ChatroomDTO.builder().chatroomId(chatroomId).build());
     }// [TMP]
 
 }
