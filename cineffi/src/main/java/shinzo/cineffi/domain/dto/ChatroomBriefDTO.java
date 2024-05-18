@@ -1,23 +1,22 @@
 package shinzo.cineffi.domain.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
-@Builder(toBuilder = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatLogDTO {
+public class ChatroomBriefDTO {
     @JsonProperty
-    private String nickname;
+    String title;
     @JsonProperty
-    private String content;
+    List<String> tags;
     @JsonProperty
-    private String timestamp;
-    @JsonProperty
-    private boolean mine;
+    String closedAT;
 }

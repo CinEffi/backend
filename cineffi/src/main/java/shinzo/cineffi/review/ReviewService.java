@@ -39,7 +39,7 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
 
     @Transactional(readOnly = true)
@@ -180,7 +180,7 @@ public class ReviewService {
             Score score = scoreRepository.findByMovieAndUser(movie, user);
 
             ReviewByMovieDTO reviewByMovieDTO = ReviewByMovieDTO.builder()
-                    .userId(encryptUtil.LongEncrypt(user.getId()))
+                    .userId(EncryptUtil.LongEncrypt(user.getId()))
                     .reviewId(review.getId())
                     .isMyReview(myUserId != null ? myUserId == user.getId() : false)
                     .nickname(user.getNickname())
@@ -225,7 +225,7 @@ public class ReviewService {
                     .moviePoster(encodeImage(movie.getPoster()))
                     .reviewScore(score != null ? score.getScore() : null)
                     .reviewId(review.getId())
-                    .reviewWriterId(encryptUtil.LongEncrypt(user.getId()))
+                    .reviewWriterId(EncryptUtil.LongEncrypt(user.getId()))
                     .reviewWriterNickname(user.getNickname())
                     .reviewContent(review.getContent())
                     .likeNumber(review.getLikeNum())

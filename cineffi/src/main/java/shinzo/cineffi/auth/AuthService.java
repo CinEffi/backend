@@ -38,7 +38,7 @@ public class AuthService {
     private final UserAnalysisRepository userAnalysisRepository;
     private final GenreRecordRepository genreRecordRepository;
     private final FollowRepository followRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
     @Value("${kakao.redirect_base_url}")
@@ -244,7 +244,7 @@ public class AuthService {
         Boolean isCertified = user.map(User::getIsCertified).orElse(false);
         Boolean isKakao = user.map(User::getIsKakao).orElse(null);
         return LoginResponseDTO.builder()
-                .userId(encryptUtil.LongEncrypt(userId))
+                .userId(EncryptUtil.LongEncrypt(userId))
                 .nickname(nick)
                 .level(level)
                 .profileImage(decodeImage(profileImage))

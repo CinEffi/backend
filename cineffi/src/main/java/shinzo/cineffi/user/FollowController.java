@@ -18,7 +18,7 @@ import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 public class FollowController {
 
     private final FollowService followService;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
     /**
      * 팔로우 하기
      * @param followReq
@@ -28,7 +28,7 @@ public class FollowController {
     public ResponseEntity<ResponseDTO<?>> postFollow(@RequestBody FollowReq followReq) {
 
         String EncryptTargetUserId = followReq.getUserId();
-        Long targetUserId = encryptUtil.LongDecrypt(EncryptTargetUserId);
+        Long targetUserId = EncryptUtil.LongDecrypt(EncryptTargetUserId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         followService.followUser(targetUserId, loginUserId);
@@ -48,7 +48,7 @@ public class FollowController {
     @DeleteMapping("/api/users/follow")
     public ResponseEntity<ResponseDTO<?>> deleteFollow(@RequestBody FollowReq followReq) {
         String EncryptTargetUserId = followReq.getUserId();
-        Long targetUserId = encryptUtil.LongDecrypt(EncryptTargetUserId);
+        Long targetUserId = EncryptUtil.LongDecrypt(EncryptTargetUserId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         followService.unfollowUser(targetUserId, loginUserId);
@@ -69,7 +69,7 @@ public class FollowController {
     public ResponseEntity<ResponseDTO<?>> getFollowerList(@PathVariable("user-id") String targetUserId,
                                                           @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        Long DecryptTargetUserId = encryptUtil.LongDecrypt(targetUserId);
+        Long DecryptTargetUserId = EncryptUtil.LongDecrypt(targetUserId);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
@@ -87,7 +87,7 @@ public class FollowController {
     public ResponseEntity<ResponseDTO<?>> getFollowingList(@PathVariable("user-id") String targetUserId,
                                                            @PageableDefault(page = 0, size=10) Pageable pageable) {
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        Long DecryptTargetUserId = encryptUtil.LongDecrypt(targetUserId);
+        Long DecryptTargetUserId = EncryptUtil.LongDecrypt(targetUserId);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())

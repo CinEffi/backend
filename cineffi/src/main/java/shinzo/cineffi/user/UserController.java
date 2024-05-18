@@ -37,7 +37,7 @@ public class UserController {
     private final ReviewService reviewService;
     private final ScrapService scrapService;
     private final ReportRepository reportRepository;
-    private final EncryptUtil encryptUtil;
+//    private final EncryptUtil encryptUtil;
 
     /**
      * 유저 마이페이지 조회
@@ -46,7 +46,7 @@ public class UserController {
      */
     @GetMapping("/api/users/{user-id}")
     public ResponseEntity<ResponseDTO<?>> getMyPage(@PathVariable("user-id") String userId) {
-        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
+        Long DecryptUserId= EncryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -104,7 +104,7 @@ public class UserController {
     public ResponseEntity<ResponseDTO<?>> getReviewList(@PathVariable("user-id") String userId
 //            , @PageableDefault(page = 0, size=10) Pageable pageable
     ) {
-        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
+        Long DecryptUserId= EncryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         System.out.println("loginUserId = " + loginUserId);
         return ResponseEntity.ok(
@@ -124,7 +124,7 @@ public class UserController {
 //            , @PageableDefault(page = 0, size=10) Pageable pageable
     ) {
 
-        Long DecryptUserId= encryptUtil.LongDecrypt(userId);
+        Long DecryptUserId= EncryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         System.out.println("loginUserId = " + loginUserId);
 
