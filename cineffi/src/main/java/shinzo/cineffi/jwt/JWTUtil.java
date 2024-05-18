@@ -16,7 +16,7 @@ public class JWTUtil {
     //jwt 키 발급
     public static Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-//    public static final long ACCESS_PERIOD = 1000L * 60L * 60L;
+    //    public static final long ACCESS_PERIOD = 1000L * 60L * 60L;
     //refresh 토큰 2주
     public static final long ACCESS_PERIOD = 300000;//5분
     public static final long REFRESH_PERIOD =  3600000;//1시간
@@ -33,16 +33,16 @@ public class JWTUtil {
             jwtBuilder.claim("role", role);                                          //JWT의 body
 
             Date now = new Date();
-                    System.out.println("the time is : " + now.getTime());
-                    String accessToken = jwtBuilder.setIssuedAt(now)
-                            .setExpiration(new Date(now.getTime() + ACCESS_PERIOD))
-                            .signWith(key, SignatureAlgorithm.HS256)                //암호화. JWT에는 권한까지 되어있기 때문에 중요.
-                            .compact();
+            System.out.println("the time is : " + now.getTime());
+            String accessToken = jwtBuilder.setIssuedAt(now)
+                    .setExpiration(new Date(now.getTime() + ACCESS_PERIOD))
+                    .signWith(key, SignatureAlgorithm.HS256)                //암호화. JWT에는 권한까지 되어있기 때문에 중요.
+                    .compact();
 
-                    String refreshToken = jwtBuilder.setIssuedAt(now)
-                            .setExpiration(new Date(now.getTime() + REFRESH_PERIOD))        //암호화. JWT에는 권한까지 되어있기 때문에 중요.
-                            .signWith(key, SignatureAlgorithm.HS256)
-                            .compact();
+            String refreshToken = jwtBuilder.setIssuedAt(now)
+                    .setExpiration(new Date(now.getTime() + REFRESH_PERIOD))        //암호화. JWT에는 권한까지 되어있기 때문에 중요.
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
 
             return new JWToken(accessToken,refreshToken);
 
@@ -75,13 +75,13 @@ public class JWTUtil {
 
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         } catch (Exception e) {
-            throw new CustomException(ErrorMsg.Invalid_token);
+            return null;
         }
     }
     //토큰의 정보에서 일부 정보만 추출하기
     public static String getClaimAttribute(String token, String key) throws RuntimeException {
-
-        return getClaims(token).getOrDefault(key, null).toString();
+        if(getClaims(token) != null) return getClaims(token).getOrDefault(key, null).toString();
+        else return null;
     }
     public static boolean isValidToken(String token) {//throws RuntimeException
         try {
@@ -97,7 +97,7 @@ public class JWTUtil {
     public static String resolveAccessToken(HttpServletRequest req) throws RuntimeException {
 
         Cookie[] cookies = req.getCookies();
-        if ( cookies == null) throw new CustomException(ErrorMsg.NOT_LOGGED_ID);
+        if ( cookies == null) return null;
         Cookie accessToken = Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("access"))
                 .findAny()

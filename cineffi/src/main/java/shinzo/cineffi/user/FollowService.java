@@ -89,15 +89,10 @@ public class FollowService {
         for (Follow f : followList) {
             User follower = f.getFollower();
             Boolean isFollowed = Boolean.FALSE;
-            if (loginUserId != null) {
-                List<Follow> followingList = followRepository.findAllByFollowerId(loginUserId); // 내가 팔로우하는 사람 목록 조회
+            Optional<Follow> foundFollow = followRepository.findByFollowerIdAndFollowingId(loginUserId, follower.getId()); // 내가 팔로우하는 사람 목록 조회
+            if (!foundFollow.isEmpty())
+                isFollowed = Boolean.TRUE;
 
-                for (Follow follow : followingList) {
-                    if (follow.getFollowing().getId().equals(follower.getId())) { // 내가 팔로우하는 사람 목록에 있으면
-                        isFollowed = true;
-                    }
-                }
-            }
             FollowerResList.add(FollowDto.builder()
                     .followId(EncryptUtil.LongEncrypt(f.getId()))
                     .userId(EncryptUtil.LongEncrypt(follower.getId()))
@@ -127,12 +122,10 @@ public class FollowService {
         for (Follow f : followList) {
             User following = f.getFollowing();
             Boolean isFollowed = Boolean.FALSE;
-            List<Follow> followingList = followRepository.findAllByFollowerId(loginUserId); // 내가 팔로우하는 사람 목록 조회
+            Optional<Follow> foundFollow = followRepository.findByFollowerIdAndFollowingId(loginUserId, following.getId()); // 내가 팔로우하는 사람 목록 조회
+            if (!foundFollow.isEmpty())
+                isFollowed = Boolean.TRUE;
 
-            for (Follow follow : followingList) {
-                if (follow.getFollowing().getId().equals(following.getId()))  // 내가 팔로우하는 사람 목록에 있으면
-                    isFollowed = true;
-            }
             FollowingResList.add(FollowDto.builder()
                     .followId(EncryptUtil.LongEncrypt(f.getId()))
                     .userId(EncryptUtil.LongEncrypt(following.getId()))
