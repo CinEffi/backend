@@ -39,18 +39,17 @@ public class JWTFilter extends OncePerRequestFilter {
                     request.getRequestURI().equals("/api/auth/user/check") ||
                     request.getRequestURI().equals("/api/auth/logout") ||
                     request.getRequestURI().equals("/api/users/follow") ||
-                    request.getRequestURI().matches("/api/users/\\d+") ||
+                    request.getRequestURI().matches("/api/users/[\\w\\W]") ||
                     request.getRequestURI().equals("/api/users/report") ||
                     request.getRequestURI().equals("/api/users/profile") ||
-                    request.getRequestURI().matches("/api/users/\\d+/reviews")||
-                    request.getRequestURI().matches("/api/users/\\d+/scrap")||
-                    request.getRequestURI().matches("/api/users/\\d+/followers")||
-                    request.getRequestURI().matches("/api/users/\\d+/followings")||
+                    request.getRequestURI().matches("/api/users/[\\w\\W]/reviews")||
+                    request.getRequestURI().matches("/api/users/[\\w\\W]/scrap")||
+                    request.getRequestURI().matches("/api/users/[\\w\\W]/followers")||
+                    request.getRequestURI().matches("/api/users/[\\w\\W]/followings")|| // 이러면 무슨 의미지...?
                     request.getRequestURI().matches("/api/movies/\\d+")||
                     request.getRequestURI().equals("/api/users/profile/edit") ||
                     request.getRequestURI().equals("/api/reviews/create") ||
                     request.getRequestURI().matches("/api/movies/\\d+/likes") ||
-                    request.getRequestURI().matches("/api/users/\\d+") ||
                     request.getRequestURI().matches("/api/reviews/\\d+/edit") ||
                     request.getRequestURI().matches("/api/reviews/\\d+/delete") ||
                     request.getRequestURI().matches("/api/reviews/\\d+") ||
