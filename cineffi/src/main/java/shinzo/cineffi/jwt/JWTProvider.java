@@ -11,11 +11,17 @@ public class JWTProvider {
 
     public Authentication getAuthentication(String token) {
         String role = JWTUtil.getClaimAttribute(token, "role");
-        Collection<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(role));
-        String userSequence = JWTUtil.getClaimAttribute(token, "sequence");
+        if (role != null) {
+            Collection<SimpleGrantedAuthority> authorities = Collections.singleton(new SimpleGrantedAuthority(role));
+            String userSequence = JWTUtil.getClaimAttribute(token, "sequence");
 
-        CustomAuthenticatedUser customAuthenticatedUser = new CustomAuthenticatedUser(authorities, Long.valueOf(userSequence), true);
-        return customAuthenticatedUser;
+            CustomAuthenticatedUser customAuthenticatedUser = new CustomAuthenticatedUser(authorities, Long.valueOf(userSequence), true);
+            return customAuthenticatedUser;
+        }
+        else{
+            return null;
+        }
+
     }
-}
 
+}

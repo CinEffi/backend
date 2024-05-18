@@ -106,6 +106,7 @@ public class UserController {
     ) {
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        System.out.println("loginUserId = " + loginUserId);
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
@@ -125,6 +126,7 @@ public class UserController {
 
         Long DecryptUserId= encryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        System.out.println("loginUserId = " + loginUserId);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
