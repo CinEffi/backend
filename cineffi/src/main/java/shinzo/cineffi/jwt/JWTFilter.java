@@ -43,17 +43,17 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().equals("/api/reviews/new")||
                         request.getRequestURI().matches("/api/movies/\\d+")
         ) {
-
             //토큰없어
             if(JWTUtil.resolveAccessToken(request) == null) {//검사안당함 로직
                 doFilter(request, response, filterChain);
             }
             else{
-
-                jwtFiltering(request, response);
+//                jwtFiltering(request, response);
+                String access = JWTUtil.resolveAccessToken(request);
+                Authentication authentication = jwtProvider.getAuthentication(access); // 정상 토큰이면 SecurityContext 저장
+                SecurityContextHolder.getContext().setAuthentication(authentication);
                 doFilter(request, response, filterChain);
             }
-
         }
         else{
             jwtFiltering(request, response);
@@ -85,7 +85,7 @@ public class JWTFilter extends OncePerRequestFilter {
             if (dbToken.equals(refresh)) {
                 String newAccessToken = JWTUtil.changeAccessToken(userSequenceValue, "ROLE_USER");
 
-                Cookie accessCookie = new Cookie("access", newAccessToken);
+                Cookie accessCookie = new Cookie("Cineffiaccess", newAccessToken);
                 accessCookie.setMaxAge((int) ACCESS_PERIOD);
                 accessCookie.setPath("/");
                 accessCookie.setHttpOnly(true);
