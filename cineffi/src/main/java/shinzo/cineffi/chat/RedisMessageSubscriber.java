@@ -38,14 +38,13 @@ public class RedisMessageSubscriber implements MessageListener {
         ChatLogDTO chatLogDTO = null;
         JoinedChatUserDTO joinedChatUserDTO = null;
         String type = "SEND";
-        if (sender.equals("SERVER:JOIN") || sender.equals("SERVER:LEAVE")){
+
+        if (sender.equals("SERVER:COME") || sender.equals("SERVER:LEAVE")) {
             RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", content);
             int splitedIndex = sender.lastIndexOf(':');
             type = sender.substring(splitedIndex + 1);
-            System.out.println("splitedType = " + type);
             sender = sender.substring(0, splitedIndex);
-            System.out.println("splitedSender = " + sender);
-            if (type.equals("JOIN")) { // JOIN 하는 경우
+            if (type.equals("COME")) { // JOIN 하는 경우
                 joinedChatUserDTO = JoinedChatUserDTO.builder()
                         .nickname(content)
                         .userId(EncryptUtil.LongEncrypt(redisUser.getId()))
@@ -56,13 +55,12 @@ public class RedisMessageSubscriber implements MessageListener {
             }
         }
         else { // 단순 메시지 SEND인 경우
-            chatLogDTO = ChatLogDTO.builder()
-                    .nickname(sender)
-                    .content(content)
-                    .timestamp(timeStamp)
-                    .build();
+             chatLogDTO = ChatLogDTO.builder().nickname(sender).content(content).timestamp(timeStamp).build();
         }
+        sendToChatroomMembers(chatroomIdStr, type, sender, content, chatLogDTO, joinedChatUserDTO);
+    }
 
+    private void sendToChatroomMembers(String chatroomIdStr, String type, String sender, String content, ChatLogDTO chatLogDTO, JoinedChatUserDTO joinedChatUserDTO) {
         Map<String, ChatSession> sessions = ChatController.getSessions();
         for (Map.Entry<Object, Object> entry : redisTemplate.opsForHash().entries("userlist:" + chatroomIdStr).entrySet()) {
             if (((RedisUserChat) entry.getValue()).getRedisUserChatStatus() != UserChatStatus.JOINED) continue;
@@ -73,7 +71,7 @@ public class RedisMessageSubscriber implements MessageListener {
                     CinEffiWebSocketHandler.sendToSession(chatSession.getSession(), WebSocketMessage.builder()
                             .type(type).sender(sender)
                             .data(chatLogDTO != null ?
-                                chatLogDTO.toBuilder().isMine(receiver.equals(sender)).build() :
+                                chatLogDTO.toBuilder().mine(receiver.equals(sender)).build() :
                                 (joinedChatUserDTO != null ? joinedChatUserDTO : content)
                             )
                             .build());

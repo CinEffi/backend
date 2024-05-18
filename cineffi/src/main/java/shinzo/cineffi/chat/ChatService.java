@@ -114,8 +114,10 @@ public class ChatService {
         return ChatroomListDTO.builder().list(chatroomDTOList).count(chatroomDTOList.size()).isOpen(false).build();
     }
 
+
+
     public void sendMessageToChatroom(Long chatroomId, String nickname, String content) {
-        if (!nickname.equals("SERVER")) {
+        if (!nickname.equals("SERVER") && !nickname.equals("SERVER:COME") && !nickname.equals("SERVER:LEAVE")) {
             Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, nickname);
             if (obj == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
             if (((RedisUserChat) obj).getRedisUserChatStatus() != UserChatStatus.JOINED)
@@ -125,12 +127,17 @@ public class ChatService {
         }
         LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
         redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + "|" + content + "|" + now);
+        if (nickname.equals("SERVER:UPDATE")) return;
+        else if (nickname.equals("SERVER:COME") || nickname.equals("SERVER:LEAVE")) {
+            // [FRONTEND]여기서 프론트와 말을 맞춰야 합니다.
+            content = "[notice] : " + content + " 님이 " + (nickname.equals("SERVER:COME") ? "입장" : "퇴장") + "하셨습니다.";
+            nickname = nickname.substring(0, nickname.indexOf(':'));
+        }
         redisTemplate.opsForList().rightPush("chatlog:" + chatroomId, RedisChatMessage.builder()
                 .sender(nickname).content(content).timestamp(now.toString()).build());
-        ;
     }
 
-    public Long createChatroom(String nickname, String title, List<String> tags) {
+    public ChatroomDTO createChatroom(String nickname, String title, List<String> tags) {
         RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", nickname);
         if (redisUser == null) throw new CustomException(USER_NOT_FOUND);
         User creator = userRepository.findById(redisUser.getId()).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
@@ -159,7 +166,9 @@ public class ChatService {
         // 채팅방 생성에 대한 알림 // 다중 서버에서는 추가 로직 필요 //
         listenerContainer.addMessageListener(subscriber, new ChannelTopic(channelName));
         sendMessageToChatroom(chatroomId, "SERVER", notificationMessage);
-        return chatroomId;
+        return ChatroomDTO.builder().chatroomId(chatroomId).title(chatroomTitle)
+                .tags(redisChatroom.getTags()).createdAt(redisChatroom.getCreatedAt())
+                .closedAt(redisChatroom.getClosedAt()).userCount(0).build();
     }
 
     private List<JoinedChatUserDTO> collectJoinedChatUsers(Long chatroomId) {
@@ -203,7 +212,7 @@ public class ChatService {
                     .nickname(sender)
                     .content(message.getContent())
                     .timestamp(message.getTimestamp().toString())
-                    .isMine(sender.equals(nickname))
+                    .mine(sender.equals(nickname))
                     .build());
         }// redis에서 마저 쌓인 메시지 긁어오자
         for (Object messageObj : redisTemplate.opsForList().range("chatlog:" + chatroomId, 0, -1)) {
@@ -213,7 +222,7 @@ public class ChatService {
                     .nickname(sender)
                     .content(message.getContent())
                     .timestamp(message.getTimestamp())
-                    .isMine(sender.equals(nickname))
+                    .mine(sender.equals(nickname))
                     .build());
         }
         return chatlogList;
@@ -251,6 +260,7 @@ public class ChatService {
         List<ChatLogDTO> chatLogDTOList = collectMessageLogs(nickname, chatroomId, redisChatroom);
 
         return InChatroomInfoDTO.builder()
+                .chatroomId(chatroomId)
                 .chatroomBriefDTO(chatRoomBriefDTO)
                 .joinedChatUserDTOList(joinedChatUserDTOList)
                 .chatLogDTOList(chatLogDTOList)
