@@ -12,7 +12,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
       properties:
         hibernate:
           format_sql: none
@@ -48,10 +48,6 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: trace
-  file:
-    name: logs/app.log
-    max-size: 10MB
-    max-history: 10
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
