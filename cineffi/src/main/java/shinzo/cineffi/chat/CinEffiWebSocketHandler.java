@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     private final ChatController chatController;
-//    private final EncryptUtil encryptUtil;
+
     // 웹소켓 연결 시
 
     @Override
