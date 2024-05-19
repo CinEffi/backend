@@ -205,7 +205,7 @@ public class ChatService {
                     System.out.println("message.getSender() == \"SERVER\"");
                 else
                     System.out.println("message.getSender() == \"" + message.getSender() + "\"");
-                
+
                 User sender = message.getSender() == "SERVER" ? null : userRepository.findByNickname(message.getSender())
                         .orElseThrow(() -> new IllegalArgumentException("User not found with nickname: " + message.getSender()));
                 ChatMessage chatMessage = ChatMessage.builder()

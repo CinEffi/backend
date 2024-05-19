@@ -9,7 +9,7 @@ import lombok.Getter;
 @Getter
 public class RedisChatMessage {
     private String sender;
-//    private Long userId;
+    //    private Long userId;
     private String content;
     private String timestamp;
 

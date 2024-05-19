@@ -3,16 +3,16 @@
 ## local
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/cineffi
-    username:
-    password:
+    url: jdbc:postgresql://localhost:5432/cineffi2
+    username: postgres
+    password: wpdnr2
     driver-class-name: org.postgresql.Driver
 
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
       properties:
         hibernate:
           format_sql: none
@@ -25,8 +25,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: skwd1012@gmail.com
-    password: tboxbeusjvbysajd
+    username: cineffi24@gmail.com
+    password: hlpzfpccpypynyme
     properties:
       mail:
         smtp:

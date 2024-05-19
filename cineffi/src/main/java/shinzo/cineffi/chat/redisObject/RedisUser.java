@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisHash;
 @Builder
 @Getter
 public class RedisUser {
-//    private String nickname; redis에서는 nickname이 식별자인데, key로 담길것 같음
+    //    private String nickname; redis에서는 nickname이 식별자인데, key로 담길것 같음
     private Boolean isBad;
     private Boolean isCertified;
     private Long id;
