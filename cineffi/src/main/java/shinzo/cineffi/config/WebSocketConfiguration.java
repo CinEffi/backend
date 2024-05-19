@@ -27,12 +27,11 @@ import java.util.Map;
 public class WebSocketConfiguration implements WebSocketConfigurer {
 
     private final ChatController chatController;
-//    private final EncryptUtil encryptUtil;
 
 @Override
 public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
     registry
-            .addHandler(signalingSocketHandler(chatController,encryptUtil), "/api/chat")
+            .addHandler(signalingSocketHandler(chatController), "/api/chat")
             .addInterceptors(new HttpSessionHandshakeInterceptor())
             .setHandshakeHandler(new DefaultHandshakeHandler())
             .setAllowedOrigins("*");
