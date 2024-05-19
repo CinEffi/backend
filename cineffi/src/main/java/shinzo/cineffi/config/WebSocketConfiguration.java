@@ -32,7 +32,7 @@ public class WebSocketConfiguration implements WebSocketConfigurer {
 @Override
 public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
     registry
-            .addHandler(signalingSocketHandler(chatController,encryptUtil), "/chat")
+            .addHandler(signalingSocketHandler(chatController,encryptUtil), "/api/chat")
             .addInterceptors(new HttpSessionHandshakeInterceptor())
             .setHandshakeHandler(new DefaultHandshakeHandler())
             .setAllowedOrigins("*");
