@@ -18,5 +18,5 @@ public class ChatroomBriefDTO {
     @JsonProperty
     List<String> tags;
     @JsonProperty
-    String closedAT;
+    String closedAt;
 }

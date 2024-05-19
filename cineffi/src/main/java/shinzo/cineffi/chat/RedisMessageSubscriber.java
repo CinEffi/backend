@@ -38,24 +38,26 @@ public class RedisMessageSubscriber implements MessageListener {
         ChatLogDTO chatLogDTO = null;
         JoinedChatUserDTO joinedChatUserDTO = null;
         String type = "SEND";
-
-        if (sender.equals("SERVER:COME") || sender.equals("SERVER:LEAVE")) {
-            RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", content);
+        if (sender.startsWith("[SERVER]:")) {
             int splitedIndex = sender.lastIndexOf(':');
             type = sender.substring(splitedIndex + 1);
             sender = sender.substring(0, splitedIndex);
-            if (type.equals("COME")) { // JOIN 하는 경우
-                joinedChatUserDTO = JoinedChatUserDTO.builder()
-                        .nickname(content)
-                        .userId(EncryptUtil.LongEncrypt(redisUser.getId()))
-                        .level(redisUser.getLevel())
-                        .isBad(redisUser.getIsBad())
-                        .isCertified(redisUser.getIsCertified())
-                        .build();
+            if (!sender.equals("[SERVER]:END"))
+            {
+                if (type.equals("COME")) { // JOIN 하는 경우
+                    RedisUser redisUser = (RedisUser) redisTemplate.opsForHash().get("redisUsers", content);
+                    joinedChatUserDTO = JoinedChatUserDTO.builder()
+                            .nickname(content)
+                            .userId(EncryptUtil.LongEncrypt(redisUser.getId()))
+                            .level(redisUser.getLevel())
+                            .isBad(redisUser.getIsBad())
+                            .isCertified(redisUser.getIsCertified())
+                            .build();
+                }
             }
         }
         else { // 단순 메시지 SEND인 경우
-             chatLogDTO = ChatLogDTO.builder().nickname(sender).content(content).timestamp(timeStamp).build();
+            chatLogDTO = ChatLogDTO.builder().nickname(sender).content(content).timestamp(timeStamp).build();
         }
         sendToChatroomMembers(chatroomIdStr, type, sender, content, chatLogDTO, joinedChatUserDTO);
     }

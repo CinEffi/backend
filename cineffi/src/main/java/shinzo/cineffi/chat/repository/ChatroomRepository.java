@@ -12,6 +12,7 @@ import java.util.List;
 public interface ChatroomRepository extends JpaRepository<Chatroom, Long> {
     List<Chatroom> findAllByIsDeleteTrueOrderByIdDesc();
 
+    @Transactional
     @Modifying
     @Query("UPDATE Chatroom c SET c.isDelete = :isDelete WHERE c.id = :chatroomId")
     void updateIsDeleteById(@Param("chatroomId") Long chatroomId, @Param("isDelete") boolean isDelete);

@@ -51,4 +51,7 @@ public class Chatroom extends BaseEntity {
                 .ownerId(owner.getId())//생성자
                 .build();
     }
+
+    public Chatroom updateIsDelete(boolean isDelete) { setIsDelete(isDelete); return this; }
+
 }

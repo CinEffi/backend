@@ -1,10 +1,13 @@
 package shinzo.cineffi.chat;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
@@ -29,7 +32,9 @@ import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
 
 import static shinzo.cineffi.exception.message.ErrorMsg.USER_NOT_FOUND;
@@ -118,7 +123,7 @@ public class ChatService {
 
 
     public void sendMessageToChatroom(Long chatroomId, String nickname, String content) {
-        if (!nickname.equals("SERVER") && !nickname.equals("SERVER:COME") && !nickname.equals("SERVER:LEAVE")) {
+        if (!nickname.equals("[SERVER]") && !nickname.equals("[SERVER]:COME") && !nickname.equals("[SERVER]:LEAVE") && !nickname.equals("[SERVER]:END")) {
             Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, nickname);
             if (obj == null) throw new CustomException(ErrorMsg.USERCHAT_NOT_FOUND);
             if (((RedisUserChat) obj).getRedisUserChatStatus() != UserChatStatus.JOINED)
@@ -128,10 +133,13 @@ public class ChatService {
         }
         LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
         redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + "|" + content + "|" + now);
-        if (nickname.equals("SERVER:UPDATE")) return;
-        else if (nickname.equals("SERVER:COME") || nickname.equals("SERVER:LEAVE")) {
-            // [FRONTEND]여기서 프론트와 말을 맞춰야 합니다.
-            content = "[notice] : " + content + " 님이 " + (nickname.equals("SERVER:COME") ? "입장" : "퇴장") + "하셨습니다.";
+        if (nickname.equals("[SERVER]:UPDATE")) return;
+        else if (nickname.startsWith("[SERVER]:"))
+        {
+            if (nickname.equals("[SERVER]:COME") || nickname.equals("[SERVER]:LEAVE")) {
+                // [FRONTEND]여기서 프론트와 말을 맞춰야 합니다.
+                content = "[notice] : " + content + " 님이 " + (nickname.equals("[SERVER]:COME") ? "입장" : "퇴장") + "하셨습니다.";
+            }
             nickname = nickname.substring(0, nickname.indexOf(':'));
         }
         redisTemplate.opsForList().rightPush("chatlog:" + chatroomId, RedisChatMessage.builder()
@@ -147,6 +155,7 @@ public class ChatService {
                 .owner(creator)
                 .closedAt(null) // 처음에는 닫힌 시간이 없습니다.
                 .build());
+
         for (String tag : tags) {
             chatroomTagRepository.save(ChatroomTag
                     .builder()
@@ -157,6 +166,7 @@ public class ChatService {
         // RedisChatroom 객체 생성
         RedisChatroom redisChatroom = chatroomRepository.save(chatroom.toBuilder()
                 .closedAt(chatroom.getCreatedAt().plusHours(24L)).build()).toRedisChatroom(tags);
+
         // redis에 RedisChatroom 보내주기
         redisTemplate.opsForHash().put("chatroom", chatroom.getId().toString(), redisChatroom);
 
@@ -166,7 +176,7 @@ public class ChatService {
         String notificationMessage = "새로운 채팅방이 생성되었습니다: " + chatroomTitle;
         // 채팅방 생성에 대한 알림 // 다중 서버에서는 추가 로직 필요 //
         listenerContainer.addMessageListener(subscriber, new ChannelTopic(channelName));
-        sendMessageToChatroom(chatroomId, "SERVER", notificationMessage);
+        sendMessageToChatroom(chatroomId, "[SERVER]", notificationMessage);
         return ChatroomDTO.builder().chatroomId(chatroomId).title(chatroomTitle)
                 .tags(redisChatroom.getTags()).createdAt(redisChatroom.getCreatedAt())
                 .closedAt(redisChatroom.getClosedAt()).userCount(0).build();
@@ -194,12 +204,12 @@ public class ChatService {
         return joinedChatUserDTOList;
     }
 
-    private ChatroomBriefDTO getChatRoomBrief(Long chatroomId) {
+    private ChatroomBriefDTO getChatroomBrief(Long chatroomId) {
         RedisChatroom redisChatroom = (RedisChatroom)redisTemplate.opsForHash().get("chatroom", chatroomId.toString());
         if (redisChatroom == null) throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);
         return ChatroomBriefDTO.builder().
                 title(redisChatroom.getTitle())
-                .closedAT(redisChatroom.getClosedAt())
+                .closedAt(redisChatroom.getClosedAt())
                 .tags(redisChatroom.getTags()).build();
     }
 
@@ -207,8 +217,7 @@ public class ChatService {
         // 입장 멤버의 소켓에 보내줄 채팅 로그 모으기
         List<ChatLogDTO> chatlogList = new ArrayList<>();// db에서 메시지 받아오자
         for (ChatMessage message : chatMessageRepository.findAllByChatroomIdOrderByTimestampAsc(chatroomId)) {
-            User senderObj = message.getSender();
-            String sender = senderObj == null ? "SERVER" : senderObj.getNickname();
+            String sender = message.getSender();
             chatlogList.add(ChatLogDTO.builder()
                     .nickname(sender)
                     .content(message.getContent())
@@ -230,7 +239,7 @@ public class ChatService {
     }
 
     public InChatroomInfoDTO joinChatroom(String nickname, Long chatroomId) {
-        ChatroomBriefDTO chatRoomBriefDTO = getChatRoomBrief(chatroomId);
+        ChatroomBriefDTO chatroomBriefDTO = getChatroomBrief(chatroomId);
         List<JoinedChatUserDTO> joinedChatUserDTOList = collectJoinedChatUsers(chatroomId);
 
         // 유저 있는지 검증(레디스에서 있는지 찾아보기 -> 없으면 null)
@@ -262,7 +271,7 @@ public class ChatService {
 
         return InChatroomInfoDTO.builder()
                 .chatroomId(chatroomId)
-                .chatroomBriefDTO(chatRoomBriefDTO)
+                .chatroomBriefDTO(chatroomBriefDTO)
                 .joinedChatUserDTOList(joinedChatUserDTOList)
                 .chatLogDTOList(chatLogDTOList)
                 .build();
@@ -308,7 +317,6 @@ public class ChatService {
     }
 
     private void backupUserChat() {
-        System.out.println("ChatService.backupUserChat");
         stringRedisTemplate.opsForSet().members("updatedUserChat").stream().map(String.class::cast).toList()
                 .forEach(entry -> {
                     String[] parts = entry.split(":");
@@ -321,17 +329,17 @@ public class ChatService {
                 });
         // mute 하는걸로는 update목록에 올리면 안되겠군
         stringRedisTemplate.delete("updatedUserChat");
-        System.out.println("ChatService.backupUserChat");
     }
 
     private void backupChatLog() {
-        System.out.println("ChatService.backupChatLog"); // [TMP]
         for (String id : stringRedisTemplate.opsForHash().keys("chatroom").stream().map(String.class::cast).collect(Collectors.toSet())) {
             Chatroom chatroom = chatroomRepository.findById(Long.parseLong(id)).get();
             for (Object messageObj : Objects.requireNonNull(redisTemplate.opsForList().range("chatlog:" + id, 0, -1))) {
                 RedisChatMessage message = (RedisChatMessage)messageObj;
-                User sender = message.getSender().equals("SERVER") ? null : userRepository.findByNickname(message.getSender())
-                        .orElseThrow(() -> new IllegalArgumentException("User not found with nickname: " + message.getSender()));
+
+                String sender = message.getSender();
+                if (sender == null || !(sender.equals("[SERVER]") || redisTemplate.opsForHash().hasKey("redisUsers", sender)))
+                    throw new IllegalArgumentException("User not found with nickname: " + sender);
                 ChatMessage chatMessage = ChatMessage.builder()
                         .sender(sender)
                         .chatroom(chatroom)
@@ -342,24 +350,24 @@ public class ChatService {
             }
             redisTemplate.delete("chatlog:" + id);
         }
-        System.out.println("ChatService.backupChatLog"); // [TMP]
     }
 
+    @Scheduled(fixedRate = 180000) // 그냥 매 3분마다 실행하기로 했습니다.
     public void backupToDatabase() { // 레디스 -> DB
-        System.out.println("ChatService.backupToDatabase"); // [TMP]
+        System.out.println("[ChatService.backupToDatabase : 백업을 시작합니다.] - " + LocalDateTime.now()); // [TMP]
         //    backupChatroom(); //  chatroom 백업 (그러나 쓰이지 않는다)
         backupUserChat();//UserChat 백업 : 레디스 채팅 유저 목록(HASH)
         backupChatLog(); //chatlog 백업 : 레디스 메세지 리스트 -> chatMessage
+        System.out.println("[ChatService.backupToDatabase : 백업을 끝냅니다.] - " + LocalDateTime.now());
     }
 
-    @Transactional
     public void closeChatroom(Long chatroomId) {
         if (redisTemplate.opsForHash().get("chatroom", chatroomId.toString()) == null) {
             throw new CustomException(ErrorMsg.CHATROOM_NON_FOUND);
             //System.out.println("[FATAL ERROR] : ChatService.closeChatroom has NOT_FOUND_CHATROOM No." + chatroomId);;// [TMP]
         } ////////////////// 이런일은 안일어나지만 적절한 에러처리로 바꾸거나 없애야겠다.// [TMP]
         // 0. 삭제합니다 공지
-        sendMessageToChatroom(chatroomId, "SERVER", "채팅방이 종료됩니다. 이후 종료된 채팅방 목록에서 찾아보실 수 있습니다.");
+        sendMessageToChatroom(chatroomId, "[SERVER]:END", "채팅방이 종료됩니다. 이후 종료된 채팅방 목록에서 찾아보실 수 있습니다.");
         // 1. 다 LEAVED 만들기
         for (Map.Entry<Object, Object> entry : redisTemplate.opsForHash().entries("userlist:" + chatroomId).entrySet())
         {
@@ -373,7 +381,11 @@ public class ChatService {
         // 4. Redis에서 채팅방 데이터 삭제
         redisTemplate.opsForHash().delete("chatroom", chatroomId.toString());
         // 5. Postgres DB에서 chatroom 테이블의 isdelete 필드 변경
-        chatroomRepository.updateIsDeleteById(chatroomId, true);
+
+
+        chatroomRepository.save(chatroomRepository.findById(chatroomId).orElseThrow(
+                () -> new CustomException(ErrorMsg.CHATROOM_NON_FOUND)).updateIsDelete(true));
+        //chatroomRepository.updateIsDeleteById(chatroomId, true);
     }
 
 }
