@@ -61,7 +61,7 @@ kobis:
   #  api_key: 5b5979d8f9822605465799f4de0d864a
   #  api_key: f97089e51098e3098753d84bea65f507
   #  api_key: 5873d607725ac6c9564a8954da0c178a
-  #  api_key: 7af2e7f58134765d4308a5096295d274
+  api_key: 7af2e7f58134765d4308a5096295d274
   #  api_key: 2a45813037fb723c2d8b3dbd808e1328
   #  api_key: 4564a256f40c78acde5f8406a7b65dc6
   #  api_key: ac0934e1fbde3331f44992550b1e1d9d
@@ -69,7 +69,7 @@ kobis:
   #  api_key: c305d916b8f8d83032f21878c3db1c16
   #  api_key: 333eabf2df141a538e910bae70243fc1
 #  api_key: 0994d8ac050005fb257070390088ea85
-  api_key: eb64f7ff5664a19e68063e2369de4cda
+#  api_key: eb64f7ff5664a19e68063e2369de4cda
 
 
   base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
@@ -118,10 +118,11 @@ email:
 logging:
   level:
     org.springframework.mail: ERROR
-    org.springframework.web: ERROR
+    org.springframework.web: trace
     org.hibernate.SQL: ERROR
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
 
 kakao:
   rest_api_key: 61c5c04db7860804a83071683b6a7bd8
-  redirect_base_url: https://k7f10638b4382a.user-app.krampoline.com
+  redirect_url: https://k7f10638b4382a.user-app.krampoline.com/auth/check
+  back_redirect_url: https://k7f10638b4382a.user-app.krampoline.com/api/auth/login/kakao
