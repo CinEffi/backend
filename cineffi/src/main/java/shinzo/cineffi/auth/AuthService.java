@@ -38,11 +38,13 @@ public class AuthService {
     private final UserAnalysisRepository userAnalysisRepository;
     private final GenreRecordRepository genreRecordRepository;
     private final FollowRepository followRepository;
+    private final RestTemplate restTemplate;
+
 //    private final EncryptUtil encryptUtil;
     @Value("${kakao.rest_api_key}")
     private String restApiKey;
-    @Value("${kakao.redirect_base_url}")
-    private String REDIRECT_BASE_URL;
+    @Value("${kakao.back_redirect_url}")
+    private String BACK_REDIRECT_URL;
     private EmailRequestDTO request;
 
     //필요하다면 카카오 회원가입, 유저아이디 반환
@@ -62,7 +64,7 @@ public class AuthService {
     }
 
     public KakaoToken requestKakaoToken(String code){
-        RestTemplate rt = new RestTemplate();
+//        RestTemplate rt = new RestTemplate();
         //요청보낼 헤더 생성
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -70,14 +72,14 @@ public class AuthService {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("grant_type", "authorization_code");
         params.add("client_id", restApiKey);
-        params.add("redirect_uri", REDIRECT_BASE_URL + "/api/auth/login/kakao");
+        params.add("redirect_uri", BACK_REDIRECT_URL);
         params.add("code", code);
         //헤더 바디 합치기
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest =
                 new HttpEntity<>(params, headers);
 
         //ResponseEntity 객체를 String 형만 받도록 생성. 응답받는 값이 Json 형식이니까
-        ResponseEntity<String> accessTokenResponse = rt.exchange(
+        ResponseEntity<String> accessTokenResponse = restTemplate.exchange(
                 "https://kauth.kakao.com/oauth/token",
                 HttpMethod.POST,
                 kakaoTokenRequest,
@@ -99,7 +101,7 @@ public class AuthService {
 
     //카카오 토큰으로 카카오 이메일 가져오기
     private String requestKakaoEmail(String accessToken){
-        RestTemplate rt = new RestTemplate();
+//        RestTemplate rt = new RestTemplate();
 
         //헤더 생성
         HttpHeaders headers = new HttpHeaders();
@@ -109,7 +111,7 @@ public class AuthService {
         HttpEntity<MultiValueMap<String, String>> kakaoProfileRequest = new HttpEntity<>(headers);
 
         //요청을 만들어 보내고, 그걸 응답에 받기
-        ResponseEntity<String> kakaoProfileResponse = rt.exchange(
+        ResponseEntity<String> kakaoProfileResponse = restTemplate.exchange(
                 "https://kapi.kakao.com/v2/user/me",
                 HttpMethod.POST,
                 kakaoProfileRequest,
@@ -211,7 +213,7 @@ public class AuthService {
 
         JWToken jwToken = JWTUtil.allocateToken(userId,"ROLE_USER");//액세스 토큰 발급
         //Access 토큰 쿠키
-        ResponseCookie accessCookie = ResponseCookie.from("Cineffiaccess",jwToken.getAccessToken())
+        ResponseCookie accessCookie = ResponseCookie.from("access",jwToken.getAccessToken())
                 .sameSite("None")
                 .maxAge(ACCESS_PERIOD)
                 .path("/")
@@ -221,7 +223,7 @@ public class AuthService {
         //Refresh 토큰 쿠키
 
         normalLoginRefreshToken(userId, jwToken.getRefreshToken());
-        ResponseCookie refreshCookie = ResponseCookie.from("Cineffirefresh",jwToken.getRefreshToken())
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh",jwToken.getRefreshToken())
                 .sameSite("None")
                 .maxAge(REFRESH_PERIOD)
                 .path("/")
@@ -310,7 +312,7 @@ public class AuthService {
 
     public Object[] logout(Long userId) {
         HttpHeaders headers = new HttpHeaders();
-        ResponseCookie cookie = ResponseCookie.from("Cineffiaccess", "")
+        ResponseCookie cookie = ResponseCookie.from("access", "")
                 .sameSite("None")
                 .secure(true)
                 .maxAge(0)
@@ -318,7 +320,7 @@ public class AuthService {
                 .httpOnly(true)
                 .build();
 
-        ResponseCookie cookie2 = ResponseCookie.from("Cineffirefresh", "")
+        ResponseCookie cookie2 = ResponseCookie.from("refresh", "")
                 .sameSite("None")
                 .secure(true)
                 .maxAge(0)
