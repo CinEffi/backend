@@ -185,11 +185,11 @@ public class AuthService {
 
     public Long getUserIdByEmail(String email) {
         Optional<UserAccount> user = Optional.ofNullable(userAccountRepository.findByEmailAndUserIsDeleted(email));
-        if(user != null) {
+        if(user.isPresent()) {
             return user.map(UserAccount::getId).orElse(null);
         }
         else {
-            return null;
+            return -1L;
         }
     }
 

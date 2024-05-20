@@ -40,14 +40,21 @@ public class AuthController {
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if(loginUserId==null) {
-            if (userId == null) {
-                return createErrorResponse(ErrorMsg.EMPTY_USER);
+            if (userId == -1) {
+                String redirectUrl = "http://localhost:3000/auth/deletedaccount";
+                //변경 필요
+                ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
+                        .isSuccess(false)
+                        .message(ErrorMsg.EMPTY_USER.getDetail())
+                        .build();
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .location(URI.create(redirectUrl))
+                        .body(responseDTO);
             }
         }else{
             authService.logout(loginUserId);
         }
         LoginResponseDTO userInfo = authService.userInfo(userId);
-
         return redirectauthLogin(userId,userInfo);
 
     }
