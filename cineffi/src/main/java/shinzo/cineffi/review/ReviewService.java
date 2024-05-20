@@ -185,7 +185,7 @@ public class ReviewService {
                     .isMyReview(myUserId != null ? myUserId == user.getId() : false)
                     .nickname(user.getNickname())
                     .level(user.getLevel())
-                    .userProfileImage(user.getProfileImage())
+                    .userProfileImage(decodeImage(user.getProfileImage()))
                     .isBad(user.getIsBad())
                     .isCertified(user.getIsCertified())
                     .content(review.getContent())

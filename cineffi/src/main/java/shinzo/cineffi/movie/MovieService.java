@@ -50,23 +50,28 @@ public class MovieService {
     }
 
     public GenreMovieListDTO findGenreList(){
-        int randomPick = new Random().nextInt(values().length);
-        Genre genre = Genre.values()[randomPick];
+        Genre genre = null;
+        while(genre == null || genre.equals(WESTERN)){
+            int randomPick = new Random().nextInt(values().length);
+            genre = Genre.values()[randomPick];
+        }
         Pageable pageable = (Pageable) PageRequest.of(0, 20);
 
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
         List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
-        for (Movie movie : movieList){
-            InListMoviveDTO dto = InListMoviveDTO.builder()
-                    .movieId(movie.getId())
-                    .title(movie.getTitle())
-                    .releaseDate(movie.getReleaseDate())
-                    .poster(decodeImage(movie.getPoster()))
-                    .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
-                    .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
-                    .build();
-            dtoList.add(dto);
+        if(!movieList.isEmpty()) {
+            for (Movie movie : movieList) {
+                InListMoviveDTO dto = InListMoviveDTO.builder()
+                        .movieId(movie.getId())
+                        .title(movie.getTitle())
+                        .releaseDate(movie.getReleaseDate())
+                        .poster(decodeImage(movie.getPoster()))
+                        .cinephileAvgScore(movie.getAvgScore().getCinephileAvgScore())
+                        .levelAvgScore(movie.getAvgScore().getLevelAvgScore())
+                        .build();
+                dtoList.add(dto);
+            }
         }
 
         return new GenreMovieListDTO(genre.getKor(), dtoList);

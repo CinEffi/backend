@@ -1,5 +1,6 @@
 package shinzo.cineffi.movie;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -92,6 +93,7 @@ public class BoxOfficeDataHandler {
     }
 
     //KOBIS에서 가져온 박스오피스 데이터를 기존DB에 저장된 데이터와 합치기
+    @Transactional
     public void processDailyBoxOfficeData(List<BoxOfficeMovie> boxOfficeMovies) {
 //        List<BoxOfficeMovie> boxOfficeMovies = boxOfficeMovieRepository.findAll(); //일단 전체 일별 박스오피스 가져옴
         for (BoxOfficeMovie boxOfficeMovie : boxOfficeMovies) {

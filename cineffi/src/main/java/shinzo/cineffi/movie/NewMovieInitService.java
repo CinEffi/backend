@@ -72,7 +72,7 @@ public class NewMovieInitService {
 
         List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(initYear);
         List<Movie> kobisBasicDatas = requestKobisDatas(initYear);
-        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas, initYear);
 
         requestDetailDatas(mixBasicDatas);
         boxOfficeDataHandler.dailyBoxOffice();
@@ -83,7 +83,7 @@ public class NewMovieInitService {
     public void initData(int year){
         List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(year);
         List<Movie> kobisBasicDatas = requestKobisDatas(year);
-        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas);
+        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas, year);
         requestDetailDatas(mixBasicDatas);
 
         if(LocalDate.now().getYear() == year) {
@@ -203,6 +203,10 @@ public class NewMovieInitService {
             Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d",
                     KOBIS_BASEURL, KOBIS_API_KEY, year, year, curPage), KOBIS);
 
+            if(response.get("movieListResult")  == null) {
+                System.out.println("코비스 키 만료됨!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                break;
+            }
             Map<String, Object> results = (Map<String, Object>) response.get("movieListResult");
             int totCnt = (int) results.get("totCnt"); // 전체 콘텐트 개수
             totalPage = (totCnt + 99) / 100; // 전체 페이지 수 계산 (올림 처리)
@@ -222,14 +226,14 @@ public class NewMovieInitService {
         return result;
     }
 
-    private List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies) {
+    private List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies, int year) {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_MAX);
         Set<String> deDuplication = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
         List<Future<Movie>> futures = new ArrayList<>();
         for (Movie TMDBMovie : TMDBMovies) {
             Future<Movie> future = executor.submit(() -> {
-                return processMovie(TMDBMovie, kobisMovies, deDuplication);
+                return processMovie(TMDBMovie, kobisMovies, deDuplication, year);
             });
             futures.add(future);
         }
@@ -250,12 +254,10 @@ public class NewMovieInitService {
         return totalSave(result); // 데이터베이스 저장 호출
     }
 
-    private Movie processMovie(Movie TMDBMovie, List<Movie> kobisMovies, Set<String> deDuplication) {
+    private Movie processMovie(Movie TMDBMovie, List<Movie> kobisMovies, Set<String> deDuplication, int year) {
         String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
         if (deDuplication.contains(korTitleMapKey)) return null;
-        Set<Integer> yearSet = new HashSet<>();
-        if(!yearSet.contains(TMDBMovie.getReleaseDate().getYear()) && TMDBMovie.getReleaseDate().getYear() < LocalDate.now().getYear()){
-            yearSet.add(TMDBMovie.getReleaseDate().getYear());
+        if(TMDBMovie.getReleaseDate().getYear() < year){
             List<Movie> newKobisMovies = requestKobisDatas(TMDBMovie.getReleaseDate().getYear());
             kobisMovies.addAll(newKobisMovies);
         }
@@ -274,9 +276,7 @@ public class NewMovieInitService {
                 deDuplication.add(korTitleMapKey);
                 return kobisKorTitleMap.get(korTitleMapKey)
                         .toBuilder()
-                        .poster(TMDBMovie.getPoster())
                         .tmdbId(TMDBMovie.getTmdbId())
-                        .introduction(TMDBMovie.getIntroduction())
                         .build();
             }
             if (TMDBMovie.getEngTitle() != null) {
@@ -285,7 +285,6 @@ public class NewMovieInitService {
                     deDuplication.add(engTitleMapKey);
                     return kobisEngTitleMap.get(engTitleMapKey)
                             .toBuilder()
-                            .poster(TMDBMovie.getPoster())
                             .tmdbId(TMDBMovie.getTmdbId())
                             .build();
                 }
@@ -355,7 +354,7 @@ public class NewMovieInitService {
         return result;
     }
     private Object requestData(String urlString, InitType type) {
-//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -421,7 +420,6 @@ public class NewMovieInitService {
     private Movie TMDBMapToMovie(Map<String, Object> map) {
         Integer id = (Integer) map.get("id");
         String title = (String) map.get("title");
-        String introduction = (String) map.get("overview");
         LocalDate releaseDate = LocalDate.parse((String) map.get("release_date"));
         String engTitle = "";
         if(((String) map.get("original_language")).equals("en")) engTitle = (String) map.get("original_title");
@@ -429,7 +427,6 @@ public class NewMovieInitService {
         Movie result = Movie.builder()
                 .tmdbId(id)
                 .title(title)
-                .introduction(introduction)
                 .releaseDate(releaseDate).build();
         if(!engTitle.equals("")) result = result.toBuilder().engTitle(engTitle).build();
 
@@ -463,6 +460,7 @@ public class NewMovieInitService {
         Map<String, Object> kobisResponse = (Map<String, Object>) ((Map<String, Object>) map.get("kobisDetails")).get("movieInfo");
         Map<String, Object> tmdbResponse = (Map<String, Object>) map.get("tmdbDetails");
         Integer runtime = (Integer) tmdbResponse.get("runtime");
+        String introduction = (String) tmdbResponse.get("overview");
         if(runtime == 0) return null;
         List<Map<String, Object>> nations = (List<Map<String, Object>>) kobisResponse.get("nations");
         String nation = nations.size() == 0 ? null : (String) nations.get(0).get("nationNm");
@@ -493,6 +491,7 @@ public class NewMovieInitService {
         result = result.toBuilder()
                 .originCountry(nation)
                 .runtime(runtime)
+                .introduction(introduction)
                 .avgScore(avgScore)
                 .poster(poster)
                 .genreList(genres)
