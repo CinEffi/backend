@@ -189,7 +189,7 @@ public class NewMovieInitService {
             List<Map<String, Object>> maps = (List<Map<String, Object>>) response.get("results");
             maxPage = (int) response.get("total_pages");
             for (Map<String, Object> map : maps) {
-                if(map == null) continue;
+                if(map == null || movieRepo.existsMovieByTmdbId((int) map.get("id"))) continue;
                 Movie movie = TMDBMapToMovie(map);
                 if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
                     resultMovie.add(movie);
@@ -218,7 +218,7 @@ public class NewMovieInitService {
             List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
             if (movieMapList != null && !movieMapList.isEmpty()) {
                 for (Map<String, Object> movieMap : movieMapList) {
-                    if(((String) movieMap.get("genreAlt")).contains("에로")) continue;
+                    if(((String) movieMap.get("genreAlt")).contains("에로") || movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd")) || ((String) movieMap.get("movieNm")).contains("섹스")) continue;
                     Movie kobisMovie = kobisMapToMovie(movieMap);
                     result.add(kobisMovie);
                 }
