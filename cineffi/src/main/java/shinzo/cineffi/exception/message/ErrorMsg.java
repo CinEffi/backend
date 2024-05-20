@@ -25,6 +25,7 @@ public enum ErrorMsg {
         NOT_JOINED_CHATROOM(BAD_REQUEST, "접속한 채팅방이 아닙니다."),
         NOT_LEFT_CHATROOM(BAD_REQUEST, "퇴장 상태가 아닙니다."),
         INVALID_TYPE_CALL(BAD_REQUEST, "서버에 전달된 메시지의 type이 유효하지 않습니다."),
+        INVALID_SOCKET_REQUEST(BAD_REQUEST, "잘못된 웹소켓 연결 INIT 요청입니다."),
 
         /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),

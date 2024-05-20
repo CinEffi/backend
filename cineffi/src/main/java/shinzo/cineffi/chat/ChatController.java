@@ -42,30 +42,48 @@ public class ChatController {
         sessionIds.remove(session.getId());
     }
 
-    public void chatSessionInit(Long userId, WebSocketSession session) {
+
+    public void chatSessionInit(Long userId, WebSocketSession newSession, String browserSession) {
+        System.out.println("ChatController.chatSessionInit");
+
         String nickname = chatService.chatUserInit(userId); // 내부적으로 redisUser를 갱신해 주면서, 존재하는 유저가 맞는지 확인
+        System.out.println("nickname = " + nickname);
         // 기존에 nickname으로 등록되었는지 찾아내기
         if (sessions.containsKey(nickname) || sessionIds.containsValue(nickname)) {
-            WebSocketSession existingSession = sessions.get(nickname).getSession();
-            try {
-                existingSession.sendMessage(new TextMessage(CinEffiUtils.getString(
-                        WebSocketMessage.builder().type("QUIT").sender("SEVER")
-                                .data("외부 접속이 감지되어 현재 세션을 종료합니다.").build()
-                )));
-            } catch (Exception e) {
-                System.out.println("Exception occurs while resolving duplicated Chat Session");
-                System.out.println("Sending Message to existing Session failed");
+            System.out.println("exist in sessions key");
+            ChatSession chatSession = sessions.get(nickname);
+            WebSocketSession existingSession = chatSession.getSession();
+            String existingBrowserSessionId = chatSession.getBrowserSession();
+
+            if (!existingBrowserSessionId.equals(browserSession)) { // 외부 접속이 되었을 때
+                chatSessionQuit(existingSession);
+                try { existingSession.sendMessage(new TextMessage(CinEffiUtils.getString(WebSocketMessage.builder()
+                        .type("QUIT").sender("SEVER").data("외부 접속이 감지되어 현재 세션을 종료합니다.").build())));
+                } catch (Exception e) {
+                    System.out.println("Exception occurs while resolving duplicated Chat Session");
+                    System.out.println("Sending Message to existing Session failed");
+                }
+                try { existingSession.close(CloseStatus.NORMAL); } catch (Exception e) {
+                    System.out.println("Exception occurs while resolving duplicated Chat Session");
+                    System.out.println("Closing existing Session failed");
+                }
             }
-            chatSessionQuit(existingSession);
-            try { existingSession.close(CloseStatus.SERVER_ERROR);}
-            catch (Exception e) {
-                System.out.println("Exception occurs while resolving duplicated Chat Session");
-                System.out.println("Closing existing Session failed");
+            else { // 그냥 또 한번 걸어준것일떄
+                sessionIds.remove(existingSession.getId());
+                sessions.put(nickname, chatSession.toBuilder().session(newSession).build());
+                try { existingSession.close(CloseStatus.NORMAL); } catch (Exception e) {
+                    System.out.println("Exception occurs while resolving re-connecting Chat Session");
+                    System.out.println("Sending Message to existing Session failed");
+                }
             }
         }
-        sessionIds.put(session.getId(), nickname);
-        sessions.put(nickname, ChatSession.builder().session(session).userId(userId).chatroomId(0L).build());
-//        queryLookers.put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
+        else { // 처음 등록되었을 때,
+            System.out.println("not exist in sessions key");
+            sessions.put(nickname, ChatSession.builder().session(newSession).userId(userId).chatroomId(0L).browserSession(browserSession).build());
+        }
+        sessionIds.put(newSession.getId(), nickname);
+        System.out.println("ChatController.chatSessionInit END");
+        //        queryLookers.put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
     }
 
     public void chatSessionQuit(WebSocketSession session) {

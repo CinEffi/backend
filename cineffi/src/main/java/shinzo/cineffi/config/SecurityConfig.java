@@ -52,7 +52,8 @@ public class SecurityConfig {
                                 "https://48fb-175-197-204-117.ngrok-free.app",
                                 "https://9e54-180-70-193-179.ngrok-free.app",
                                 "https://k7f10638b4382a.user-app.krampoline.com",
-                                "ws://localhost:4001"));
+                                "ws://localhost:4001",
+                                "https://ea6f-175-197-204-117.ngrok-free.app"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(60L);

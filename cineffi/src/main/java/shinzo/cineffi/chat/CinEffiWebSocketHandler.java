@@ -26,20 +26,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     private final ChatController chatController;
+    private final static Map<String, Long> beforeInitSockets = new ConcurrentHashMap<>();
+
 
     // 웹소켓 연결 시
-
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         try {
             URI uri = session.getUri();
-            String userId = uri.getQuery().split("=")[1];
-            System.out.println("userID!!!!!" + userId); // [TMP]
-            Long loginUserId = EncryptUtil.LongDecrypt(userId);
-            System.out.println("loginUserId = " + loginUserId);// [TMP]
-            session.getAttributes().put("userId", loginUserId);
-            chatController.chatSessionInit(loginUserId, session);
+            String userIdStr = uri.getQuery().split("=")[1];
+            Long userId = EncryptUtil.LongDecrypt(userIdStr);
+            System.out.println("userId = " + userId);
 
+            beforeInitSockets.put(session.getId(), userId);
+            // session.getAttributes().put("userId", loginUserId); 이러면 브라우저도 Long 데이터를 알게 되니까 안된다.
         } catch (CustomException e) {
             sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("[SERVER]").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
@@ -51,8 +51,10 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         try {
+            beforeInitSockets.remove(session.getId()); // 혹시 있을수도
             System.out.println("CinEffiWebSocketHandler.afterConnectionClosed [status] : " + status);
             chatController.chatSessionQuit(session);
+
         } catch (CustomException e) {
             System.out.println("[CustomException Occurs] : " + e.getErrorMsg().getDetail());
         }
@@ -63,7 +65,24 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         try {
             String payload = textMessage.getPayload();
             String type = CinEffiUtils.getObject(payload, "type", String.class);
+
+
+            if (type.equals("INIT")) {
+                System.out.println("INIT type Message called");
+                Long userId = beforeInitSockets.get(session.getId());
+                if (userId == null) throw new CustomException(ErrorMsg.INVALID_SOCKET_REQUEST);
+                beforeInitSockets.remove(session.getId()); // 바로 지워버리겠습니다.
+
+                String browserSession = CinEffiUtils.getObject(payload, "data", String.class);
+
+                System.out.println("browserSession = " + browserSession);
+
+                chatController.chatSessionInit(userId, session, browserSession);
+                return ;
+            }
+
             String nickname = ChatController.getNicknameFromSession(session);
+            if (nickname == null) { session.close(CloseStatus.SERVER_ERROR); }
 
             if (type.equals("LIST")) {
                 Boolean isOpen = CinEffiUtils.getObject(payload, "data", Boolean.class);

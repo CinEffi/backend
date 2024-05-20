@@ -13,4 +13,5 @@ public class ChatSession {
     private final WebSocketSession session;
     private Long userId;
     private Long chatroomId; // 0이면 쿼리중임
+    private String browserSession;
 }
