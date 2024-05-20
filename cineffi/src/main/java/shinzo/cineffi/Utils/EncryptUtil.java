@@ -10,11 +10,10 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-@Component
+
 public class EncryptUtil { //URL 암호화 복호화
 
-    @Value("${app.encryption.key}")
-    private String key;
+    private static String key;
     private static final String INIT_VECTOR = "encryptionIntVec";
     private static final byte[] FIXED_IV = {
             0x00, 0x01, 0x02, 0x03,
@@ -23,8 +22,12 @@ public class EncryptUtil { //URL 암호화 복호화
             0x0C, 0x0D, 0x0E, 0x0F
     };
 
+    public static void setKey(String key) {
+        EncryptUtil.key = key;
+    }
+
     //값을 암호화하는 메서드
-    public String LongEncrypt(Long value) {
+    public static String LongEncrypt(Long value) {
         try {
             String plainText = String.valueOf(value);
             IvParameterSpec ivParameterSpec = new IvParameterSpec(FIXED_IV);
@@ -41,11 +44,9 @@ public class EncryptUtil { //URL 암호화 복호화
         return null;
     }
 
-    //암호화된 값을 복호화하는 메서드
-
 
     //암호화된 값을 복호화하는 메서드
-    public Long LongDecrypt(String encrypted) {
+    public static Long LongDecrypt(String encrypted) {
         try {
             IvParameterSpec ivParameterSpec = new IvParameterSpec(FIXED_IV);
             SecretKeySpec sKeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");

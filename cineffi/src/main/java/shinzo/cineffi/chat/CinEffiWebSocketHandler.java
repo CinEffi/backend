@@ -11,6 +11,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import shinzo.cineffi.Utils.CinEffiUtils;
 import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.auth.AuthService;
+import shinzo.cineffi.domain.dto.ChatroomDTO;
 import shinzo.cineffi.domain.dto.CreateChatroomDTO;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.dto.SendChatMessageDTO;
@@ -25,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class CinEffiWebSocketHandler extends TextWebSocketHandler {
     private final ChatController chatController;
-    private final EncryptUtil encryptUtil;
+
     // 웹소켓 연결 시
 
     @Override
@@ -34,12 +35,13 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             URI uri = session.getUri();
             String userId = uri.getQuery().split("=")[1];
             System.out.println("userID!!!!!" + userId); // [TMP]
-            Long loginUserId = encryptUtil.LongDecrypt(userId);
+            Long loginUserId = EncryptUtil.LongDecrypt(userId);
             System.out.println("loginUserId = " + loginUserId);// [TMP]
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
+
         } catch (CustomException e) {
-            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
+            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("[SERVER]").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
             session.close(CloseStatus.SERVER_ERROR);
         }
@@ -65,6 +67,8 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
 
             if (type.equals("LIST")) {
                 Boolean isOpen = CinEffiUtils.getObject(payload, "data", Boolean.class);
+                // LIST를 요청하는 경로는 chatList여야만 합니다.// 그리고 그 경우 chatLookers에 포함시킵니다.
+                ChatController.getQueryLookers().put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
                 sendToSession(session, chatController.chatroomListSend(isOpen));
             } else if (type.equals("CREATE")) {
                 CreateChatroomDTO dto = CinEffiUtils.getObject(payload, "data", CreateChatroomDTO.class);
@@ -72,26 +76,29 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             } else if (type.equals("JOIN")) {
                 Long joinChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
                 sendToSession(session, chatController.chatroomJoin(nickname, joinChatroomId));
-                chatController.messageToChatroom(joinChatroomId, "SERVER", "[notice] : " + nickname + " 님이 입장하셨습니다.");
+                chatController.messageToChatroom(joinChatroomId, "[SERVER]:COME", nickname);
             } else if (type.equals("SEND")) {
                 SendChatMessageDTO dto = CinEffiUtils.getObject(payload, "data", SendChatMessageDTO.class);
                 chatController.messageToChatroom(dto.getChatroomId(), nickname, dto.getMessage());
             } else if (type.equals("EXIT")) {
                 Long exitChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
                 sendToSession(session, chatController.chatroomLeave(exitChatroomId, nickname));
+                chatController.messageToChatroom(exitChatroomId, "[SERVER]:LEAVE", nickname);
+                //chatController.messageToChatroom(exitChatroomId, "[SERVER]:EXIT", "[notice] : " + nickname + " 님이 퇴장하셨습니다.");
             } else if (type.equals("BACKUP")) { // [TMP]이렇게 하면 안되지만 테스트를 위하여
                 chatController.tmpForBackupTest(); // [TMP]이 메서드도 지울거임
             } else if (type.equals("CLOSE")) { // [TMP]
-                chatController.tmpForChatroomClose(); // [TMP]
+                Long chatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
+                chatController.chatroomClose(chatroomId); // [TMP]
             }
             else {
                 throw new CustomException(ErrorMsg.INVALID_TYPE_CALL);
             }
         } catch (CustomException e) {
-            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data(ResponseDTO
+            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("[SERVER]").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
         } catch (Exception e) {
-            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("SERVER").data("[Unhandled Error]" + e.getMessage()).build());
+            sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("[SERVER]").data("[Unhandled Error]" + e.getMessage()).build());
         }
     }
 

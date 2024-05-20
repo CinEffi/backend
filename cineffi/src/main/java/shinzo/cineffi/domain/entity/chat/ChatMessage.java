@@ -10,15 +10,17 @@ import java.time.LocalDateTime;
 @Entity
 @AllArgsConstructor
 @Builder
-
+@NoArgsConstructor
 public class ChatMessage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_id")
     private Long id;
 
-    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
-    @ManyToOne
-    private User sender;
+//    @JoinColumn(name = "sender_id", referencedColumnName = "user_id")
+//    @ManyToOne
+//    private User sender;
+    @Column(name = "sender")
+    private String sender;
 
     @JoinColumn(name = "chatroom_id", referencedColumnName = "chatroom_id")
     @ManyToOne
