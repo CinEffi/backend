@@ -18,8 +18,8 @@ public class JWTUtil {
 
     //    public static final long ACCESS_PERIOD = 1000L * 60L * 60L;
     //refresh 토큰 2주
-    public static final long ACCESS_PERIOD = 300000;//5분
-    public static final long REFRESH_PERIOD =  3600000;//1시간
+    public static final long ACCESS_PERIOD = 600000;//10분
+    public static final long REFRESH_PERIOD =  3600000*24*14;//2주
 
     //토큰 발급
     public static JWToken allocateToken(Long userSequence, String role) throws RuntimeException {

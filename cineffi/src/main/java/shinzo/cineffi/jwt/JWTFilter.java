@@ -6,10 +6,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import shinzo.cineffi.auth.AuthService;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.user.repository.UserAccountRepository;
@@ -26,10 +28,9 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if (
             //검사하긴하는데 있어도되고없어도되는애들+ 검사하면 안되는 애들
-                request.getRequestURI().startsWith("/api/auth") ||
-                        request.getRequestURI().equals("/api/movies/boxOffice") ||
+                (request.getRequestURI().startsWith("/api/auth") ||
                         request.getRequestURI().equals("/api/movies/init") ||
-                        request.getRequestURI().equals("/api/movies/update") ||
+                        request.getRequestURI().equals("/api/movies/boxOffice") ||
                         request.getRequestURI().equals("/api/movies/genre") ||
                         request.getRequestURI().equals("/api/movies/upcoming") ||
                         request.getRequestURI().equals("/api/movies/search")||
@@ -42,14 +43,17 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().matches("/api/reviews/\\d+")||
                         request.getRequestURI().equals("/api/reviews/hot")||
                         request.getRequestURI().equals("/api/reviews/new")||
-                        request.getRequestURI().matches("/api/movies/\\d+")
+                        request.getRequestURI().matches("/api/movies/\\d+"))
+                        && !request.getRequestURI().equals("/api/auth/user/check")
+                        && !request.getRequestURI().equals("/api/auth/userInfo")
+                        && !request.getRequestURI().equals("/api/auth/logout")
+                        && !request.getRequestURI().equals("/api/user/delete")
         ) {
             //토큰없어
-            if(JWTUtil.resolveAccessToken(request) == null) {//검사안당함 로직
+            if(!JWTUtil.isValidToken(JWTUtil.resolveAccessToken(request))) {//검사안당함 로직
                 doFilter(request, response, filterChain);
             }
             else{
-//                jwtFiltering(request, response);
                 String access = JWTUtil.resolveAccessToken(request);
                 Authentication authentication = jwtProvider.getAuthentication(access); // 정상 토큰이면 SecurityContext 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -71,8 +75,8 @@ public class JWTFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } else if (refresh == null) {// ACCESS 토큰 유효기간 지남.+ REFRESH 없으면 -> 토큰 만료 되었습니다.
             throw new CustomException(ErrorMsg.ACCESS_TOKEN_EXPIRED);
-        } else { // ACCESS 토큰 유효기간 지남.+ REFRESH 있음
 
+        } else { // ACCESS 토큰 유효기간 지남.+ REFRESH 있음
             if (!JWTUtil.isValidToken(refresh))
                 throw new CustomException(ErrorMsg.REFRESH_TOKEN_EXPIRED);
 
