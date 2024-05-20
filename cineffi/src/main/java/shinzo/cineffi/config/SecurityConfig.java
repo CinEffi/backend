@@ -47,7 +47,7 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedOrigins(List.of(
-                                "https://k7f10638b4382a.user-app.krampoline.com",
+                                "https://k0894347bbd29a.user-app.krampoline.com",
                                 "http://localhost:3000",
                                 "http://localhost:3003",
                                 "https://48fb-175-197-204-117.ngrok-free.app",
