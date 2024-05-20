@@ -29,6 +29,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 request.getRequestURI().startsWith("/api/auth") ||
                         request.getRequestURI().equals("/api/movies/boxOffice") ||
                         request.getRequestURI().equals("/api/movies/init") ||
+                        request.getRequestURI().equals("/api/movies/update") ||
                         request.getRequestURI().equals("/api/movies/genre") ||
                         request.getRequestURI().equals("/api/movies/upcoming") ||
                         request.getRequestURI().equals("/api/movies/search")||
