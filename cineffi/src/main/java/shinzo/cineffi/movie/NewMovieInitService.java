@@ -67,14 +67,18 @@ public class NewMovieInitService {
     @Scheduled(cron = "0 0 0 * * ?")
     public List<String> updateData(){
         int nowYear = LocalDate.now().getYear();
-        int nextYear = nowYear + 1;
-        int initYear = LocalDate.now().getMonthValue() > 11 ? nextYear : nowYear;
 
-        List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(initYear);
-        List<Movie> kobisBasicDatas = requestKobisDatas(initYear);
-        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas, initYear);
+        List<Movie> TMDBBasicDatas = getTMDBBasicDatasByDate(nowYear);
+        List<Movie> kobisBasicDatas = requestKobisDatas(nowYear);
 
+        if(LocalDate.now().getMonthValue() >= 10){
+            TMDBBasicDatas.addAll(getTMDBBasicDatasByDate(nowYear+1));
+            kobisBasicDatas.addAll(requestKobisDatas(nowYear+1));
+        }
+
+        List<Movie> mixBasicDatas = returnMIxDatas(TMDBBasicDatas, kobisBasicDatas, nowYear);
         requestDetailDatas(mixBasicDatas);
+
         boxOfficeDataHandler.dailyBoxOffice();
 
         return mixBasicDatas.stream().map(Movie::getTitle).toList();
@@ -203,7 +207,7 @@ public class NewMovieInitService {
             Map<String, Object> response = (Map<String, Object>) requestData(String.format("%s/movie/searchMovieList.json?key=%s&openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d",
                     KOBIS_BASEURL, KOBIS_API_KEY, year, year, curPage), KOBIS);
 
-            if(response.get("movieListResult")  == null) {
+            if(response.containsKey("faultInfo") && ((Map<String, String>) response.get("faultInfo")).get("errorCode").equals("320011")) {
                 System.out.println("코비스 키 만료됨!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 break;
             }
@@ -229,11 +233,20 @@ public class NewMovieInitService {
     private List<Movie> returnMIxDatas(List<Movie> TMDBMovies, List<Movie> kobisMovies, int year) {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_MAX);
         Set<String> deDuplication = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        //코비스 데이터 검색 쉽도록 맵화
+        Map<String, Movie> kobisKorTitleMap = new ConcurrentHashMap<>();
+        Map<String, Movie> kobisEngTitleMap = new ConcurrentHashMap<>();
+        for (Movie kobisMovie : kobisMovies) {
+            kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
+            if (kobisMovie.getEngTitle() != null) {
+                kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
+            }
+        }
 
         List<Future<Movie>> futures = new ArrayList<>();
         for (Movie TMDBMovie : TMDBMovies) {
             Future<Movie> future = executor.submit(() -> {
-                return processMovie(TMDBMovie, kobisMovies, deDuplication, year);
+                return processMovie(TMDBMovie, kobisKorTitleMap, kobisEngTitleMap, deDuplication, year);
             });
             futures.add(future);
         }
@@ -242,9 +255,7 @@ public class NewMovieInitService {
         for (Future<Movie> future : futures) {
             try {
                 Movie movie = future.get();
-                if (movie != null) {
-                    result.add(movie);
-                }
+                if (movie != null) result.add(movie);
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
@@ -254,20 +265,21 @@ public class NewMovieInitService {
         return totalSave(result); // 데이터베이스 저장 호출
     }
 
-    private Movie processMovie(Movie TMDBMovie, List<Movie> kobisMovies, Set<String> deDuplication, int year) {
+    private Movie processMovie(Movie TMDBMovie, Map<String, Movie> kobisKorTitleMap, Map<String, Movie> kobisEngTitleMap, Set<String> deDuplication, int year) {
         String korTitleMapKey = makeNoBlankStr(TMDBMovie.getTitle());
         if (deDuplication.contains(korTitleMapKey)) return null;
-        if(TMDBMovie.getReleaseDate().getYear() < year){
+
+        //재개봉 영화라 개봉일이 과거면 kobis 요청 다시 보내기
+        if(TMDBMovie.getReleaseDate().getYear() < year && !deDuplication.contains(Integer.toString(year))){
             List<Movie> newKobisMovies = requestKobisDatas(TMDBMovie.getReleaseDate().getYear());
-            kobisMovies.addAll(newKobisMovies);
-        }
-        //코비스 데이터 규격화
-        Map<String, Movie> kobisKorTitleMap = new ConcurrentHashMap<>();
-        Map<String, Movie> kobisEngTitleMap = new ConcurrentHashMap<>();
-        for (Movie kobisMovie : kobisMovies) {
-            kobisKorTitleMap.put(makeNoBlankStr(kobisMovie.getTitle()), kobisMovie);
-            if (kobisMovie.getEngTitle() != null) {
-                kobisEngTitleMap.put(makeNoBlankStr(kobisMovie.getEngTitle()).toLowerCase(), kobisMovie);
+            if(!newKobisMovies.isEmpty()){
+                deDuplication.add(Integer.toString(year));
+                for(Movie newKobis : newKobisMovies){
+                    kobisKorTitleMap.put(makeNoBlankStr(newKobis.getTitle()), newKobis);
+                    if (newKobis.getEngTitle() != null) {
+                        kobisEngTitleMap.put(makeNoBlankStr(newKobis.getEngTitle()).toLowerCase(), newKobis);
+                    }
+                }
             }
         }
 
@@ -281,6 +293,7 @@ public class NewMovieInitService {
             }
             if (TMDBMovie.getEngTitle() != null) {
                 String engTitleMapKey = makeNoBlankStr(TMDBMovie.getEngTitle()).toLowerCase();
+                if (deDuplication.contains(engTitleMapKey)) return null;
                 if (kobisEngTitleMap.containsKey(engTitleMapKey)) {
                     deDuplication.add(engTitleMapKey);
                     return kobisEngTitleMap.get(engTitleMapKey)
@@ -339,12 +352,16 @@ public class NewMovieInitService {
         Map<String, Object> result = new HashMap<>();
         String kobisCode = movie.getKobisCode();
         int tmdbId = movie.getTmdbId();
-
-        // KOBIS 요청 수행
-        Map<String, Object> kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
+        Map<String, Object> kobisDetails = new HashMap<>();
+        Map<String, Object> tmdbDetails = new HashMap<>();
 
         // TMDB 요청 수행
-        Map<String, Object> tmdbDetails = (Map<String, Object>) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
+        Map<String, Object> tmdbDetailsDatas = (Map<String, Object>) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + tmdbId + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
+        if(!tmdbDetailsDatas.isEmpty() && tmdbDetailsDatas != null) tmdbDetails = tmdbDetailsDatas;
+
+        // KOBIS 요청 수행
+        if(!tmdbDetails.isEmpty()) kobisDetails = (Map<String, Object>) ((Map<String, Object>) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?key=" + KOBIS_API_KEY + "&movieCd=" + kobisCode, KOBIS)).get("movieInfoResult");
+
 
         if (!tmdbDetails.isEmpty() && !kobisDetails.isEmpty()) {
             result.put("kobisDetails", kobisDetails);
@@ -354,7 +371,7 @@ public class NewMovieInitService {
         return result;
     }
     private Object requestData(String urlString, InitType type) {
-        RestTemplate restTemplate = new RestTemplate();
+//        RestTemplate restTemplate = new RestTemplate();
         Object result = new HashMap<>();
         try {
             HttpHeaders headers = new HttpHeaders();
