@@ -31,7 +31,11 @@ public class AuthController {
     @Value("${kakao.redirect_url}")
     private String REDIRECT_URL;
 
+    @Value("${kakao.deleted_redirect_url}")
+    private String DELETED_REDIRECT_URL;
+
     @GetMapping("/auth/login/kakao")
+
     public ResponseEntity<ResponseDTO<Object>> loginKakao(@RequestParam final String code) throws JsonProcessingException {
 
         //인가코드로 카카오 토큰 발급
@@ -39,9 +43,9 @@ public class AuthController {
         //카카오 토큰으로 필요하다면 회원가입하고 userId 반환
         Long userId = authService.loginByKakao(kakaoToken.getAccessToken());
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        if(loginUserId==null) {
+        if (loginUserId == null) {
             if (userId == -1) {
-                String redirectUrl = "http://localhost:3000/auth/deletedaccount";
+                String redirectUrl = DELETED_REDIRECT_URL;
                 //변경 필요
                 ResponseDTO<Object> responseDTO = ResponseDTO.<Object>builder()
                         .isSuccess(false)
@@ -51,11 +55,11 @@ public class AuthController {
                         .location(URI.create(redirectUrl))
                         .body(responseDTO);
             }
-        }else{
+        } else {
             authService.logout(loginUserId);
         }
         LoginResponseDTO userInfo = authService.userInfo(userId);
-        return redirectauthLogin(userId,userInfo);
+        return redirectauthLogin(userId, userInfo);
 
     }
 
@@ -85,8 +89,8 @@ public class AuthController {
             if (userId == null) {
                 return createErrorResponse(ErrorMsg.EMPTY_USER);
             }
-        }else{
-        authService.logout(loginUserId);
+        } else {
+            authService.logout(loginUserId);
         }
         boolean loginSuccess = authService.emailLogin(request);
         if (loginSuccess) {
@@ -106,6 +110,7 @@ public class AuthController {
                         .message(errorMsg.getDetail())
                         .build());
     }
+
     private ResponseEntity<ResponseDTO<Object>> authLogin(Long userId) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
         HttpHeaders headers = (HttpHeaders) result[0];
@@ -115,6 +120,7 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok().headers(headers).body(responseDTO);
     }
+
     private ResponseEntity<ResponseDTO<Object>> redirectauthLogin(Long userId, LoginResponseDTO userInfo) throws JsonProcessingException {
         Object[] result = authService.makeCookie(userId);
         HttpHeaders headers = (HttpHeaders) result[0];
@@ -178,11 +184,12 @@ public class AuthController {
             return ResponseEntity.ok(responseDTO);
         }
     }
+
     @PostMapping("/auth/logout")
-    public ResponseEntity<ResponseDTO<?>> logout()  {
+    public ResponseEntity<ResponseDTO<?>> logout() {
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
-        else{
+        else {
             Object[] result = authService.logout(loginUserId);
             //텅빈 쿠키 담아서 쿠키 전달하기
             HttpHeaders headers = (HttpHeaders) result[0];
@@ -196,10 +203,10 @@ public class AuthController {
 
 
     @GetMapping("/auth/user/check")
-    public ResponseEntity<ResponseDTO<?>> usercheck(){
+    public ResponseEntity<ResponseDTO<?>> usercheck() {
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
-        else{
+        else {
             Map<String, Long> userJson = new HashMap<>();
             userJson.put("userId", loginUserId);
 
@@ -211,20 +218,20 @@ public class AuthController {
             return ResponseEntity.ok(responseDTO);
         }
     }
+
     @PostMapping("/user/delete")
-    public ResponseEntity<ResponseDTO<?>> userDelete(){
+    public ResponseEntity<ResponseDTO<?>> userDelete() {
         Long loginUserId = AuthService.getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
-        else{
+        else {
             boolean isSuccess = authService.userdelete(loginUserId);
-            if(isSuccess) {
+            if (isSuccess) {
                 ResponseDTO<?> responseDTO = ResponseDTO.builder()
                         .isSuccess(true)
                         .message(SuccessMsg.SUCCESS.getDetail())
                         .build();
                 return ResponseEntity.ok(responseDTO);
-            }
-            else {
+            } else {
                 return ResponseEntity.status(ErrorMsg.ISDELETE_USER.getHttpStatus())
                         .body(ResponseDTO.<Object>builder()
                                 .isSuccess(false)
