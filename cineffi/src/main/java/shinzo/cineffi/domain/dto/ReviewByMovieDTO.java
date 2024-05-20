@@ -14,7 +14,7 @@ public class ReviewByMovieDTO {
     private String userId;
     private String nickname;
     private Integer level;
-    private byte[] userProfileImage;// byte[] 여야 할까 Byte[]여야 할까
+    private String userProfileImage;
     private Boolean isCertified;
     private Boolean isBad;
     private String content;

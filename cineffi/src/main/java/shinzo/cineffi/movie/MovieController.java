@@ -41,16 +41,17 @@ public class MovieController {
 
     @GetMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
-//        long beforeTime = System.currentTimeMillis();
+        long beforeTime = System.currentTimeMillis();
 
         newMovieInitService.initData(year);
 
-//        long afterTime = System.currentTimeMillis();
-//        long secDiffTime = (afterTime - beforeTime)/1000;
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime)/1000;
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(secDiffTime)
                         .build());
     }
 
