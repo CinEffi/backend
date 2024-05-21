@@ -68,7 +68,9 @@ public class MovieController {
 
     @GetMapping("/genre")
     public ResponseEntity<ResponseDTO<?>> findRandomGenreList(@RequestParam String genre){
+        System.out.println("[*+*]MovieController.findRandomGenreList");
         GenreMovieListDTO movieList = movieService.findGenreList(genre);
+        System.out.println("[*+*]MovieController.findRandomGenreList");
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
