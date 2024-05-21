@@ -107,7 +107,7 @@ email:
 logging:
   level:
     org.springframework.mail: ERROR
-    org.springframework.web: trace
+    org.springframework.web: ERROR
     org.hibernate.SQL: ERROR
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
 
