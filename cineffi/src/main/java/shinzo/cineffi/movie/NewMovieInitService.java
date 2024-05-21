@@ -189,15 +189,25 @@ public class NewMovieInitService {
             List<Map<String, Object>> maps = (List<Map<String, Object>>) response.get("results");
             maxPage = (int) response.get("total_pages");
             for (Map<String, Object> map : maps) {
+                //중복 제거
                 if(map == null || movieRepo.existsMovieByTmdbId((int) map.get("id"))) continue;
-                Movie movie = TMDBMapToMovie(map);
-                if (!movieRepo.existsByTmdbId(movie.getTmdbId())) {
-                    resultMovie.add(movie);
+                //19금 제거
+                if(((List<Integer>) map.get("genre_ids")).contains(10749)) {
+                    String title = (String) map.get("title");
+                    String overview = (String) map.get("overview");
+                    if (title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
+                            || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")
+                        || overview.contains("섹스") || overview.contains("무삭제") || overview.contains("처제") || overview.contains("형수") || overview.contains("가슴 큰") || overview.contains("룸싸롱") || overview.contains("성행각")
+                            || overview.contains("불륜") || overview.contains("왕가슴") || overview.contains("성감대") || overview.contains("유혹하는 유부녀") || overview.contains("정사를 나") || overview.contains("몸을 탐닉"))
+                        continue;
                 }
+                Movie movie = TMDBMapToMovie(map);
+                resultMovie.add(movie);
             }
         }
         return new Object[]{resultMovie, maxPage};
     }
+
     private List<Movie> requestKobisDatas(int year) {
         List<Movie> result = new ArrayList<>();
         int curPage = 1;
@@ -218,7 +228,17 @@ public class NewMovieInitService {
             List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
             if (movieMapList != null && !movieMapList.isEmpty()) {
                 for (Map<String, Object> movieMap : movieMapList) {
-                    if(((String) movieMap.get("genreAlt")).contains("에로") || movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd")) || ((String) movieMap.get("movieNm")).contains("섹스")) continue;
+                    //중복 제거
+                    if(movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd"))) continue;
+                    //19금 제거
+                    if(((String) movieMap.get("genreAlt")).contains("에로") || ((String) movieMap.get("genreAlt")).isEmpty()) continue;
+                    if(((String) movieMap.get("genreAlt")).contains("로맨스")) {
+                        String title = (String) movieMap.get("movieNm");
+                        if (title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
+                                || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")|| title.contains("젖어버린 속살"))
+                            continue;
+                    }
+
                     Movie kobisMovie = kobisMapToMovie(movieMap);
                     result.add(kobisMovie);
                 }
