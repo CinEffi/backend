@@ -9,7 +9,7 @@ public class CinEffiUtils {
 
     public static Float averageScore(Float sum, Integer count) {
         if(sum == null || count == null) return null;
-        return 0 < count ? Math.round((sum / count) * 10.0f) / 10.0f : null;
+        return 0 < count ? Math.round((sum / count) * 10.0f) / 10.0f : 0.0f;
     }
 
     public static <T> T getObject(final String message, String key, Class<T> classtype) throws Exception {
