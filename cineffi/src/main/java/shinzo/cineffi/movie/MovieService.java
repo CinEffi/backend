@@ -1,6 +1,5 @@
 package shinzo.cineffi.movie;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ import shinzo.cineffi.score.repository.ScoreRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import static shinzo.cineffi.domain.enums.Genre.*;
+
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service
@@ -53,12 +52,12 @@ public class MovieService {
         if(genre == null || genre.isEmpty()) return GenreMovieListDTO.builder().genre("없는 장르입니다").movieList(new ArrayList<>()).build();
 
         Pageable pageable = (Pageable) PageRequest.of(0, 20);
-        List<InListMoviveDTO> dtoList = new ArrayList<>();
+        List<InListMovieDTO> dtoList = new ArrayList<>();
 
         List<Movie> movieList = movieRepo.findGenreList(Genre.getEnum(genre), pageable);
         if(!movieList.isEmpty()) {
             for (Movie movie : movieList) {
-                InListMoviveDTO dto = InListMoviveDTO.builder()
+                InListMovieDTO dto = InListMovieDTO.builder()
                         .movieId(movie.getId())
                         .title(movie.getTitle())
                         .releaseDate(movie.getReleaseDate())
