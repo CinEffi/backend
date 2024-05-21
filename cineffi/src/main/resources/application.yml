@@ -110,6 +110,7 @@ logging:
     org.springframework.web: ERROR
     org.hibernate.SQL: ERROR
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    shinzo.cineffi.exception.CustomException: OFF
 
 kakao:
   rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
