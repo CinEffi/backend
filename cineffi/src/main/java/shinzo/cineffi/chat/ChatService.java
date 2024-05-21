@@ -33,6 +33,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
@@ -114,8 +115,6 @@ public class ChatService {
         return ChatroomListDTO.builder().list(chatroomDTOList).count(chatroomDTOList.size()).isOpen(false).build();
     }
 
-
-
     public void sendMessageToChatroom(Long chatroomId, String nickname, String content) {
         if (!nickname.equals("[SERVER]") && !nickname.equals("[SERVER]:COME") && !nickname.equals("[SERVER]:LEAVE") && !nickname.equals("[SERVER]:END")) {
             Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, nickname);
@@ -125,7 +124,7 @@ public class ChatService {
             if (((RedisUserChat) obj).getIsMuted())
                 throw new CustomException(ErrorMsg.USER_MUTED);
         }
-        LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
         redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + "|" + content + "|" + now);
         if (nickname.equals("[SERVER]:UPDATE")) return;
         else if (nickname.startsWith("[SERVER]:"))
