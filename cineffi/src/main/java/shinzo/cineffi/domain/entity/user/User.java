@@ -9,6 +9,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.chat.redisObject.RedisUser;
 import shinzo.cineffi.domain.entity.BaseEntity;
+import shinzo.cineffi.domain.enums.ScoreTypeEvent;
 
 import java.util.Base64;
 
@@ -66,22 +67,28 @@ public class User extends BaseEntity {
 
     private static int maxExp(int level) { return ((Long) Math.round(5 * Math.pow(1.1, level - 1))).intValue(); }
 
-    private void refreshExpStatus() {
-        if (this.exp < 0) this.exp += maxExp(--this.level);
+    private ScoreTypeEvent refreshExpStatus() {
+        if (this.exp < 0) {
+            this.exp += maxExp(--this.level);
+            if (this.level == 9)
+                return ScoreTypeEvent.DOWN_LV10;
+        }
         else {
             int maxExpAmount = maxExp(this.level);
             if (maxExpAmount <= this.exp) {
                 this.exp -= maxExpAmount;
                 this.level++;
+                if (this.level == 10) return ScoreTypeEvent.UP_LV10;
             }
         }
+        return ScoreTypeEvent.NOTHING;
     }
 
-    public User addExp(int expDelta) {
+    public ScoreTypeEvent addExp(int expDelta) {
         this.exp += expDelta;
-        refreshExpStatus();
-        return this;
+        return refreshExpStatus();
     }
+
     // 유저의 Certified 상태를 바꾸는 메서드
     public void changeUserCertifiedStatus(Boolean flag) {
         this.isCertified = flag;
@@ -89,11 +96,11 @@ public class User extends BaseEntity {
 
     public RedisUser getRedisUser() {
         return RedisUser.builder()
-//                .nickname(this.nickname) // Redis에서는 nickname이 식별자인데, key로 담기니까 그거 가져가셈
-                .isBad(this.isBad)
-                .isCertified(this.isCertified)
-                .id(this.id)
-                .level(this.level)
-                .build();
+          //.nickname(this.nickname) // Redis에서는 nickname이 식별자인데, key로 담기니까 그거 가져가셈
+            .isBad(this.isBad)
+            .isCertified(this.isCertified)
+            .id(this.id)
+            .level(this.level)
+            .build();
     }
 }

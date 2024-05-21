@@ -9,13 +9,15 @@ import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserAnalysis;
-import shinzo.cineffi.domain.enums.Genre;
+import shinzo.cineffi.domain.enums.ScoreTypeEvent;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.AvgScoreRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.repository.UserRepository;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -54,5 +56,29 @@ public class ScoreService {
         if (10 <= user.getLevel()) avgScore.setLevelAvgScore(deltaScoreSum, deltaScoreCount);
         if (user.getIsCertified()) avgScore.setCinephileAvgScore(deltaScoreSum, deltaScoreCount);
         avgScoreRepository.save(avgScore);
+    }
+
+    public void scoreTypeRefresh(Long userId, ScoreTypeEvent scoreTypeEvent) {
+
+        if (scoreTypeEvent == ScoreTypeEvent.NOTHING)
+            return ;
+
+        List<Score> scoreListToRefresh = scoreRepository.findAllByUserId(userId);
+        for (Score score : scoreListToRefresh) {
+            AvgScore avgScore = score.getMovie().getAvgScore();
+            if (scoreTypeEvent == ScoreTypeEvent.UP_LV10) {
+                avgScore.setLevelAvgScore(score.getScore(), 1);
+            }
+            else if (scoreTypeEvent == ScoreTypeEvent.DOWN_LV10) {
+                avgScore.setLevelAvgScore(-score.getScore(), -1);
+            }
+            else if (scoreTypeEvent == ScoreTypeEvent.CINEPHIL) {
+                avgScore.setCinephileAvgScore(score.getScore(), 1);
+            }
+            else if (scoreTypeEvent == ScoreTypeEvent.UN_CINEPHIL) {
+                avgScore.setCinephileAvgScore(-score.getScore(), -1);
+            }
+            avgScoreRepository.save(avgScore);
+        }
     }
 }

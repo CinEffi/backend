@@ -17,11 +17,13 @@ import shinzo.cineffi.domain.entity.review.ReviewLike;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserAnalysis;
+import shinzo.cineffi.domain.enums.ScoreTypeEvent;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.review.repository.ReviewLikeRepository;
 import shinzo.cineffi.review.repository.ReviewRepository;
+import shinzo.cineffi.score.ScoreService;
 import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.repository.UserRepository;
 
@@ -39,6 +41,7 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final ScoreRepository scoreRepository;
+    private final ScoreService scoreService;
 //    private final EncryptUtil encryptUtil;
 
 
@@ -138,7 +141,10 @@ public class ReviewService {
         // 리뷰에 딸린 모든 좋아요 삭제
         List<ReviewLike> reviewLikeList = reviewLikeRepository.findByReview(review);
         // 경험치도 뺏어가고 // 레벨도 낮춰주고
-        userRepository.save(user.addExp(-reviewLikeList.size()));
+
+        user.addExp(-reviewLikeList.size());
+        userRepository.save(user);
+
         reviewLikeRepository.deleteAll(reviewLikeList);
         user.getUserActivityNum().subCollectionNum();
         userRepository.save(user);
@@ -153,9 +159,11 @@ public class ReviewService {
             throw new CustomException(ErrorMsg.REVIEW_LIKE_EXIST);
         ReviewLike reviewLike = reviewLikeRepository.save(ReviewLike.builder().review(review).user(user).build());
         reviewRepository.save(review.addLikeNum());
-        review.getUser().addExp(1);
+        ScoreTypeEvent scoreTypeEvent = review.getUser().addExp(1);
+        scoreService.scoreTypeRefresh(userId, scoreTypeEvent);
         return reviewLike.getId();
     }
+
     // 평론 좋아요 취소
     public Long unlikeReview(Long reviewId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(
@@ -166,7 +174,8 @@ public class ReviewService {
         if (reviewLike == null) throw new CustomException(ErrorMsg.REVIEW_LIKE_NOT_EXIST);
         reviewLikeRepository.delete(reviewLike);
         reviewRepository.save(review.subLikeNum());
-        review.getUser().addExp(-1);
+        ScoreTypeEvent scoreTypeEvent = review.getUser().addExp(-1);
+        scoreService.scoreTypeRefresh(userId, scoreTypeEvent);
         return reviewLike.getId();
     }
 
@@ -239,10 +248,11 @@ public class ReviewService {
         return ReviewLookupListDTO.builder().reviews(reviewLookupDTOList)
                 .totalPageNum(reviewPage.getTotalPages()).build();
     }
+
     public String encodeImage(byte[] imageData) {
         String baseImgStr = "data:image/png;base64,";
         String result = Base64.getEncoder().encodeToString(imageData);
-
         return baseImgStr + result;
     }
+
 }
