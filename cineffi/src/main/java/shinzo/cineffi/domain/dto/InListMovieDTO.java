@@ -1,6 +1,5 @@
 package shinzo.cineffi.domain.dto;
 
-import jakarta.persistence.Lob;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +9,7 @@ import java.time.LocalDate;
 @Data
 @Builder(toBuilder = true)
 @AllArgsConstructor
-public class InListMoviveDTO {
+public class InListMovieDTO {
     private Long movieId;
     private String title;
     private LocalDate releaseDate;

@@ -3,9 +3,7 @@ package shinzo.cineffi.domain.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import shinzo.cineffi.domain.enums.Genre;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -13,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 public class GenreMovieListDTO {
     private String genre;
-    private List<InListMoviveDTO> movieList;
+    private List<InListMovieDTO> movieList;
 }

@@ -33,6 +33,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Collectors;
@@ -57,21 +58,15 @@ public class ChatService {
 
     public String userToRedis(User user) {
         RedisUser redisUser = user.getRedisUser();
-        System.out.println("redisUser = " + redisUser); // [TMP]
-        System.out.println("redisUser.getIsBad() = " + redisUser.getIsBad()); // [TMP]
-        System.out.println("redisUser.getIsCertified() = " + redisUser.getIsCertified()); // [TMP]
-        System.out.println("redisUser.getId() = " + redisUser.getId()); // [TMP]
-        System.out.println("redisUser.getLevel() = " + redisUser.getLevel()); // [TMP]
 
         String nickname = user.getNickname();
-        System.out.println("nickname = " + nickname); // [TMP]
         redisTemplate.opsForHash().put("redisUsers", nickname, redisUser);
-        System.out.println("redisTemplate.opsForHash().get(\"users\", nickname) = " + (RedisUser) redisTemplate.opsForHash().get("redisUsers", nickname)); // [TMP]
         return nickname;
     }
 
     public String chatUserInit(Long userId) {
-        return userToRedis(userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND)));
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        return userToRedis(user);
     }
 
     public void chatUserQuit(String nickname) {
@@ -120,8 +115,6 @@ public class ChatService {
         return ChatroomListDTO.builder().list(chatroomDTOList).count(chatroomDTOList.size()).isOpen(false).build();
     }
 
-
-
     public void sendMessageToChatroom(Long chatroomId, String nickname, String content) {
         if (!nickname.equals("[SERVER]") && !nickname.equals("[SERVER]:COME") && !nickname.equals("[SERVER]:LEAVE") && !nickname.equals("[SERVER]:END")) {
             Object obj = redisTemplate.opsForHash().get("userlist:" + chatroomId, nickname);
@@ -131,7 +124,7 @@ public class ChatService {
             if (((RedisUserChat) obj).getIsMuted())
                 throw new CustomException(ErrorMsg.USER_MUTED);
         }
-        LocalDateTime now = LocalDateTime.now(); //LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
         redisTemplate.convertAndSend("chatroom:" + chatroomId, nickname + "|" + content + "|" + now);
         if (nickname.equals("[SERVER]:UPDATE")) return;
         else if (nickname.startsWith("[SERVER]:"))
@@ -386,6 +379,24 @@ public class ChatService {
         chatroomRepository.save(chatroomRepository.findById(chatroomId).orElseThrow(
                 () -> new CustomException(ErrorMsg.CHATROOM_NON_FOUND)).updateIsDelete(true));
         //chatroomRepository.updateIsDeleteById(chatroomId, true);
+    }
+
+
+    public InChatroomInfoDTO readClosedChatroom(String nickname, Long chatroomId) {
+        Chatroom chatroom = chatroomRepository.findByIdAndIsDeleteTrue(chatroomId).toJavaUtil().orElseThrow(() -> new CustomException(ErrorMsg.CHATROOM_NON_FOUND));
+        ChatroomBriefDTO chatroomBriefDTO = ChatroomBriefDTO.builder().title(chatroom.getTitle()).closedAt(chatroom.getClosedAt().toString())
+                .tags(chatroom.getTagList().stream().map(v -> v.getContent()).collect(Collectors.toList())).build();
+        List<ChatMessage> chatMessageList = chatMessageRepository.findAllByChatroomIdOrderByTimestampAsc(chatroomId);
+        List<ChatLogDTO> chatLogDTOList = new ArrayList<>();
+        for (ChatMessage chatMessage : chatMessageList) {
+            String sender = chatMessage.getSender();
+            chatLogDTOList.add(ChatLogDTO.builder()
+                    .nickname(sender)
+                    .content(chatMessage.getContent())
+                    .timestamp(chatMessage.getTimestamp())
+                    .mine(sender.equals(nickname)).build());
+        }
+        return InChatroomInfoDTO.builder().chatroomBriefDTO(chatroomBriefDTO).chatLogDTOList(chatLogDTOList).joinedChatUserDTOList(null).build();
     }
 
 }

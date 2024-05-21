@@ -34,9 +34,7 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
         try {
             URI uri = session.getUri();
             String userId = uri.getQuery().split("=")[1];
-            System.out.println("userID!!!!!" + userId); // [TMP]
             Long loginUserId = EncryptUtil.LongDecrypt(userId);
-            System.out.println("loginUserId = " + loginUserId);// [TMP]
             session.getAttributes().put("userId", loginUserId);
             chatController.chatSessionInit(loginUserId, session);
 
@@ -85,15 +83,17 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
                 sendToSession(session, chatController.chatroomLeave(exitChatroomId, nickname));
                 chatController.messageToChatroom(exitChatroomId, "[SERVER]:LEAVE", nickname);
                 //chatController.messageToChatroom(exitChatroomId, "[SERVER]:EXIT", "[notice] : " + nickname + " 님이 퇴장하셨습니다.");
-            } else if (type.equals("BACKUP")) { // [TMP]이렇게 하면 안되지만 테스트를 위하여
-                chatController.tmpForBackupTest(); // [TMP]이 메서드도 지울거임
-            } else if (type.equals("CLOSE")) { // [TMP]
-                Long chatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
-                chatController.chatroomClose(chatroomId); // [TMP]
-            }
-            else {
+            } else if (type.equals("READ")) {
+                Long readChatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
+                sendToSession(session, chatController.closedChatroomRead(nickname, readChatroomId));
+            } else {
                 throw new CustomException(ErrorMsg.INVALID_TYPE_CALL);
             }
+//            else if (type.equals("CLOSE")) { // [TMP]
+//                Long chatroomId = CinEffiUtils.getObject(payload, "data", Long.class);
+//                chatController.chatroomClose(chatroomId); // [TMP]
+//            }
+
         } catch (CustomException e) {
             sendToSession(session, WebSocketMessage.builder().type("ERROR").sender("[SERVER]").data(ResponseDTO
                     .builder().isSuccess(false).message(e.getErrorMsg().getDetail()).build()).build());
