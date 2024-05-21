@@ -90,10 +90,10 @@ public class User extends BaseEntity {
     public RedisUser getRedisUser() {
         return RedisUser.builder()
 //                .nickname(this.nickname) // Redis에서는 nickname이 식별자인데, key로 담기니까 그거 가져가셈
-                .isBad(isBad)
-                .isCertified(isCertified)
+                .isBad(this.isBad)
+                .isCertified(this.isCertified)
                 .id(this.id)
+                .level(this.level)
                 .build();
     }
-
 }

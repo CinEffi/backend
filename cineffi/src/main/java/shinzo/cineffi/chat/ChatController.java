@@ -49,22 +49,29 @@ public class ChatController {
             WebSocketSession existingSession = sessions.get(nickname).getSession();
             try {
                 existingSession.sendMessage(new TextMessage(CinEffiUtils.getString(
-                        WebSocketMessage.builder().type("QUIT").sender("SEVER")
-                                .data("외부 접속이 감지되어 현재 세션을 종료합니다.").build()
+                        WebSocketMessage.builder().type("QUIT").sender("[SERVER]")
+                                .data("새로운 세션 접속이 감지되어 현재 세션을 종료합니다.").build()
                 )));
             } catch (Exception e) {
                 System.out.println("Exception occurs while resolving duplicated Chat Session");
                 System.out.println("Sending Message to existing Session failed");
             }
-            chatSessionQuit(existingSession);
+//            chatSessionQuit(existingSession);
+            sessionIds.remove(existingSession.getId());
+            ChatSession chatSession = sessions.get(nickname);
+            sessions.put(nickname, chatSession.toBuilder().session(session).build());
+
             try { existingSession.close(CloseStatus.SERVER_ERROR);}
             catch (Exception e) {
                 System.out.println("Exception occurs while resolving duplicated Chat Session");
                 System.out.println("Closing existing Session failed");
             }
         }
+        else {
+            sessions.put(nickname, ChatSession.builder().session(session).userId(userId).chatroomId(0L).build());
+        }
         sessionIds.put(session.getId(), nickname);
-        sessions.put(nickname, ChatSession.builder().session(session).userId(userId).chatroomId(0L).build());
+
 //        queryLookers.put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
     }
 
@@ -117,6 +124,14 @@ public class ChatController {
                 .isSuccess(true).message("처리완료").result(leavedChatroomId).build()).build();
     }
 
+    public WebSocketMessage<InChatroomInfoDTO> closedChatroomRead(String nickname, Long chatroomId)  {
+        InChatroomInfoDTO inChatroomInfoDTO = chatService.readClosedChatroom(nickname, chatroomId);
+        sessions.put(nickname, sessions.get(nickname).toBuilder().chatroomId(chatroomId).build());
+        queryLookers.remove(nickname);
+
+        updateToChatList("JOIN", ChatroomDTO.builder().chatroomId(chatroomId).build());
+        return WebSocketMessage.<InChatroomInfoDTO>builder().type("JOIN").sender("[SERVER]").data(inChatroomInfoDTO).build();
+    }
 
     public void messageToChatroom(Long chatroomId, String nickname, String message) {
         chatService.sendMessageToChatroom(chatroomId, nickname, message);
