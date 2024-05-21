@@ -123,7 +123,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: ERROR
 
 kakao:
-  rest_api_key: 61c5c04db7860804a83071683b6a7bd8
+  rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
   redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/check
   back_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/api/auth/login/kakao
   deleted_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/deletedaccount
