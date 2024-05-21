@@ -49,17 +49,13 @@ public class MovieService {
         return result;
     }
 
-    public GenreMovieListDTO findGenreList(){
-        Genre genre = null;
-        while(genre == null || genre.equals(WESTERN)){
-            int randomPick = new Random().nextInt(values().length);
-            genre = Genre.values()[randomPick];
-        }
-        Pageable pageable = (Pageable) PageRequest.of(0, 20);
+    public GenreMovieListDTO findGenreList(String genre){
+        if(genre == null || genre.isEmpty()) return GenreMovieListDTO.builder().genre("없는 장르입니다").movieList(new ArrayList<>()).build();
 
+        Pageable pageable = (Pageable) PageRequest.of(0, 20);
         List<InListMoviveDTO> dtoList = new ArrayList<>();
 
-        List<Movie> movieList = movieRepo.findGenreList(genre, pageable);
+        List<Movie> movieList = movieRepo.findGenreList(Genre.getEnum(genre), pageable);
         if(!movieList.isEmpty()) {
             for (Movie movie : movieList) {
                 InListMoviveDTO dto = InListMoviveDTO.builder()
@@ -74,7 +70,7 @@ public class MovieService {
             }
         }
 
-        return new GenreMovieListDTO(genre.getKor(), dtoList);
+        return new GenreMovieListDTO(genre, dtoList);
     }
 
     public void insertDailyBoxOffice() {
