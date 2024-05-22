@@ -145,8 +145,7 @@ public class UserController {
     public ResponseEntity<ResponseDTO<?>> postReport(MultipartHttpServletRequest request) {
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         if (loginUserId == null) throw new CustomException(NOT_LOGGED_IN);
-
-        Long reportedUserId = Long.parseLong(request.getParameter("userId"));
+        Long reportedUserId = EncryptUtil.LongDecrypt(request.getParameter("userId"));
         String reportReason = request.getParameter("reportReason");
         MultipartFile file = request.getFile("file");
 

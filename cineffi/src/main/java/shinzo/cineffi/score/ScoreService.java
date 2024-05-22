@@ -62,20 +62,9 @@ public class ScoreService {
 
         if (scoreTypeEvent == ScoreTypeEvent.NOTHING)
             return ;
-
-        System.out.println("ScoreService.scoreTypeRefresh 발동");
-        System.out.println("userId = " + userId);
-        System.out.println("scoreTypeEvent = " + scoreTypeEvent);
         List<Score> scoreListToRefresh = scoreRepository.findAllByUserId(userId);
-        System.out.println("userId = " + userId + ", 순회 시작합니다.");
         for (Score score : scoreListToRefresh) {
-            System.out.println("score = " + score);
-            System.out.println("score.getScore() = " + score.getScore());
-            System.out.println("score.getMovie() = " + score.getMovie().getId());
             AvgScore avgScore = score.getMovie().getAvgScore();
-            System.out.println("avgScore = " + avgScore);
-            System.out.println("avgScore.getLevelAvgScore() = " + avgScore.getLevelAvgScore());
-            System.out.println("avgScore.getCinephileAvgScore() = " + avgScore.getCinephileAvgScore());
             if (scoreTypeEvent == ScoreTypeEvent.UP_LV10) {
                 avgScore.setLevelAvgScore(score.getScore(), 1);
             }
@@ -90,8 +79,6 @@ public class ScoreService {
             }
             avgScoreRepository.save(avgScore);
             avgScore = score.getMovie().getAvgScore();
-            System.out.println("avgScore.getLevelAvgScore() = " + avgScore.getLevelAvgScore());
-            System.out.println("avgScore.getCinephileAvgScore() = " + avgScore.getCinephileAvgScore());
         }
     }
 }
