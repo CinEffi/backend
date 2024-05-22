@@ -27,6 +27,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Boolean existsMovieByTmdbId(int tmdbId);
     Boolean existsMovieByKobisCode(String kobisCode);
 
+    Optional<Movie> findByTmdbId(int tmdbId);
+    Optional<Movie> findByKobisCode(String kobisCode);
+
 
     @Query("SELECT m FROM Movie m WHERE REPLACE(m.title, ' ', '') = REPLACE(:title, ' ', '')")
     List<Movie> findByTitleIgnoringSpaces(@Param("title") String title);
