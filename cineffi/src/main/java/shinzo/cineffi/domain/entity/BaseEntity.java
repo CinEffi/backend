@@ -1,8 +1,6 @@
 package shinzo.cineffi.domain.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.ColumnDefault;
@@ -13,6 +11,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Getter
 @SuperBuilder(toBuilder = true)
@@ -33,6 +33,18 @@ public abstract class BaseEntity {
     @ColumnDefault("false")
     @Builder.Default
     private Boolean isDelete = false;
+
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        this.modifiedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.modifiedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+    }
 
     protected void setIsDelete(boolean isDelete) { this.isDelete = isDelete; }
 }

@@ -66,6 +66,12 @@ public class CinEffiWebSocketHandler extends TextWebSocketHandler {
             if (type.equals("LIST")) {
                 Boolean isOpen = CinEffiUtils.getObject(payload, "data", Boolean.class);
                 // LIST를 요청하는 경로는 chatList여야만 합니다.// 그리고 그 경우 chatLookers에 포함시킵니다.
+                ChatSession chatSession = ChatController.getSessions().get(nickname);
+                Long unLeavedchatroomId = chatSession.getChatroomId();
+                if (chatSession != null && unLeavedchatroomId != 0L) {
+                    chatController.chatroomLeave(unLeavedchatroomId, nickname);
+                    chatController.messageToChatroom(unLeavedchatroomId, "[SERVER]:LEAVE", nickname);
+                }
                 ChatController.getQueryLookers().put(nickname, ChatQuery.builder().queryType(QUERY_TYPE.NONE).build());
                 sendToSession(session, chatController.chatroomListSend(isOpen));
             } else if (type.equals("CREATE")) {
