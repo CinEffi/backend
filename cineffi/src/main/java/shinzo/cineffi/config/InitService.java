@@ -54,7 +54,7 @@ public class InitService {
     @Transactional
     public void arrangeAvgScores() {
         System.out.println("InitService.arrangeAvgScores");
-        List<Movie> all = movieRepository.findAllByAvgScoreIsNull();
+        List<Movie> all = movieRepository.findAllByAvgScoreIdIsNull();
         System.out.println("all.size() = " + all.size());
         for (Movie movie : all) {
             Float allSum = 0.0f, levelSum = 0.0f, cinephileSum = 0.0f;
