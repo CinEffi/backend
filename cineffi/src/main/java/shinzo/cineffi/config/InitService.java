@@ -76,10 +76,12 @@ public class InitService {
             AvgScore avgScore = AvgScore.builder()
                     .id(movie.getId()).allScoreCount(allCount).allScoreSum(allSum).levelScoreCount(levelCount)
                     .levelScoreSum(levelSum).cinephileScoreCount(cinephileCount).cinephileScoreSum(cinephileSum).build();
+
+            avgScore = avgScoreRepository.save(avgScore);
+
             movieRepository.save(movie.toBuilder().avgScore(avgScore).build());
         }
     }
-
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
 //    @PostConstruct
 //    @Transactional
