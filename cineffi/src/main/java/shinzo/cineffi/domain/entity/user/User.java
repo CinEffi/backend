@@ -80,7 +80,7 @@ public class User extends BaseEntity {
         else {
             Integer beforeLevel = this.level;
             int maxExpAmount = maxExp(this.level);
-            while (maxExpAmount < this.exp) {
+            while (maxExpAmount <= this.exp) {
                 this.exp -= maxExpAmount;
                 this.level++;
                 maxExpAmount = maxExp(this.level);

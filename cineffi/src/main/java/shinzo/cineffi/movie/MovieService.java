@@ -49,26 +49,16 @@ public class MovieService {
     }
 
     public GenreMovieListDTO findGenreList(String genre){
-        System.out.println("[*+*]MovieService.findGenreList");
         if(genre == null || genre.isEmpty()) return GenreMovieListDTO.builder().genre("없는 장르입니다").movieList(new ArrayList<>()).build();
         Pageable pageable = (Pageable) PageRequest.of(0, 20);
         List<InListMovieDTO> dtoList = new ArrayList<>();
 
         List<Movie> movieList = movieRepo.findGenreList(Genre.getEnum(genre), pageable);
-        System.out.println("[*+*]movieList = " + movieList);
         for (Movie movie : movieList){
-            System.out.println("[*+*]movie = " + movie);
-            System.out.println("movie.getId() = " + movie.getId());
             AvgScore avgScore = movie.getAvgScore();
-            System.out.println("avgScore = " + avgScore);
             if (avgScore == null) {
-                System.out.println("[**]avgScore is null");
                 continue;
             }
-            System.out.println("avgScore.getId() = " + avgScore.getId());
-            System.out.println("avgScore.getCinephileScoreSum() = " + avgScore.getCinephileScoreSum());
-            System.out.println("avgScore.getCinephileScoreCount() = " + avgScore.getCinephileScoreCount());
-            System.out.println("avgScore.getCinephileAvgScore() = " + avgScore.getCinephileAvgScore());
         }
         if(!movieList.isEmpty()) {
             for (Movie movie : movieList) {
@@ -83,7 +73,6 @@ public class MovieService {
                 dtoList.add(dto);
             }
         }
-        System.out.println("[*+*]MovieService.findGenreList");
         return new GenreMovieListDTO(genre, dtoList);
     }
 
