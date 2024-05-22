@@ -11,8 +11,10 @@ import shinzo.cineffi.domain.dto.GetFollowRes;
 import shinzo.cineffi.domain.entity.user.Follow;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserActivityNum;
+import shinzo.cineffi.domain.enums.ScoreTypeEvent;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
+import shinzo.cineffi.score.ScoreService;
 import shinzo.cineffi.user.repository.FollowRepository;
 import shinzo.cineffi.user.repository.UserActivityNumRepository;
 import shinzo.cineffi.user.repository.UserRepository;
@@ -30,6 +32,7 @@ public class FollowService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final UserActivityNumRepository uanRepository;
+    private final ScoreService scoreService;
 //    private final EncryptUtil encryptUtil;
 
     @Transactional
@@ -72,10 +75,8 @@ public class FollowService {
                     throw new CustomException(EMPTY_FOLLOW);
                 }
         );
-
         // UserActivityNum 업데이트
         decreaseUserFollowNum(followingUserId, followerUserId);
-
     }
 
     // targetUser 를 팔로우하고 있는 유저 목록 조회
@@ -144,33 +145,32 @@ public class FollowService {
                 .build();
     }
 
-
     private void increaseUserFollowNum(Long followingUserId, Long followerUserId) {
         // 팔로우 하는 사람의 팔로잉 숫자를 +1
         uanRepository.findByUserId(followerUserId).ifPresent( uan -> uan.addFollowingsNum() );
-
         // 팔로우 당하는 사람의 팔로워 숫자를 +1
         uanRepository.findByUserId(followingUserId).ifPresent(
-                uan -> {
-                    uan.addFollowersNum();
-                    if (uan.getFollowersNum() >= 300 && uan.getUser().getIsCertified() == Boolean.FALSE) // 팔로워가 300명 이상이고, 인증마크가 없다면
-                        uan.getUser().changeUserCertifiedStatus(Boolean.TRUE); // isCertified를 true로
-                } );
-
+            uan -> {
+                uan.addFollowersNum();
+                if (uan.getFollowersNum() >= 300 && uan.getUser().getIsCertified() == Boolean.FALSE) // 팔로워가 300명 이상이고, 인증마크가 없다면
+                    scoreService.scoreTypeRefresh(uan.getUser().getId(), ScoreTypeEvent.CINEPHIL);
+                uan.getUser().changeUserCertifiedStatus(Boolean.TRUE); // isCertified를 true로
+            }
+        );
     }
 
     private void decreaseUserFollowNum(Long followingUserId, Long followerUserId) {
         // 팔로우 하는 사람의 팔로잉 숫자를 -1
         uanRepository.findByUserId(followerUserId).ifPresent(uan -> uan.subFollowingsNum());
-
         // 팔로우 당하는 사람의 팔로워 숫자를 -1
         uanRepository.findByUserId(followingUserId).ifPresent(
-                uan -> {
-                    uan.subFollowersNum();
-                    if (uan.getFollowersNum() < 300 && uan.getUser().getIsCertified() == Boolean.TRUE) // 팔로워가 300명 미만이고, 인증마크가 있다면
-                        uan.getUser().changeUserCertifiedStatus(Boolean.FALSE); // isCertified를 false로
-                } );
-
+            uan -> {
+                uan.subFollowersNum();
+                if (uan.getFollowersNum() < 300 && uan.getUser().getIsCertified() == Boolean.TRUE) // 팔로워가 300명 미만이고, 인증마크가 있다면
+                    scoreService.scoreTypeRefresh(uan.getUser().getId(), ScoreTypeEvent.UN_CINEPHIL);
+                uan.getUser().changeUserCertifiedStatus(Boolean.FALSE); // isCertified를 false로
+            }
+        );
     }
 
 }

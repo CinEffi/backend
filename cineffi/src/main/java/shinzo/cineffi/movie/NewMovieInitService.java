@@ -189,18 +189,22 @@ public class NewMovieInitService {
             List<Map<String, Object>> maps = (List<Map<String, Object>>) response.get("results");
             maxPage = (int) response.get("total_pages");
             for (Map<String, Object> map : maps) {
+                String title = (String) map.get("title");
+                String overview = (String) map.get("overview");
+                if(
                 //중복 제거
-                if(map == null || movieRepo.existsMovieByTmdbId((int) map.get("id"))) continue;
+                (map == null || movieRepo.existsMovieByTmdbId((int) map.get("id")))
                 //19금 제거
-                if(((List<Integer>) map.get("genre_ids")).contains(10749)) {
-                    String title = (String) map.get("title");
-                    String overview = (String) map.get("overview");
-                    if (title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
-                            || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")
+                || (((List<Integer>) map.get("genre_ids")).contains(10749)) && ((title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
+                        || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")
                         || overview.contains("섹스") || overview.contains("무삭제") || overview.contains("처제") || overview.contains("형수") || overview.contains("가슴 큰") || overview.contains("룸싸롱") || overview.contains("성행각")
-                            || overview.contains("불륜") || overview.contains("왕가슴") || overview.contains("성감대") || overview.contains("유혹하는 유부녀") || overview.contains("정사를 나") || overview.contains("몸을 탐닉"))
-                        continue;
+                        || overview.contains("불륜") || overview.contains("왕가슴") || overview.contains("성감대") || overview.contains("유혹하는 유부녀") || overview.contains("정사를 나") || overview.contains("몸을 탐닉")))
+                //포스터 없으면 제거
+                || (((String) map.get("poster_path")).isEmpty() || ((String) map.get("poster_path")) == null)
+                ){
+                    continue;
                 }
+
                 Movie movie = TMDBMapToMovie(map);
                 resultMovie.add(movie);
             }
@@ -498,7 +502,6 @@ public class NewMovieInitService {
         Map<String, Object> tmdbResponse = (Map<String, Object>) map.get("tmdbDetails");
         Integer runtime = (Integer) tmdbResponse.get("runtime");
         String introduction = (String) tmdbResponse.get("overview");
-        if(runtime == 0) return null;
         List<Map<String, Object>> nations = (List<Map<String, Object>>) kobisResponse.get("nations");
         String nation = nations.size() == 0 ? null : (String) nations.get(0).get("nationNm");
         List<Map<String, Object>> kobisDirectors = kobisResponse.get("directors") == null ? new ArrayList<>() : (List<Map<String, Object>>) kobisResponse.get("directors");
@@ -509,7 +512,12 @@ public class NewMovieInitService {
         List<Map<String, Object>> genreMaps = tmdbResponse.get("genres") == null ? new ArrayList<>() : (List<Map<String, Object>>) tmdbResponse.get("genres");
         byte[] poster = requestImg((String) tmdbResponse.get("poster_path"), POSTER);
 
-        AvgScore avgScore = AvgScore.builder().build();
+        if(poster == null || runtime == 0 || introduction == null) {
+            movieRepo.delete(data);
+            return null;
+        }
+
+        AvgScore avgScore = AvgScore.builder().id(data.getId()).build();
         avgScoreRepo.save(avgScore);
 
         List<MovieGenre> genres = new ArrayList<>();
@@ -607,7 +615,7 @@ public class NewMovieInitService {
 
     //이미지 데이터 요청하기
     private byte[] requestImg(String imagePath, ImageType type) {
-        if (imagePath == null) return returnDefaultImg(type);
+        if (imagePath == null) return type.equals(POSTER) ? null : returnDefaultImg(type);
 
         try {
             // Directly get byte array from the restTemplate
@@ -618,7 +626,7 @@ public class NewMovieInitService {
             e.printStackTrace();
         }
 
-        return returnDefaultImg(type);
+        return type.equals(POSTER) ? null : returnDefaultImg(type);
     }
     private byte[] returnDefaultImg(ImageType type) {
         if (type.equals(POSTER)) {

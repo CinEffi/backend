@@ -5,10 +5,13 @@ import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ScoreRepository extends JpaRepository<Score, Long> {
     Score findByMovieAndUser(Movie movie, User user);
 
     Score findByMovieIdAndUserId(Long movieId, Long userId);
+
+    List<Score> findAllByUserId(Long userId);
 }

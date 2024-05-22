@@ -16,7 +16,7 @@ import shinzo.cineffi.Utils.CinEffiUtils;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AvgScore {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "avg_score_id")
     private Long id;
 
