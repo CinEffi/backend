@@ -136,8 +136,8 @@ public class MovieInitService {
         for (Movie movieEmpty : movieEmptys){
             Map<String, Object> preProcessData = requestMovieDetailData(movieEmpty.getTmdbId());
             Map<String, Object> postProcessData = modifyDetailData(preProcessData);
-            if(postProcessData == null) movieRepo.delete(movieEmpty);
-            else makeMovieData(postProcessData, movieEmpty);
+//            if(postProcessData == null) movieRepo.delete(movieEmpty);
+//            else makeMovieData(postProcessData, movieEmpty);
 
         }
     }
@@ -278,73 +278,73 @@ public class MovieInitService {
     }
 
     //응답 받은 데이터 가공 및 저장 for initMovieData()
-    private Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
-        //데이터 가공
-        String newTitle = (String) movieDetailData.get("title");
-        LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
-        List<String> newOriginCountrys = (List<String>) movieDetailData.get("origin_country");
-        List<Map<String, Object>> genres = (List<Map<String, Object>>) movieDetailData.get("genres");
-        List<String> genreStrs = genres.stream().map(obj-> (String) obj.get("name")).collect(Collectors.toList());
-        int newRuntime = (int) movieDetailData.get("runtime");
-        String newIntroduction = (String) movieDetailData.get("overview");
-        List<Map<String, Object>> casts = (List<Map<String, Object>>) ((Map<String, Object>) movieDetailData.get("credits")).get("cast");
-        AvgScore avgScore = AvgScore.builder().build();
-        avgScoreRepo.save(avgScore);
+//    private Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
+//        //데이터 가공
+//        String newTitle = (String) movieDetailData.get("title");
+//        LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
+//        List<String> newOriginCountrys = (List<String>) movieDetailData.get("origin_country");
+//        List<Map<String, Object>> genres = (List<Map<String, Object>>) movieDetailData.get("genres");
+//        List<String> genreStrs = genres.stream().map(obj-> (String) obj.get("name")).collect(Collectors.toList());
+//        int newRuntime = (int) movieDetailData.get("runtime");
+//        String newIntroduction = (String) movieDetailData.get("overview");
+//        List<Map<String, Object>> casts = (List<Map<String, Object>>) ((Map<String, Object>) movieDetailData.get("credits")).get("cast");
+//        AvgScore avgScore = AvgScore.builder().build();
+//        avgScoreRepo.save(avgScore);
+//
+//        Director director = Director.builder()
+//                .name(nameToKor((int) movieDetailData.get("directorId")))
+//                .profileImage(requestImg((String) movieDetailData.get("directorImgPath"), PROFILE))
+//                .tmdbId((int) movieDetailData.get("directorId"))
+//                .build();
+//
+//        //영화 + 감독 데이터 저장
+//        Movie newMovie = movie.toBuilder()
+//                .title(newTitle)
+//                .originCountry(newOriginCountrys.size() != 0 ? newOriginCountrys.get(0) : null)
+//                .runtime(newRuntime)
+//                .introduction(newIntroduction)
+//                .poster(requestImg((String) movieDetailData.get("poster_path"), POSTER))
+//                .director(directorRepo.save(director))
+//                .avgScore(avgScore)
+//                .build();
+//
+//        newMovie = newMovie.toBuilder()
+//                .genreList(makeMovieGenre(genreStrs, newMovie))
+//                .build();
+//        movieRepo.save(newMovie);
+//
+//        //배우 데이터 저장
+//        saveActor(casts, newMovie);
+//
+//        return newMovie;
+//    }
 
-        Director director = Director.builder()
-                .name(nameToKor((int) movieDetailData.get("directorId")))
-                .profileImage(requestImg((String) movieDetailData.get("directorImgPath"), PROFILE))
-                .tmdbId((int) movieDetailData.get("directorId"))
-                .build();
-
-        //영화 + 감독 데이터 저장
-        Movie newMovie = movie.toBuilder()
-                .title(newTitle)
-                .originCountry(newOriginCountrys.size() != 0 ? newOriginCountrys.get(0) : null)
-                .runtime(newRuntime)
-                .introduction(newIntroduction)
-                .poster(requestImg((String) movieDetailData.get("poster_path"), POSTER))
-                .director(directorRepo.save(director))
-                .avgScore(avgScore)
-                .build();
-
-        newMovie = newMovie.toBuilder()
-                .genreList(makeMovieGenre(genreStrs, newMovie))
-                .build();
-        movieRepo.save(newMovie);
-
-        //배우 데이터 저장
-        saveActor(casts, newMovie);
-
-        return newMovie;
-    }
-
-    private void saveActor(List<Map<String, Object>> casts, Movie movie){
-        for (Map<String, Object> cast : casts){
-            if((int) cast.get("order") < 8){
-                int tmdbId = (int) cast.get("id");
-                Optional<Actor> actorOpt = actorRepo.findByTmdbId(tmdbId);
-                Actor actor;
-                if(actorOpt.isPresent()) actor = actorOpt.get();
-                else{
-                    actor = Actor.builder()
-                            .name(nameToKor(tmdbId))
-                            .profileImage(requestImg((String) cast.get("profile_path"), PROFILE))
-                            .tmdbId(tmdbId)
-                            .build();
-                    actorRepo.save(actor);
-                }
-
-                ActorMovie actorMovie = ActorMovie.builder()
-                        .character((String) cast.get("character"))
-                        .orders((int) cast.get("order"))
-                        .actor(actor)
-                        .movie(movie)
-                        .build();
-                actorMovieRepo.save(actorMovie);
-            }
-        }
-    }
+//    private void saveActor(List<Map<String, Object>> casts, Movie movie){
+//        for (Map<String, Object> cast : casts){
+//            if((int) cast.get("order") < 8){
+//                int tmdbId = (int) cast.get("id");
+//                Optional<Actor> actorOpt = actorRepo.findByTmdbId(tmdbId);
+//                Actor actor;
+//                if(actorOpt.isPresent()) actor = actorOpt.get();
+//                else{
+//                    actor = Actor.builder()
+//                            .name(nameToKor(tmdbId))
+//                            .profileImage(requestImg((String) cast.get("profile_path"), PROFILE))
+//                            .tmdbId(tmdbId)
+//                            .build();
+//                    actorRepo.save(actor);
+//                }
+//
+//                ActorMovie actorMovie = ActorMovie.builder()
+//                        .character((String) cast.get("character"))
+//                        .orders((int) cast.get("order"))
+//                        .actor(actor)
+//                        .movie(movie)
+//                        .build();
+//                actorMovieRepo.save(actorMovie);
+//            }
+//        }
+//    }
 
 
 

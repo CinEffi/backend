@@ -13,4 +13,8 @@ public interface DirectorRepository extends JpaRepository<Director, Long> {
     @Query("SELECT d FROM Director d WHERE d.tmdbId = :tmdbId")
     Optional<Director> findByTmbdId(int tmdbId);
 
+    @Query("SELECT d.id FROM Director d WHERE d.name = :name")
+    Long idByName(String name);
+
+    boolean existsByName(String name);
 }
