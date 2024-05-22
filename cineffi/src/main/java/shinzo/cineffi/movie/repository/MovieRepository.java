@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface MovieRepository extends JpaRepository<Movie, Long> {
     boolean existsByTmdbId(int tmdbId);
 
+    List<Movie> findByAvgScoreIsNull();
+
     @Query("SELECT m FROM Movie m WHERE YEAR(m.releaseDate) = :year")
     List<Movie> findAllByReleaseDate(Integer year);
 

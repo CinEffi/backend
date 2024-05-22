@@ -12,6 +12,7 @@ import shinzo.cineffi.domain.entity.movie.BoxOfficeMovie;
 import shinzo.cineffi.domain.entity.movie.Director;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.movie.MovieGenre;
+import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.movie.BoxOfficeDataHandler;
 import shinzo.cineffi.domain.enums.Genre;
@@ -22,6 +23,7 @@ import shinzo.cineffi.movie.repository.MovieGenreRepository;
 import shinzo.cineffi.movie.repository.MovieRepository;
 import shinzo.cineffi.review.ReviewService;
 import shinzo.cineffi.score.ScoreService;
+import shinzo.cineffi.score.repository.ScoreRepository;
 import shinzo.cineffi.user.FollowService;
 import shinzo.cineffi.user.repository.UserRepository;
 
@@ -46,6 +48,37 @@ public class InitService {
     private final ScoreService scoreService;
     private final MovieGenreRepository movieGenreRepository;
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
+    private final ScoreRepository scoreRepository;
+
+    @PostConstruct
+    @Transactional
+    public void arrangeAvgScores() {
+        System.out.println("InitService.arrangeAvgScores");
+        List<Movie> all = movieRepository.findByAvgScoreIsNull();
+        System.out.println("all.size() = " + all.size());
+        for (Movie movie : all) {
+            Float allSum = 0.0f, levelSum = 0.0f, cinephileSum = 0.0f;
+            Integer allCount = 0, levelCount = 0, cinephileCount = 0;
+            List<Score> scores = scoreRepository.findAllByMovie(movie);
+            for (Score score : scores) {
+                Float scoreValue = score.getScore();
+                allCount++;
+                allSum += scoreValue;
+                if (score.getUser().getIsCertified()) {
+                    cinephileCount++;
+                    cinephileSum += scoreValue;
+                }
+                if (10 <= score.getUser().getLevel()) {
+                    levelCount++;
+                    levelSum += scoreValue;
+                }
+            }
+            AvgScore avgScore = AvgScore.builder()
+                    .id(movie.getId()).allScoreCount(allCount).allScoreSum(allSum).levelScoreCount(levelCount)
+                    .levelScoreSum(levelSum).cinephileScoreCount(cinephileCount).cinephileScoreSum(cinephileSum).build();
+            movieRepository.save(movie.toBuilder().avgScore(avgScore).build());
+        }
+    }
 
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
 //    @PostConstruct
