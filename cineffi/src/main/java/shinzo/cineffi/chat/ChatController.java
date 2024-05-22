@@ -81,8 +81,10 @@ public class ChatController {
             ChatSession chatSession = sessions.get(nickname);
             if (chatSession != null) {
                 Long chatroomId = chatSession.getChatroomId();
-                try { if (chatroomId != 0L) chatroomLeave(chatroomId, nickname);
+                try { if (chatroomId != 0L) {
+                    chatroomLeave(chatroomId, nickname);
                     messageToChatroom(chatroomId, "[SERVER]:LEAVE", nickname);
+                }
                 } catch (Exception e) { System.out.println("chatroomLeave in chatSessionQuit got exception"); }
             }
             //   chatService.chatUserQuit(nickname); 안 씁니다.

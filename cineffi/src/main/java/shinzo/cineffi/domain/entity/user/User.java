@@ -10,6 +10,7 @@ import org.hibernate.annotations.DynamicInsert;
 import shinzo.cineffi.chat.redisObject.RedisUser;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.enums.ScoreTypeEvent;
+import shinzo.cineffi.score.ScoreService;
 
 import java.util.Base64;
 
@@ -68,20 +69,26 @@ public class User extends BaseEntity {
     private static int maxExp(int level) { return ((Long) Math.round(5 * Math.pow(1.1, level - 1))).intValue(); }
 
     private ScoreTypeEvent refreshExpStatus() {
+        ScoreTypeEvent scoreTypeEvent = ScoreTypeEvent.NOTHING;
         if (this.exp < 0) {
-            this.exp += maxExp(--this.level);
-            if (this.level == 9)
-                return ScoreTypeEvent.DOWN_LV10;
+            Integer beforeLevel = this.level;
+            while (this.exp < 0)
+                this.exp += maxExp(--this.level);
+            if (this.level < 10 && 10 <= beforeLevel)
+                scoreTypeEvent = ScoreTypeEvent.DOWN_LV10;
         }
         else {
+            Integer beforeLevel = this.level;
             int maxExpAmount = maxExp(this.level);
-            if (maxExpAmount <= this.exp) {
+            while (maxExpAmount < this.exp) {
                 this.exp -= maxExpAmount;
                 this.level++;
-                if (this.level == 10) return ScoreTypeEvent.UP_LV10;
+                maxExpAmount = maxExp(this.level);
             }
+            if (beforeLevel < 10 && 10 <= this.level)
+                scoreTypeEvent = ScoreTypeEvent.UP_LV10;
         }
-        return ScoreTypeEvent.NOTHING;
+        return scoreTypeEvent;
     }
 
     public ScoreTypeEvent addExp(int expDelta) {

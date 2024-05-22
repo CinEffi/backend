@@ -152,9 +152,10 @@ public class FollowService {
         uanRepository.findByUserId(followingUserId).ifPresent(
             uan -> {
                 uan.addFollowersNum();
-                if (uan.getFollowersNum() >= 300 && uan.getUser().getIsCertified() == Boolean.FALSE) // 팔로워가 300명 이상이고, 인증마크가 없다면
+                if (uan.getFollowersNum() >= 300 && uan.getUser().getIsCertified() == Boolean.FALSE) {// 팔로워가 300명 이상이고, 인증마크가 없다면
                     scoreService.scoreTypeRefresh(uan.getUser().getId(), ScoreTypeEvent.CINEPHIL);
-                uan.getUser().changeUserCertifiedStatus(Boolean.TRUE); // isCertified를 true로
+                    uan.getUser().changeUserCertifiedStatus(Boolean.TRUE); // isCertified를 true로
+                }
             }
         );
     }
@@ -166,9 +167,10 @@ public class FollowService {
         uanRepository.findByUserId(followingUserId).ifPresent(
             uan -> {
                 uan.subFollowersNum();
-                if (uan.getFollowersNum() < 300 && uan.getUser().getIsCertified() == Boolean.TRUE) // 팔로워가 300명 미만이고, 인증마크가 있다면
+                if (uan.getFollowersNum() < 300 && uan.getUser().getIsCertified() == Boolean.TRUE) {// 팔로워가 300명 미만이고, 인증마크가 있다면
                     scoreService.scoreTypeRefresh(uan.getUser().getId(), ScoreTypeEvent.UN_CINEPHIL);
-                uan.getUser().changeUserCertifiedStatus(Boolean.FALSE); // isCertified를 false로
+                    uan.getUser().changeUserCertifiedStatus(Boolean.FALSE); // isCertified를 false로
+                }
             }
         );
     }
