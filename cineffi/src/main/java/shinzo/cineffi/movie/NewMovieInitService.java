@@ -191,9 +191,20 @@ public class NewMovieInitService {
             for (Map<String, Object> map : maps) {
                 String title = (String) map.get("title");
                 String overview = (String) map.get("overview");
+
+                //이미 디비에 있고 제대로된 값 아니면 덮어쓰기
+                if(movieRepo.existsMovieByTmdbId((int) map.get("id"))){
+                    Optional<Movie> movie = movieRepo.findByTmdbId((int) map.get("id"));
+                    if(movie.get().getPoster() == null) {
+                        resultMovie.add(movie.get());
+                        continue;
+                    }
+                    else continue;
+                }
+
                 if(
-                //중복 제거
-                (map == null || movieRepo.existsMovieByTmdbId((int) map.get("id")))
+                //데이터 없으면 제거
+                (map == null)
                 //19금 제거
                 || (((List<Integer>) map.get("genre_ids")).contains(10749)) && ((title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
                         || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")
@@ -232,8 +243,15 @@ public class NewMovieInitService {
             List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
             if (movieMapList != null && !movieMapList.isEmpty()) {
                 for (Map<String, Object> movieMap : movieMapList) {
-                    //중복 제거
-                    if(movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd"))) continue;
+                    //이미 디비에 있고 제대로된 값 아니면 덮어쓰기
+                    if(movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd"))) {
+                        Optional<Movie> movieOpt = movieRepo.findByKobisCode((String) movieMap.get("movieCd"));
+                        if(movieOpt.get().getPoster() == null) {
+                            result.add(movieOpt.get());
+                            continue;
+                        }
+                        else continue;
+                    }
                     //19금 제거
                     if(((String) movieMap.get("genreAlt")).contains("에로") || ((String) movieMap.get("genreAlt")).isEmpty()) continue;
                     if(((String) movieMap.get("genreAlt")).contains("로맨스")) {
@@ -512,7 +530,7 @@ public class NewMovieInitService {
         List<Map<String, Object>> genreMaps = tmdbResponse.get("genres") == null ? new ArrayList<>() : (List<Map<String, Object>>) tmdbResponse.get("genres");
         byte[] poster = requestImg((String) tmdbResponse.get("poster_path"), POSTER);
 
-        if(poster == null || runtime == 0 || introduction == null) {
+        if(poster == null || runtime == 0 || runtime == null || introduction == null) {
             movieRepo.delete(data);
             return null;
         }
