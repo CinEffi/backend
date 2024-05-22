@@ -10,6 +10,9 @@ public interface ActorRepository extends JpaRepository<Actor, Long> {
 
     Optional<Actor> findByName(String name);
 
-    @Query("SELECT a FROM Actor a WHERE a.tmdbId = :tmdbId")
-    Optional<Actor> findByTmdbId(int tmdbId);
+    boolean existsByName(String name);
+
+    @Query("SELECT a.id FROM Actor a WHERE a.name = :name")
+    Long idByName(String name);
+
 }

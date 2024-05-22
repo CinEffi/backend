@@ -2,6 +2,9 @@ package shinzo.cineffi.movie;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -62,6 +65,8 @@ public class NewMovieInitService {
     private final DateTimeFormatter KOBIS_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private static final int THREAD_MAX = 100; // 동시에 처리할 스레드 수
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     //자정마다 새 영화데이터 업데이트 로직
     @Scheduled(cron = "0 0 0 * * ?")
@@ -192,24 +197,14 @@ public class NewMovieInitService {
                 String title = (String) map.get("title");
                 String overview = (String) map.get("overview");
 
-                //이미 디비에 있고 제대로된 값 아니면 덮어쓰기
-                if(movieRepo.existsMovieByTmdbId((int) map.get("id"))){
-                    Optional<Movie> movie = movieRepo.findByTmdbId((int) map.get("id"));
-                    if(movie.get().getPoster() == null) {
-                        resultMovie.add(movie.get());
-                        continue;
-                    }
-                    else continue;
-                }
-
                 if(
                 //데이터 없으면 제거
                 (map == null)
                 //19금 제거
                 || (((List<Integer>) map.get("genre_ids")).contains(10749)) && ((title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
-                        || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")
+                        || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉") || title.contains("젖몸살") || title.contains("가슴큰") || title.contains("가슴 큰")
                         || overview.contains("섹스") || overview.contains("무삭제") || overview.contains("처제") || overview.contains("형수") || overview.contains("가슴 큰") || overview.contains("룸싸롱") || overview.contains("성행각")
-                        || overview.contains("불륜") || overview.contains("왕가슴") || overview.contains("성감대") || overview.contains("유혹하는 유부녀") || overview.contains("정사를 나") || overview.contains("몸을 탐닉")))
+                        || overview.contains("불륜") || overview.contains("왕가슴") || overview.contains("성감대") || overview.contains("유혹하는 유부녀") || overview.contains("정사를 나") || overview.contains("몸을 탐닉"))) || title.contains("젖몸살") || title.contains("가슴큰") || title.contains("가슴 큰")
                 //포스터 없으면 제거
                 || (((String) map.get("poster_path")).isEmpty() || ((String) map.get("poster_path")) == null)
                 ){
@@ -243,21 +238,12 @@ public class NewMovieInitService {
             List<Map<String, Object>> movieMapList = (List<Map<String, Object>>) results.get("movieList");
             if (movieMapList != null && !movieMapList.isEmpty()) {
                 for (Map<String, Object> movieMap : movieMapList) {
-                    //이미 디비에 있고 제대로된 값 아니면 덮어쓰기
-                    if(movieRepo.existsMovieByKobisCode((String) movieMap.get("movieCd"))) {
-                        Optional<Movie> movieOpt = movieRepo.findByKobisCode((String) movieMap.get("movieCd"));
-                        if(movieOpt.get().getPoster() == null) {
-                            result.add(movieOpt.get());
-                            continue;
-                        }
-                        else continue;
-                    }
                     //19금 제거
                     if(((String) movieMap.get("genreAlt")).contains("에로") || ((String) movieMap.get("genreAlt")).isEmpty()) continue;
                     if(((String) movieMap.get("genreAlt")).contains("로맨스")) {
                         String title = (String) movieMap.get("movieNm");
                         if (title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("가슴 큰") || title.contains("룸싸롱") || title.contains("성행각")
-                                || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")|| title.contains("젖어버린 속살"))
+                                || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대") || title.contains("유혹하는 유부녀") || title.contains("정사를 나") || title.contains("몸을 탐닉")|| title.contains("젖어버린 속살") || title.contains("젖몸살") || title.contains("가슴큰") || title.contains("가슴 큰"))
                             continue;
                     }
 
@@ -488,6 +474,7 @@ public class NewMovieInitService {
                 .title(title)
                 .releaseDate(releaseDate).build();
         if(!engTitle.equals("")) result = result.toBuilder().engTitle(engTitle).build();
+        if(movieRepo.existsMovieByTmdbId(id)) result = result.toBuilder().id(movieRepo.findMovieIdByTmdbId(id)).build();
 
         return result;
     }
@@ -508,6 +495,10 @@ public class NewMovieInitService {
             LocalDate releaseDate = LocalDate.parse((String) map.get("openDt"), KOBIS_DATE_FORMATTER);
             movie =  movie.toBuilder().releaseDate(releaseDate).build();
         }
+        if(movieRepo.existsMovieByKobisCode(movieCode)){
+            movie = movie.toBuilder().id(movieRepo.findMovieIdByKobisCode(movieCode)).build();
+        }
+
         return movie;
 
     }
@@ -535,8 +526,13 @@ public class NewMovieInitService {
             return null;
         }
 
-        AvgScore avgScore = AvgScore.builder().id(data.getId()).build();
-        avgScoreRepo.save(avgScore);
+        Optional<AvgScore> avgOpt = avgScoreRepo.findByMovieId(data.getId());
+        AvgScore avgScore = AvgScore.builder().build();
+        if(avgOpt.isEmpty()) {
+            avgScore = avgScore.toBuilder().id(data.getId()).build();
+            avgScoreRepo.save(avgScore);
+        }
+        else avgScore = avgOpt.get();
 
         List<MovieGenre> genres = new ArrayList<>();
         if(!genreMaps.isEmpty()) {
@@ -564,23 +560,27 @@ public class NewMovieInitService {
             String directorName = (String) kobisDirectors.get(0).get("peopleNm");
             String directorEngName = (String) kobisDirectors.get(0).get("peopleNmEn");
 
-            Director director = Director.builder()
-                    .name(directorName)
-                    .engname(directorEngName)
-                    .build();
+            Director director = Director.builder().build();
+            if(!directorRepo.existsByName(directorName)) {
+                director = director.toBuilder()
+                        .name(directorName)
+                        .engname(directorEngName)
+                        .build();
 
-            for(Map<String, Object> crewMap : crewMaps) {
-                if ((crewMap.get("job")).equals("Director")) {
-                    byte[] profileImg = requestImg((String) crewMap.get("profile_path"), PROFILE);
-                    director = director.toBuilder()
-                            .tmdbId((Integer) crewMap.get("id"))
-                            .engname((String) crewMap.get("original_name"))
-                            .profileImage(profileImg)
-                            .build();
-                    break;
+                for (Map<String, Object> crewMap : crewMaps) {
+                    if ((crewMap.get("job")).equals("Director")) {
+                        byte[] profileImg = requestImg((String) crewMap.get("profile_path"), PROFILE);
+                        director = director.toBuilder()
+                                .tmdbId((Integer) crewMap.get("id"))
+                                .engname((String) crewMap.get("original_name"))
+                                .profileImage(profileImg)
+                                .build();
+                        break;
+                    }
                 }
+                directorRepo.save(director);
             }
-            directorRepo.save(director);
+            else director = director.toBuilder().id(directorRepo.idByName(directorName)).build();
 
             result = result.toBuilder()
                     .director(director)
@@ -592,14 +592,6 @@ public class NewMovieInitService {
                 String actorEngName = (String) kobisActors.get(i).get("peopleNmEn");
                 String cast = (String) kobisActors.get(i).get("cast");
 
-                Actor actor = Actor.builder()
-                        .name(actorKorName)
-                        .engName(actorEngName)
-                        .build();
-                ActorMovie actorMovie = ActorMovie.builder()
-                        .character(cast)
-                        .movie(result)
-                        .build();
                 for (Map<String, Object> castMap : castMaps){
                     if(!castMap.containsKey("order")) continue;
 
@@ -609,18 +601,31 @@ public class NewMovieInitService {
                     String TMDBProfilePath = (String) castMap.get("profile_path");
                     String TMDBEngName = castMap.get("original_name") == null ? null : makeNoBlankStr((String) castMap.get("original_name")).toLowerCase();
 
-                    if((TMDBKorName.equals(makeNoBlankStr(actor.getName()))) ||
-                            (TMDBEngName != null && TMDBEngName.equals(makeNoBlankStr(actor.getEngName()).toLowerCase()))){
-                        actor = actor.toBuilder()
-                                .tmdbId(tmdbId)
-                                .profileImage(requestImg(TMDBProfilePath, PROFILE))
-                                .build();
-                        actorMovie = actorMovie.toBuilder()
-                                .actor(actor)
-                                .orders(TMDBOrder)
-                                .build();
-                        actorRepo.save(actor);
-                        actorMovieRepo.save(actorMovie);
+                    if((TMDBKorName.equals(makeNoBlankStr(actorKorName))) ||
+                            (TMDBEngName != null && TMDBEngName.equals(makeNoBlankStr(actorEngName).toLowerCase()))){
+                        Actor actor = Actor.builder().build();
+
+                        if(!actorRepo.existsByName(actorKorName)){
+                            actor = actor.toBuilder()
+                                    .name(actorKorName)
+                                    .engName(actorEngName)
+                                    .tmdbId(tmdbId)
+                                    .profileImage(requestImg(TMDBProfilePath, PROFILE))
+                                    .build();
+                            actorRepo.save(actor);
+                        }
+                        else actor = actor.toBuilder().id(actorRepo.idByName(actorKorName)).build();
+
+                       if(!actorMovieRepo.existsByMovieIdAndActorId(result.getId(), actor.getId())) {
+                           ActorMovie actorMovie = ActorMovie.builder()
+                                   .character(cast)
+                                   .movie(result)
+                                   .actor(actor)
+                                   .orders(TMDBOrder)
+                                   .build();
+
+                           actorMovieRepo.save(actorMovie);
+                       }
                         break;
                     }
 
