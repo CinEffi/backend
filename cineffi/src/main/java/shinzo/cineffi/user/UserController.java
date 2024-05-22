@@ -123,7 +123,6 @@ public class UserController {
     public ResponseEntity<ResponseDTO<?>> getScrapList(@PathVariable("user-id") String userId
 //            , @PageableDefault(page = 0, size=10) Pageable pageable
     ) {
-
         Long DecryptUserId= EncryptUtil.LongDecrypt(userId);
         Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         System.out.println("loginUserId = " + loginUserId);
