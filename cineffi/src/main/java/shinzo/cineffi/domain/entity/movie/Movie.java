@@ -52,4 +52,5 @@ public class Movie extends BaseEntity {
 
     private String kobisCode;
 
+
 }
