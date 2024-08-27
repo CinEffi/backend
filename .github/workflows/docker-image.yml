@@ -11,6 +11,9 @@ jobs:
   CI-CD:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -27,8 +30,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Check files
+      - name: Check current directory
+        run: pwd
+
+      - name: List files in current directory
         run: ls -la
+
+      - name: List files in parent directory
+        run: |
+          cd ..
+          ls -la
 
       - name: Build with Gradle
         run: |
