@@ -41,6 +41,7 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew build -x test
+        working-directory: ./cineffi-backend
 
       # docker build & push to production
       - name: Docker build & push to prod
