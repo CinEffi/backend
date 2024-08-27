@@ -35,7 +35,6 @@ jobs:
       # gradle build
       - name: Build with Gradle
         run: |
-          cd cineffi
           chmod +x gradlew
           ./gradlew build -x test
 
