@@ -32,16 +32,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Print current directory and list files
-        run: |
-          pwd
-          ls -la
-
       - name: Build with Gradle
         run: |
           chmod +x gradlew
           ./gradlew build -x test
-        working-directory: ./cineffi-backend
 
       # docker build & push to production
       - name: Docker build & push to prod
