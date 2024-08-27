@@ -32,11 +32,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Print current directory and list files
-        run: |
-          pwd
-          ls -la
-
       - name: Build with Gradle
         run: |
           chmod +x gradlew
