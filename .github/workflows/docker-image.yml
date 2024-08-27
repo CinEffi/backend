@@ -28,37 +28,26 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Check current directory
-        run: pwd
-
-      - name: List files in current directory
-        run: ls -la
-
-      - name: List files in parent directory
-        run: |
-          cd ..
-          ls -la
 
       - name: Build with Gradle
         run: |
+          cd ..
           chmod +x gradlew
           ./gradlew build -x test
 
-      - name: Docker build & push to prod
-        if: contains(github.ref, 'main')
-        run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-test-prod .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
+#      - name: Docker build & push to prod
+#        if: contains(github.ref, 'main')
+#        run: |
+#          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+#          docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-test-prod .
+#          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
 
       - name: Docker build & push to dev
         if: contains(github.ref, 'dev')
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/docker-test-dev .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
+          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-dev .
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-dev
 
       - name: Deploy to dev
         uses: appleboy/ssh-action@master
@@ -71,6 +60,6 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             sudo docker ps
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
-            sudo docker run -d -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-dev
+            sudo docker run -d -p 4000:4000 ${{ secrets.DOCKER_USERNAME }}/docker-dev
             sudo docker image prune -f
