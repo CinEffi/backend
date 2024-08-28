@@ -109,8 +109,9 @@ public class MovieInitService {
                 Optional<Movie> baseMovie = getBaseMovie(tmdbData, kobisData);
 
                 baseMovie.ifPresent(m -> {
-                    Optional<Movie> opt = saveMovie(m);
-                    if (opt.isPresent()) result.add(opt.get());
+                    saveMovie(m);
+                    Optional<Movie> newMovie = movieRepo.findByTmdbId(m.getTmdbId());
+                    result.add(newMovie.get());
                 });
 
             }
@@ -540,9 +541,12 @@ public class MovieInitService {
         JSONObject response = (JSONObject) requestData(String.format("%s%s/discover/movie?api_key=%s&include_adult=false&include_video=false&language=ko-KR&include_adult=false&page=1&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
                 TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, startDate, endDate), TMDB_MOVIE);
 
-        if (response != null && !response.isEmpty()) {
-            maxPage = ((Long) response.getOrDefault("total_pages", 500)).intValue();
+        while(response == null || response.isEmpty()){
+            response = (JSONObject) requestData(String.format("%s%s/discover/movie?api_key=%s&include_adult=false&include_video=false&language=ko-KR&include_adult=false&page=1&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, startDate, endDate), TMDB_MOVIE);
         }
+
+        maxPage = ((Long) response.get("total_pages")).intValue();
         return Math.min(maxPage, 500);
     }
     private int kobisDataMaxPage(int year, int curPage){
@@ -553,7 +557,7 @@ public class MovieInitService {
         response = reRequestKobis(response, url);
 
         JSONObject results = (JSONObject) response.get("movieListResult");
-        Long totCnt = (Long) results.getOrDefault("totCnt", 500); // 전체 콘텐트 개수
+        Long totCnt = (Long) results.get("totCnt"); // 전체 콘텐트 개수
 
         return ((Long)((totCnt + 99) / 100)).intValue(); // 전체 페이지 수 계산 (올림 처리)
 
