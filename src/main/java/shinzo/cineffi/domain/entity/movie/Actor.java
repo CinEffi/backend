@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.DynamicInsert;
 
-import java.util.Base64;
-
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
@@ -27,7 +25,8 @@ public class Actor {
     @Lob
     private byte[] profileImage;
 
-    private Integer tmdbId;
+    @Column(unique = true)
+    private Long tmdbId;
     private String engName;
 
 }

@@ -1,29 +1,35 @@
 package shinzo.cineffi.movie;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.entity.movie.*;
 import shinzo.cineffi.domain.enums.Genre;
 import shinzo.cineffi.domain.enums.ImageType;
+import shinzo.cineffi.domain.enums.InitType;
+import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.movie.repository.*;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
-import static shinzo.cineffi.domain.enums.ImageType.POSTER;
-import static shinzo.cineffi.domain.enums.ImageType.PROFILE;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import static shinzo.cineffi.domain.enums.ImageType.*;
+import static shinzo.cineffi.domain.enums.InitType.*;
+import static shinzo.cineffi.exception.message.ErrorMsg.TMDB_APIKEY_EXPIRED;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovieInitService {
@@ -33,15 +39,10 @@ public class MovieInitService {
     private final ActorMovieRepository actorMovieRepo;
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
-
-    @Value("${tmdb.start-year}")
-    private int startYear;
-    @Value("${tmdb.end-year}")
-    private int endYear;
-    @Value("${tmdb.start-month}")
-    private int startMonth;
-    @Value("${tmdb.end-month}")
-    private int endMonth;
+    private final BoxOfficeDataHandler boxOfficeDataHandler;
+    private final RestTemplate restTemplate;
+    private final ParseString parseString;
+    private final KobisService kobisService;
 
     @Value("${tmdb.access_token}")
     private String TMDB_ACCESS_TOKEN;
@@ -55,178 +56,525 @@ public class MovieInitService {
     private String TMDB_PATH_PROFILE;
     @Value("${tmdb.path_movie}")
     private String TMDB_PATH_MOVIE;
-    private final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
     private static final int MAX_PAGES = 500;
-    private WebClient wc = WebClient.builder()
-            .baseUrl(TMDB_BASEURL)
-            .defaultHeader(HttpHeaders.ACCEPT, "application/json")
-            .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + TMDB_ACCESS_TOKEN)
-            .build();
 
-    public void fetchTMDBIdsByDate() {
-        for (int year = startYear; year <= endYear; year++) {
-            for (int month = startMonth; month <= endMonth; month++) {
-                String startDate = String.format("%d-%02d-26", year, month);
-                String endDate = String.format("$d-%02d-2d", year, month, YearMonth.of(year, month).lengthOfMonth());
+    private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
+    ExecutorService executorService = Executors.newFixedThreadPool(100);
 
-                List<Movie> movies = requestTMDBIds(startDate, endDate);
-                initMovieData(movies);
+    public List<Movie> initData(int year){
+        List<Movie> baseList = savebaseList(year);
+        List<Movie> movieList = saveDetailList(baseList);
+
+        if(LocalDate.now().getYear() == year) {
+            boxOfficeDataHandler.dailyBoxOffice();
+        }
+
+        return movieList;
+    }
+
+    public void updateData(){
+        int year = LocalDate.now().getYear();
+        List<Movie> baseList = savebaseList(year);
+        List<Movie> movieList = saveDetailList(baseList);
+
+        if(LocalDate.now().getYear() == year) {
+            boxOfficeDataHandler.dailyBoxOffice();
+        }
+
+    }
+
+    private List<Movie> savebaseList(int year){
+        Map<String, JSONObject> tmdbDatas = getTmdbDatas(year);
+        List<JSONObject> kobisDatas = getKobisDatas(year);
+        List<Movie> result = new ArrayList<>();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (JSONObject kobisData : kobisDatas) {
+            CompletableFuture<Void> f = CompletableFuture.runAsync(() -> makeBaseData(tmdbDatas, kobisData, result), executorService);
+            futures.add(f);
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        return result;
+    }
+    private void makeBaseData(Map<String, JSONObject> tmdbDatas, JSONObject kobisData, List<Movie> result) {
+        String movieNm = (String) kobisData.getOrDefault("movieNm", "");
+        String date = (String) kobisData.getOrDefault("openDt", "");
+        if(!movieNm.isBlank() && !date.isBlank()) {
+            String title = parseString.makeNoBlankStr(movieNm).toLowerCase();
+            String key = title + " " + date;
+            if (tmdbDatas.containsKey(key)) {
+                JSONObject tmdbData = tmdbDatas.get(key);
+
+                Optional<Movie> baseMovie = getBaseMovie(tmdbData, kobisData);
+
+                baseMovie.ifPresent(m -> {
+                    saveMovie(m);
+                    Optional<Movie> newMovie = movieRepo.findByTmdbId(m.getTmdbId());
+                    result.add(newMovie.get());
+                });
+
             }
         }
     }
 
 
-    private List<Movie> requestTMDBIds(String startDate, String endDate) {
-        return Flux.range(1, MAX_PAGES) // 최대 페이지 수까지 Flux 생성
-                .flatMap(page -> wc.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path(TMDB_PATH_MOVIE + "/discover/movie")
-                                .queryParam("sort_by", "popularity.asc")
-                                .queryParam("release_date.gte", startDate)
-                                .queryParam("release_date.lte", "2024-04-28")
-                                .queryParam("region", "KR")
-                                .queryParam("page", page)
-                                .queryParam("api_key", TMDB_API_KEY)
-                                .queryParam("with_runtime.gte", "40")
-                                .queryParam("language", "ko-KR")
-                                .build())
-                        .retrieve()
-                        .bodyToMono(Map.class)
-                        .map(response -> new AbstractMap.SimpleEntry<>(page, response))
-                        .onErrorResume(e -> Mono.empty())
-                )
-                .takeWhile(entry -> {
-                    Map<String, Object> response = entry.getValue();
-                    if (response == null) return false;
-                    int totalPages = (int) response.get("total_pages");
-                    return entry.getKey() <= (totalPages > MAX_PAGES ? MAX_PAGES : totalPages);
-                })
-                .flatMap(entry -> Flux.fromIterable((List<Map<String, Object>>) entry.getValue().get("results")))
-                .map(result -> new AbstractMap.SimpleEntry<>((Integer) result.get("id"), (String) result.get("release_date")))
-                .filter(entry -> !movieRepo.existsByTmdbId(entry.getKey())) // 중복되는 ID 거르기
-                .map(entry -> {
-                    LocalDate releaseDate = Optional.ofNullable(entry.getValue())
-                            .filter(s -> !s.isEmpty())
-                            .map(s -> LocalDate.parse(s, FORMATTER))
-                            .orElse(null);
-                    return Movie.builder().tmdbId(entry.getKey()).releaseDate(releaseDate).build();
-                })
-                .map(movie -> (Movie) movieRepo.save(movie))
-                .collectList()
-                .block();
-    }
+    private static Optional<Movie> getBaseMovie(JSONObject tmdbData, JSONObject kobisData) {
+        Movie movie = null;
 
-    private Map<String, Object> requestPeople(int personId){
-        return wc.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(TMDB_PATH_MOVIE + "/person/" + personId)
-                        .queryParam("api_key", TMDB_API_KEY)
-                        .build())
-                .retrieve()
-                .bodyToMono(Map.class)
-                .onErrorResume(e-> {
-                    return Mono.just(new HashMap<String, Object>());
-                })
-                .block();
-    }
-
-    //영화 데이터 init 하기
-    public void initMovieData(List<Movie> movieEmptys) {
-        for (Movie movieEmpty : movieEmptys){
-            Map<String, Object> preProcessData = requestMovieDetailData(movieEmpty.getTmdbId());
-            Map<String, Object> postProcessData = modifyDetailData(preProcessData);
-//            if(postProcessData == null) movieRepo.delete(movieEmpty);
-//            else makeMovieData(postProcessData, movieEmpty);
-
-        }
-    }
-    //데이터 가공
-    public Map<String, Object> modifyDetailData(Map<String, Object> preProcessData) {
-        //데이터에 이상 있으면 null값으로 반환
-        if (preProcessData == null ||
-                ((int) preProcessData.get("runtime")) == 0 ||
-                !preProcessData.containsKey("credits") ||
-                ((Map<String, Object>) preProcessData.get("credits")).isEmpty() ||
-                !((Map<String, Object>) preProcessData.get("credits")).containsKey("crew") ||
-                ((List<Map<String, Object>>) ((Map<String, Object>) preProcessData.get("credits")).get("crew")).isEmpty()
-        ) {
-            return null;
+        String title = (String) kobisData.getOrDefault("movieNm", "");
+        if(title.isBlank()) title = (String) tmdbData.getOrDefault("title", "");
+        Long tmdbId = (Long) tmdbData.getOrDefault("id", 0L);
+        String cobisCode = (String) kobisData.getOrDefault("movieCd", "");
+        String posterPath = (String) tmdbData.getOrDefault("poster_path", "");
+        if(!title.isBlank() && tmdbId != 0 && !cobisCode.isBlank() || !posterPath.isBlank()) {
+            movie = Movie.builder()
+                    .title(title)
+                    .tmdbId(tmdbId)
+                    .kobisCode(cobisCode)
+                    .build();
         }
 
-        //사람 가공
-        Map<String, Object> credits = (Map<String, Object>) preProcessData.get("credits");
+        return Optional.ofNullable(movie);
+    }
+    private List<Movie> saveDetailList(List<Movie> movieList){
+        List<Movie> result = new ArrayList<>();
 
-        //감독 가공
-        List<Map<String, Object>> crews = (List<Map<String, Object>>) credits.get("crew");
-        Map<String, Object> directorData = new HashMap<>();
-        for (Map<String, Object> crew : crews) {
-            if ("Director".equals(crew.get("job"))) {
-                directorData.put("directorId", crew.get("id"));
-                directorData.put("directorImgPath", crew.get("profile_path"));
+        // TMDB 및 KOBIS 자세한 정보 요청
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (Movie movie : movieList) {
+            CompletableFuture<Void> f = CompletableFuture.runAsync(() -> {
+                if(movie != null && movie.getTmdbId() != null) getDetailMovie(movie, result);
+            }, executorService);
+            futures.add(f);
+
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        return result;
+    }
+
+    @Transactional
+    private void getDetailMovie(Movie movie, List<Movie> result) {
+        JSONObject tmdbData = (JSONObject) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + movie.getTmdbId() + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
+        JSONObject movieInfoResult = (JSONObject) ((JSONObject) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?movieCd=" + movie.getKobisCode(), KOBIS)).get("movieInfoResult");
+        if(movieInfoResult == null || tmdbData == null) {
+            Optional<Movie> movieOpt = movieRepo.findByTmdbId(movie.getTmdbId());
+            if(movieOpt.isPresent() && movieOpt.get().getRuntime() == null){
+                movieRepo.delete(movie);
+            }
+            return;
+        }
+        JSONObject kobisData = (JSONObject) movieInfoResult.get("movieInfo");
+        Long movieId = movie.getId();
+
+        String posterPath = (String) tmdbData.getOrDefault("poster_path", "");
+        Optional<byte[]> poster = requestImg(posterPath, POSTER);
+        int runtime = ((Long) tmdbData.getOrDefault("runtime", 0)).intValue();
+        if(poster.isEmpty() || runtime < 40) {
+            movieRepo.delete(movie);
+            return;
+        }
+        LocalDate releaseDate = getReleaseDate(kobisData, tmdbData);
+        String originCountry = "";
+        JSONArray nations = (JSONArray) kobisData.getOrDefault("nations", new JSONArray());
+        if(!nations.isEmpty()) originCountry = (String) ((JSONObject) (nations.get(0))).getOrDefault("nationNm", "");
+        List<MovieGenre> genreList = getMovieGenres(tmdbData, movieId);
+        String overview = (String) tmdbData.getOrDefault("overview", "");
+        Director director = getDirector(tmdbData, kobisData);
+        AvgScore avgScore = getAvgScore(movieId);
+
+        movie = movie.toBuilder()
+                .releaseDate(releaseDate)
+                .poster(poster.get())
+                .originCountry(originCountry)
+                .genreList(genreList)
+                .runtime(runtime)
+                .introduction(overview)
+                .director(director)
+                .avgScore(avgScore)
+                .build();
+        saveMovie(movie);
+
+        saveActor(tmdbData, kobisData, movieId);
+    }
+
+    @Transactional
+    private void saveActor(JSONObject tmdbData, JSONObject kobisData, Long movieId){
+        JSONObject credits = (JSONObject) tmdbData.getOrDefault("credits", "");
+        if(credits.isEmpty() || credits.equals("")) return;
+        JSONArray tmdbActors = (JSONArray) credits.getOrDefault("cast", new JSONArray());
+        JSONArray kobisActors = (JSONArray) kobisData.getOrDefault("actors", new JSONArray());
+        Map<String, JSONObject> tmdbMap = new HashMap<>();
+        if(!tmdbActors.isEmpty()) {
+            for (Object obj : tmdbActors) {
+                JSONObject tmdbActor = (JSONObject) obj;
+                String key = parseString.makeNoBlankStr((String) tmdbActor.getOrDefault("name", "")).toLowerCase();
+                if (!key.isBlank()) tmdbMap.put(key, tmdbActor);
+            }
+        }
+
+        if(!kobisActors.isEmpty()){
+            for (Object obj2 : kobisActors){
+                JSONObject kobisActor = (JSONObject) obj2;
+                String actorKorName = (String) kobisActor.getOrDefault("peopleNm", "");
+                String cast = (String) kobisActor.getOrDefault("cast", "");
+                String key = parseString.makeNoBlankStr(actorKorName).toLowerCase();
+                if (!key.isBlank() && tmdbMap.containsKey(key)) {
+                    JSONObject tmdbActor = tmdbMap.get(key);
+                    Long tmdbId = (Long) tmdbActor.getOrDefault("id", 0L);
+                    if(tmdbId == 0L) continue;
+                    Optional<Actor> byTmdbId = actorRepo.findByTmdbId(tmdbId);
+                    Actor actor;
+                    if(byTmdbId.isPresent()) actor = byTmdbId.get();
+                    else {
+                        String actorEngName = (String) kobisActor.getOrDefault("peopleNmEn", "");
+                        String TMDBProfilePath = (String) tmdbActor.getOrDefault("profile_path", "");
+                        try{
+                            actor = actorRepo.saveAndFlush(Actor.builder()
+                                    .name(actorKorName)
+                                    .engName(actorEngName)
+                                    .tmdbId(tmdbId)
+                                    .profileImage(requestImg(TMDBProfilePath, PROFILE).get())
+                                    .build());
+
+                        } catch (DataIntegrityViolationException e){
+                            actor = actorRepo.findByTmdbId(tmdbId).get();
+                        }
+                    }
+                    if(!actorMovieRepo.existsByMovieIdAndActorId(movieId, actor.getId())) {
+                        Long tmdbOrder = (Long) tmdbActor.getOrDefault("order", 0L);
+                        ActorMovie actorMovie = ActorMovie.builder()
+                                .character(cast)
+                                .movie(Movie.builder().id(movieId).build())
+                                .actor(Actor.builder().id(actor.getId()).build())
+                                .orders(tmdbOrder)
+                                .build();
+
+                        try {
+                            actorMovieRepo.saveAndFlush(actorMovie);
+                        } catch (DataIntegrityViolationException e){
+                        }
+                    }
+
+                }
+
+            }
+        }
+    }
+
+    @Transactional
+    private AvgScore getAvgScore(Long movieId) {
+        AvgScore avgScore;
+        Optional<AvgScore> as = avgScoreRepo.findByMovieId(movieId);
+        if(as.isPresent()){
+            avgScore = as.get();
+        }
+        else{
+            AvgScore newAs = AvgScore.builder().id(movieId).build();
+            try{
+                avgScore = avgScoreRepo.saveAndFlush(newAs);
+            }catch (DataIntegrityViolationException e){
+                avgScore = avgScoreRepo.findByMovieId(movieId).get();
+            }
+        }
+        return avgScore;
+    }
+
+    @Transactional
+    private List<MovieGenre> getMovieGenres(JSONObject tmdbData, Long movieId) {
+        List<MovieGenre> genreList = new ArrayList<>();
+        JSONArray genres = (JSONArray) tmdbData.getOrDefault("genres", new JSONArray());
+        if(genres != null && !genres.isEmpty()){
+            for (Object obj : genres) {
+                String genreKor = (String) ((JSONObject) obj).getOrDefault("name", "");
+                MovieGenre mg = MovieGenre.builder()
+                        .genre(Genre.getEnum(genreKor))
+                        .movie(Movie.builder().id(movieId).build())
+                        .build();
+                genreList.add(mg);
+                mg = movieGenreRepo.save(mg);
+            }
+        }
+        return genreList;
+    }
+
+    private LocalDate getReleaseDate(JSONObject kobisData, JSONObject tmdbData) {
+        String releaseDateStr = (String) kobisData.getOrDefault("openDt", "");
+        LocalDate releaseDate = null;
+        if(releaseDateStr.isBlank()){
+            releaseDateStr = (String) tmdbData.getOrDefault("release_date", "");
+            if(!releaseDateStr.isBlank()){
+                DateTimeFormatter f = DateTimeFormatter.ISO_DATE;
+                releaseDate = LocalDate.parse(releaseDateStr, f);
+            }
+        }
+        else{
+            DateTimeFormatter f = DateTimeFormatter.BASIC_ISO_DATE;
+            releaseDate = LocalDate.parse(releaseDateStr, f);
+        }
+        return releaseDate;
+    }
+
+    @Transactional
+    private Director getDirector(JSONObject tmdbData, JSONObject kobisData) {
+        Director director = null;
+        JSONObject credits = (JSONObject) tmdbData.getOrDefault("credits", "");
+        if(credits.isEmpty() || credits.equals("")) return director;
+        JSONArray crews = (JSONArray) credits.getOrDefault("crew", new JSONArray());
+        if(crews == null || crews.isEmpty()) return director;
+        Map<String, JSONObject> directorsTmdb = new HashMap<>();
+        for (Object obj : crews) {
+            JSONObject crew = (JSONObject) obj;
+            if(((String) crew.getOrDefault("job", "")).equals("Director")){
+                String name = parseString.makeNoBlankStr((String) crew.getOrDefault("name", "")).toLowerCase();
+                if(!name.isBlank())directorsTmdb.put(name, crew);
+            }
+        }
+        JSONArray directorArr = (JSONArray) kobisData.getOrDefault("directors", new JSONArray());
+        if(directorArr == null || directorArr.isEmpty()) return director;
+        for (int i = 0; i < directorArr.size(); i++){
+            JSONObject directorKobis = (JSONObject) directorArr.get(i);
+            String name = (String) directorKobis.getOrDefault("peopleNm", "");
+            if(name.isBlank()) continue;
+            Optional<Long> opt = directorRepo.findIdByName(name);
+            String key = parseString.makeNoBlankStr(name).toLowerCase();
+            if (directorsTmdb.containsKey(key)) {
+                if(opt.isPresent()){
+                    director = Director.builder().id(opt.get()).build();
+                }
+                else{
+                    JSONObject directorTmdb = directorsTmdb.get(key);
+
+                    try {
+                        director = directorRepo.saveAndFlush(Director.builder()
+                                .name(name)
+                                .engname((String) directorKobis.getOrDefault("peopleNmEn", ""))
+                                .profileImage(requestImg((String) directorTmdb.getOrDefault("profile_path", ""), PROFILE).get())
+                                .tmdbId((Long) directorTmdb.get("id"))
+                                .build());
+                    } catch (DataIntegrityViolationException e){
+                        director = directorRepo.findByName(name).get();
+                    }
+
+                }
                 break;
             }
         }
-        if(directorData.isEmpty()) return null;
-        credits.remove("crew");
-        preProcessData.putAll(directorData);
 
-        return preProcessData;
-    }
+        if(director == null){
+            JSONObject d = (JSONObject) directorArr.get(0);
+            String name = (String) d.getOrDefault("peopleNm", "");
+            if(!name.isBlank()){
+                Optional<Long> optId = directorRepo.findIdByName(name);
 
-    //영화 상세정보 요청하기 for initMovieData()
-    public Map<String, Object> requestMovieDetailData(int tmdbId){
-        return wc.get()
-                .uri(uriBuilder -> uriBuilder
-                        .path(TMDB_PATH_MOVIE + "/movie/" + tmdbId)
-                        .queryParam("language", "ko-KR")
-                        .queryParam("append_to_response", "credits")
-                        .queryParam("api_key", TMDB_API_KEY)
-                        .build())
-                .retrieve()
-                .bodyToMono(Map.class)
-                .onErrorResume(e -> {
-                    return Mono.just(new HashMap<String, Object>());
-                })
-                .block();
-    }
-
-    //이미지 데이터 요청하기
-    public byte[] requestImg(String imagePath, ImageType type) {
-        if (imagePath != null) {
-            HttpURLConnection connection = null;
-            try {
-                URL url = new URL(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-
-                // 서버로부터 응답 상태 코드 확인
-                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    try (InputStream inputStream = connection.getInputStream();
-                         ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-
-                        // InputStream에서 데이터를 읽고 byte[]로 변환
-                        int nRead;
-                        byte[] data = new byte[16384]; // 16KB buffer size
-
-                        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
-                            buffer.write(data, 0, nRead);
-                        }
-                        buffer.flush();
-                        return buffer.toByteArray();
-                    }
+                if(!optId.isPresent()) {
+                    director = Director.builder()
+                            .name(name)
+                            .engname((String) d.getOrDefault("peopleNmEn", ""))
+                            .profileImage(requestImg("", PROFILE).get())
+                            .build();
                 }
-                return returnDefaultImg(type);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return returnDefaultImg(type);
-            } finally {
-                if (connection != null) connection.disconnect();
+                else director = Director.builder().id(optId.get()).build();
+
+                try {
+                    director = directorRepo.saveAndFlush(director);
+
+                } catch (DataIntegrityViolationException e){
+                    director = directorRepo.findByName(director.getName()).get();
+                }
+            }
+
+        }
+
+
+        return director;
+    }
+
+    @Transactional
+    private Optional<Movie> saveMovie(Movie movie){
+        Movie m = null;
+        Optional<Movie> movieFromDb = movieRepo.findByTmdbId(movie.getTmdbId());
+        if(movie == null || movie.getTmdbId() == null || movie.getTmdbId() == 0L || movie.getTitle() == null || (movie.getId() == null && movieFromDb.isPresent() && movieFromDb.get().getPoster() != null)) return Optional.ofNullable(null);
+        if (movieFromDb.isPresent()) m = movie.toBuilder().id(movieFromDb.get().getId()).build();
+        else m = movie;
+        try {
+            m = movieRepo.saveAndFlush(m);
+        } catch (DataIntegrityViolationException e) {
+            m = movieRepo.findById(movieRepo.findByTmdbId(m.getTmdbId()).get().getId()).get();
+            movieRepo.saveAndFlush(m);
+        }
+
+
+        return Optional.of(m);
+    }
+
+    private List<JSONObject> getKobisDatas(int year) {
+        List<JSONObject> result = new ArrayList<>();
+        int maxPage = kobisDataMaxPage(year, 1);
+
+        //총 페이지만큼 반복해 요청 보내기
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (int curPage = 1; curPage <= maxPage; curPage++) {
+            final int finalCurPage = curPage;
+            CompletableFuture<Void> f = CompletableFuture.runAsync(() -> requestKobisDatas(year, finalCurPage, result), executorService);
+            futures.add(f);
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        return result;
+    }
+    private void requestKobisDatas(int year, int curPage, List<JSONObject> result) {
+        String url = String.format("%s/movie/searchMovieList.json?openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d", KOBIS_BASEURL, year, year, curPage);
+        JSONObject response = (JSONObject) requestData(url, KOBIS);
+        if(response == null) return;
+
+        //코비스 키 만료로 실패한 경우 다시 요청하기
+        if(response.containsKey("faultInfo") && ((Map<String, String>) response.get("faultInfo")).get("errorCode").equals("320011")) {
+            response = reRequestKobis(response, url);
+        }
+
+        JSONObject results = (JSONObject) response.get("movieListResult");
+        if(results != null) {
+            JSONArray movieDataList = (JSONArray) results.get("movieList");
+            if (movieDataList != null && !movieDataList.isEmpty()) {
+                for (Object movieData : movieDataList) {
+                    JSONObject obj = (JSONObject) movieData;
+
+                    //19금이면 거르자
+                    if (isKobisContainSexual(obj)) continue;
+                    result.add(obj);
+                }
             }
         }
-        else {
-            return returnDefaultImg(type);
+
+    }
+
+    private boolean isKobisContainSexual(JSONObject obj){
+        boolean result = false;
+        String title = (String) obj.getOrDefault("movieNm", "");
+        JSONArray companys = (JSONArray) obj.getOrDefault("companys", new JSONArray());
+        String genre = (String) obj.getOrDefault("genreAlt", "");
+
+
+        //장르가 에로이면 거르자
+        if(!genre.isBlank() && genre.contains("에로")) result = true;
+
+        //에로 장르를 주로 만드는 회사도 거르자
+        if(!companys.isEmpty()){
+            for(Object company : companys){
+                JSONObject com = (JSONObject) company;
+
+                String companyNm = (String) com.getOrDefault("companyNm", "");
+                if(companyNm.contains("샤이커뮤니케이션즈")) result = true;
+            }
         }
+
+        //제목에서 싹수가 보이면 거르자
+        if ((!genre.isBlank() && genre.contains("로맨스")) && (
+                title.contains("섹스") || title.contains("무삭제") || title.contains("처제") || title.contains("형수") || title.contains("야한")
+                        || title.contains("룸싸롱") || title.contains("성행각") || title.contains("불륜") || title.contains("왕가슴") || title.contains("성감대")
+                        || title.contains("유부녀") || title.contains("정사") || title.contains("몸을 탐닉") || title.contains("젖") || title.contains("구멍")
+                        || title.contains("가슴큰") || title.contains("가슴 큰") || title.contains("거유") || title.contains("스와핑") || title.contains("엄마")
+                        || title.contains("체액") || title.contains("미망인") || title.contains("마누라") || title.contains("도련님") || title.contains("육덕")
+        )){
+            result = true;
+        }
+
+        return result;
+    }
+    private JSONObject reRequestKobis(JSONObject response, String url) {
+        boolean isfault = response.containsKey("faultInfo");
+        while (isfault){
+            kobisService.nextKobisKey();
+            response = (JSONObject) requestData(url, KOBIS);
+            isfault = response.containsKey("faultInfo");
+        }
+
+        return response;
+    }
+
+    private Map<String, JSONObject> getTmdbDatas(int year){
+        String startDate = year + "-01-01";
+        String endDate = year + "-12-31";
+        int maxPage = TMDBDataMaxPage(startDate, endDate);
+        Map<String, JSONObject> result = new HashMap<>();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (int curPage = 1; curPage <= maxPage; curPage++) {
+            final int finalCurPage = curPage;
+            CompletableFuture<Void> f = CompletableFuture.runAsync(() -> requestTMDBDatas(finalCurPage, startDate, endDate, result), executorService);
+            futures.add(f);
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        return result;
+
+    }
+
+    private void requestTMDBDatas(int page, String startDate, String endDate, Map<String, JSONObject> list) {
+        JSONObject response = (JSONObject) requestData(String.format("%s%s/discover/movie?api_key=%s&include_adult=false&include_video=false&language=ko-KR&include_adult=false&page=%d&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, page, startDate, endDate), TMDB_MOVIE);
+
+        if (response != null) {
+            JSONArray results = (JSONArray) response.getOrDefault("results", new JSONArray());
+            if(!results.isEmpty()) {
+                for (Object result : results) {
+                    if(result == null) continue;
+                    JSONObject obj = (JSONObject) result;
+
+                    String title = parseString.makeNoBlankStr((String) obj.getOrDefault("title", "")).toLowerCase();
+                    String dateStr = (String) obj.getOrDefault("release_date", "");
+                    if (title.isBlank() || dateStr.isBlank()) continue;
+                    String[] split = dateStr.split("-");
+                    String date = String.join("", split);
+                    String key = title + " " + date;
+                    list.put(key, obj);
+                }
+            }
+        }
+    }
+
+    //요청시 응답의 총 페이지 확인
+    private int TMDBDataMaxPage(String startDate, String endDate) {
+        int maxPage = 0;
+        JSONObject response = (JSONObject) requestData(String.format("%s%s/discover/movie?api_key=%s&include_adult=false&include_video=false&language=ko-KR&include_adult=false&page=1&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, startDate, endDate), TMDB_MOVIE);
+
+        while(response == null || response.isEmpty()){
+            response = (JSONObject) requestData(String.format("%s%s/discover/movie?api_key=%s&include_adult=false&include_video=false&language=ko-KR&include_adult=false&page=1&release_date.gte=%s&release_date.lte=%s&with_runtime.gte=40&region=KR",
+                    TMDB_BASEURL, TMDB_PATH_MOVIE, TMDB_API_KEY, startDate, endDate), TMDB_MOVIE);
+        }
+
+        maxPage = ((Long) response.get("total_pages")).intValue();
+        return Math.min(maxPage, 500);
+    }
+    private int kobisDataMaxPage(int year, int curPage){
+        String url = String.format("%s/movie/searchMovieList.json?openStartDt=%s&openEndDt=%s&itemPerPage=100&curPage=%d", KOBIS_BASEURL, year, year, curPage);
+        JSONObject response = (JSONObject) requestData(url, KOBIS);
+
+        //코비스 키 만료로 실패한 경우 다시 요청하기
+        response = reRequestKobis(response, url);
+
+        JSONObject results = (JSONObject) response.get("movieListResult");
+        Long totCnt = (Long) results.get("totCnt"); // 전체 콘텐트 개수
+
+        return ((Long)((totCnt + 99) / 100)).intValue(); // 전체 페이지 수 계산 (올림 처리)
+
+    }
+
+    //외부 통신
+    private Optional<byte[]> requestImg(String imagePath, ImageType type) {
+        if (imagePath == null || imagePath.isBlank()) return Optional.ofNullable(returnDefaultImg(type));
+        try {
+            byte[] imageBytes = (byte[]) requestData(TMDB_BASEURL + (type.equals(POSTER) ? TMDB_PATH_POSTER : TMDB_PATH_PROFILE) + imagePath, TMDB_IMG);
+            if(imageBytes != null && imageBytes.length > 0) return Optional.of(imageBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return Optional.ofNullable(returnDefaultImg(type));
     }
     private byte[] returnDefaultImg(ImageType type) {
         if (type.equals(POSTER)) {
@@ -240,112 +588,63 @@ public class MovieInitService {
 
         }
     }
-
-    public static Genre getGenreBykorName(String korName) {
-        for (Genre genre : Genre.values()) {
-            if (genre.getKor().equals(korName)) return genre;
+    public Object requestData(String url, InitType type) {
+//        RestTemplate restTemplate = new RestTemplate();
+        Object result = null;
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Accept", "application/json");
+        if (type.equals(TMDB_MOVIE)) headers.set("Authorization", "Bearer " + TMDB_ACCESS_TOKEN);
+        if (type.equals(KOBIS)){
+            url = String.format("%s&key=%s", url, kobisService.curKobisKey);
         }
-        return null;
-    }
 
-    private List<MovieGenre> makeMovieGenre(List<String> genreStrs, Movie movie) {
-        if( genreStrs.size() <= 0 ) return new ArrayList<>();
+        if(type.equals(TMDB_IMG)){
+            ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                response = restTemplate.getForEntity(url, byte[].class);
+                //연속 통신 횟수를 넘는다면
+                while(response.getStatusCode().value() == 429){
+                    try {
+                        Thread.sleep(200); // 0.1초 동안 지연
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    response = restTemplate.getForEntity(url, byte[].class);
+                }
+            }
 
-        return genreStrs.stream()
-                .map(genreStr -> MovieGenre.builder().movie(movie).genre(getGenreBykorName(genreStr)).build())
-                .map(movieGenreRepo::save)
-                .collect(Collectors.toList());
+            if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null) result = response.getBody();
+        }
+        else{
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
-    }
+            if(type.equals(TMDB_MOVIE)){
+                //연속 통신 횟수를 넘는다면
+                while(response.getStatusCode().value() == 429){
+                    try {
+                        Thread.sleep(200); // 0.1초 동안 지연
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    response = restTemplate.getForEntity(url, String.class);
+                }
+                //TMDB 키가 정지되었다면
+                if(response.getStatusCode().value() == 404 || response.getStatusCode().value() == 422) {
+                    throw new CustomException(TMDB_APIKEY_EXPIRED);
+                }
+            }
 
-    private String nameToKor(int tmdbId) {
-        Map<String, Object> people = requestPeople(tmdbId);
-        if (people == null || people.isEmpty()) return "이름없음";
-
-        String defaultName = (String) people.get("name");
-        if (defaultName == null) return "이름없음";
-
-        List<String> also_known_as = (List<String>) people.get("also_known_as");
-        if (also_known_as != null && !also_known_as.isEmpty()) {
-            for (String name : also_known_as) {
-                if (name.matches("^[가-힣]+$")) {
-                    return name;  // 한글 이름 발견 시 반환
+            if(response.getStatusCode().is2xxSuccessful()){
+                JSONParser jsonParser = new JSONParser();
+                try {
+                    JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
+                    result = jsonObject;
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
             }
         }
 
-        return defaultName;  // 한글 이름이 없다면 기본 이름 반환
+        return result;
     }
-
-    //응답 받은 데이터 가공 및 저장 for initMovieData()
-//    private Movie makeMovieData(Map<String, Object> movieDetailData, Movie movie){
-//        //데이터 가공
-//        String newTitle = (String) movieDetailData.get("title");
-//        LocalDate newReleaseDate = LocalDate.parse((String) movieDetailData.get("release_date"));
-//        List<String> newOriginCountrys = (List<String>) movieDetailData.get("origin_country");
-//        List<Map<String, Object>> genres = (List<Map<String, Object>>) movieDetailData.get("genres");
-//        List<String> genreStrs = genres.stream().map(obj-> (String) obj.get("name")).collect(Collectors.toList());
-//        int newRuntime = (int) movieDetailData.get("runtime");
-//        String newIntroduction = (String) movieDetailData.get("overview");
-//        List<Map<String, Object>> casts = (List<Map<String, Object>>) ((Map<String, Object>) movieDetailData.get("credits")).get("cast");
-//        AvgScore avgScore = AvgScore.builder().build();
-//        avgScoreRepo.save(avgScore);
-//
-//        Director director = Director.builder()
-//                .name(nameToKor((int) movieDetailData.get("directorId")))
-//                .profileImage(requestImg((String) movieDetailData.get("directorImgPath"), PROFILE))
-//                .tmdbId((int) movieDetailData.get("directorId"))
-//                .build();
-//
-//        //영화 + 감독 데이터 저장
-//        Movie newMovie = movie.toBuilder()
-//                .title(newTitle)
-//                .originCountry(newOriginCountrys.size() != 0 ? newOriginCountrys.get(0) : null)
-//                .runtime(newRuntime)
-//                .introduction(newIntroduction)
-//                .poster(requestImg((String) movieDetailData.get("poster_path"), POSTER))
-//                .director(directorRepo.save(director))
-//                .avgScore(avgScore)
-//                .build();
-//
-//        newMovie = newMovie.toBuilder()
-//                .genreList(makeMovieGenre(genreStrs, newMovie))
-//                .build();
-//        movieRepo.save(newMovie);
-//
-//        //배우 데이터 저장
-//        saveActor(casts, newMovie);
-//
-//        return newMovie;
-//    }
-
-//    private void saveActor(List<Map<String, Object>> casts, Movie movie){
-//        for (Map<String, Object> cast : casts){
-//            if((int) cast.get("order") < 8){
-//                int tmdbId = (int) cast.get("id");
-//                Optional<Actor> actorOpt = actorRepo.findByTmdbId(tmdbId);
-//                Actor actor;
-//                if(actorOpt.isPresent()) actor = actorOpt.get();
-//                else{
-//                    actor = Actor.builder()
-//                            .name(nameToKor(tmdbId))
-//                            .profileImage(requestImg((String) cast.get("profile_path"), PROFILE))
-//                            .tmdbId(tmdbId)
-//                            .build();
-//                    actorRepo.save(actor);
-//                }
-//
-//                ActorMovie actorMovie = ActorMovie.builder()
-//                        .character((String) cast.get("character"))
-//                        .orders((int) cast.get("order"))
-//                        .actor(actor)
-//                        .movie(movie)
-//                        .build();
-//                actorMovieRepo.save(actorMovie);
-//            }
-//        }
-//    }
-
-
-
 }
