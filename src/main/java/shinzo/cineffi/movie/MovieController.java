@@ -25,17 +25,17 @@ import static shinzo.cineffi.auth.AuthService.getLoginUserId;
 public class MovieController {
     private final MovieService movieService;
     private final ScrapService scrapService;
-    private final NewMovieInitService newMovieInitService;
+    private final MovieInitService movieInitService;
 
     @GetMapping("/update")
     public ResponseEntity<ResponseDTO<?>> update() {
 
-        List<String> titles = newMovieInitService.updateData();
+        movieInitService.updateData();
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(titles.isEmpty() ? "업데이트된 영화가 없습니다" : titles)
+                        .result("업데이트 완료")
                         .build());
     }
 
@@ -43,7 +43,7 @@ public class MovieController {
     public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
         long beforeTime = System.currentTimeMillis();
 
-        newMovieInitService.initData(year);
+        movieInitService.initData(year);
 
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime)/1000;
@@ -51,7 +51,7 @@ public class MovieController {
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(secDiffTime)
+                        .result("걸린 시간: " + secDiffTime)
                         .build());
     }
 

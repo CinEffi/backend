@@ -47,7 +47,8 @@ public class Movie extends BaseEntity {
     @JoinColumn(name = "avg_score_id")
     private AvgScore avgScore;
 
-    private int tmdbId;
+    @Column(unique=true)
+    private Long tmdbId;
     private String engTitle;
 
     private String kobisCode;

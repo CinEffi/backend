@@ -50,38 +50,38 @@ public class InitService {
     private final BoxOfficeMovieRepository boxOfficeMovieRepository;
     private final ScoreRepository scoreRepository;
 
-    @PostConstruct
-    @Transactional
-    public void arrangeAvgScores() {
-        System.out.println("InitService.arrangeAvgScores");
-        List<Movie> all = movieRepository.findAllByAvgScoreIdIsNull();
-        System.out.println("all.size() = " + all.size());
-        for (Movie movie : all) {
-            Float allSum = 0.0f, levelSum = 0.0f, cinephileSum = 0.0f;
-            Integer allCount = 0, levelCount = 0, cinephileCount = 0;
-            List<Score> scores = scoreRepository.findAllByMovie(movie);
-            for (Score score : scores) {
-                Float scoreValue = score.getScore();
-                allCount++;
-                allSum += scoreValue;
-                if (score.getUser().getIsCertified()) {
-                    cinephileCount++;
-                    cinephileSum += scoreValue;
-                }
-                if (10 <= score.getUser().getLevel()) {
-                    levelCount++;
-                    levelSum += scoreValue;
-                }
-            }
-            AvgScore avgScore = AvgScore.builder()
-                    .id(movie.getId()).allScoreCount(allCount).allScoreSum(allSum).levelScoreCount(levelCount)
-                    .levelScoreSum(levelSum).cinephileScoreCount(cinephileCount).cinephileScoreSum(cinephileSum).build();
-
-            avgScore = avgScoreRepository.save(avgScore);
-
-            movieRepository.save(movie.toBuilder().avgScore(avgScore).build());
-        }
-    }
+//    @PostConstruct
+//    @Transactional
+//    public void arrangeAvgScores() {
+//        System.out.println("InitService.arrangeAvgScores");
+//        List<Movie> all = movieRepository.findAllByAvgScoreIdIsNull();
+//        System.out.println("all.size() = " + all.size());
+//        for (Movie movie : all) {
+//            Float allSum = 0.0f, levelSum = 0.0f, cinephileSum = 0.0f;
+//            Integer allCount = 0, levelCount = 0, cinephileCount = 0;
+//            List<Score> scores = scoreRepository.findAllByMovie(movie);
+//            for (Score score : scores) {
+//                Float scoreValue = score.getScore();
+//                allCount++;
+//                allSum += scoreValue;
+//                if (score.getUser().getIsCertified()) {
+//                    cinephileCount++;
+//                    cinephileSum += scoreValue;
+//                }
+//                if (10 <= score.getUser().getLevel()) {
+//                    levelCount++;
+//                    levelSum += scoreValue;
+//                }
+//            }
+//            AvgScore avgScore = AvgScore.builder()
+//                    .id(movie.getId()).allScoreCount(allCount).allScoreSum(allSum).levelScoreCount(levelCount)
+//                    .levelScoreSum(levelSum).cinephileScoreCount(cinephileCount).cinephileScoreSum(cinephileSum).build();
+//
+//            avgScore = avgScoreRepository.save(avgScore);
+//
+//            movieRepository.save(movie.toBuilder().avgScore(avgScore).build());
+//        }
+//    }
     // Initialize 시 더미데이터 삽입 (테스트 유저, 영화, 평론)
 //    @PostConstruct
 //    @Transactional
