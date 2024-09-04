@@ -52,7 +52,6 @@ jobs:
       - name: print present path
         run: |
           pwd
-          cd /home/ubuntu
 
       - name: Deploy to prod (임시로 dev 서버에 배포)
         uses: appleboy/ssh-action@master
