@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import shinzo.cineffi.domain.entity.movie.*;
@@ -61,17 +62,7 @@ public class MovieInitService {
     private final String KOBIS_BASEURL = "http://www.kobis.or.kr/kobisopenapi/webservice/rest";
     ExecutorService executorService = Executors.newFixedThreadPool(100);
 
-    public List<Movie> initData(int year){
-        List<Movie> baseList = savebaseList(year);
-        List<Movie> movieList = saveDetailList(baseList);
-
-        if(LocalDate.now().getYear() == year) {
-            boxOfficeDataHandler.dailyBoxOffice();
-        }
-
-        return movieList;
-    }
-
+    @Scheduled(cron = "0 0 0 * * ?")
     public void updateData(){
         int year = LocalDate.now().getYear();
         List<Movie> baseList = savebaseList(year);
@@ -81,6 +72,17 @@ public class MovieInitService {
             boxOfficeDataHandler.dailyBoxOffice();
         }
 
+    }
+
+    public List<Movie> initData(int year){
+        List<Movie> baseList = savebaseList(year);
+        List<Movie> movieList = saveDetailList(baseList);
+
+        if(LocalDate.now().getYear() == year) {
+            boxOfficeDataHandler.dailyBoxOffice();
+        }
+
+        return movieList;
     }
 
     private List<Movie> savebaseList(int year){
