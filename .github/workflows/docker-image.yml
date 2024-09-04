@@ -59,7 +59,6 @@ jobs:
           port: 22
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            sudo docker ps
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
-            sudo docker run -d -p 4000:4000 ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
-            sudo docker image prune -f
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d
