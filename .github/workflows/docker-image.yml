@@ -56,7 +56,7 @@ jobs:
 
       - name: Deploy to prod (임시로 dev 서버에 배포)
         uses: appleboy/ssh-action@master
-        id: deploy-dev
+        id: deploy-prod
         if: contains(github.ref, 'main')
         with:
           host: ${{ secrets.HOST_DEV }}
