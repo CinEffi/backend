@@ -90,9 +90,9 @@ spring:
         - dev
   # Postgres
   datasource:
-    url: jdbc:postgresql://postgres:5432/cineffi
-    username: root
-    password: n1234
+    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com
+    username: postgres
+    password: cineffi2024!
     driver-class-name: org.postgresql.Driver
   #Redis
   data:
