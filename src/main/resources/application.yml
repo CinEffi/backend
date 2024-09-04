@@ -103,7 +103,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: create
       properties:
         hibernate:
           format_sql: none
