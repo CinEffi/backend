@@ -30,6 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
             //검사하긴하는데 있어도되고없어도되는애들+ 검사하면 안되는 애들
                 (request.getRequestURI().startsWith("/api/auth") ||
                         request.getRequestURI().equals("/api/movies/init") ||
+                        request.getRequestURI().equals("/api/movies/update") ||
                         request.getRequestURI().equals("/api/movies/boxOffice") ||
                         request.getRequestURI().equals("/api/movies/genre") ||
                         request.getRequestURI().equals("/api/movies/upcoming") ||

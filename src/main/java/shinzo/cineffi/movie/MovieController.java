@@ -27,7 +27,7 @@ public class MovieController {
     private final ScrapService scrapService;
     private final MovieInitService movieInitService;
 
-    @GetMapping("/update")
+    @PostMapping("/update")
     public ResponseEntity<ResponseDTO<?>> update() {
 
         movieInitService.updateData();
@@ -39,7 +39,7 @@ public class MovieController {
                         .build());
     }
 
-    @GetMapping("/init")
+    @PostMapping("/init")
     public ResponseEntity<ResponseDTO<?>> init(@RequestParam int year) {
         long beforeTime = System.currentTimeMillis();
 
@@ -51,7 +51,7 @@ public class MovieController {
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result("걸린 시간: " + secDiffTime)
+                        .result("소요 시간: " + secDiffTime)
                         .build());
     }
 
