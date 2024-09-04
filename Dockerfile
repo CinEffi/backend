@@ -4,13 +4,11 @@ FROM openjdk:17-jdk-slim-buster as builder
 # 커맨드를 실행하는 디렉토리를 지정, -w:오버라이딩
 WORKDIR /app
 
-COPY cineffi/gradlew cineffi/build.gradle cineffi/settings.gradle ./
-COPY cineffi/gradle ./gradle
-COPY cineffi/src/main ./src/main
+COPY ./gradlew ./build.gradle ./settings.gradle ./
+COPY ./gradle ./gradle
+COPY ./src/main ./src/main
 
 RUN mkdir -p /root/.gradle
-RUN echo "systemProp.http.proxyHost=krmp-proxy.9rum.cc\nsystemProp.http.proxyPort=3128\nsystemProp.https.proxyHost=krmp-proxy.9rum.cc\nsystemProp.https.proxyPort=3128" > /root/.gradle/gradle.properties
-
 RUN ./gradlew bootJar
 
 # app

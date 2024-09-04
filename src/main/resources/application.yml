@@ -1,0 +1,137 @@
+---
+
+## local
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/cineffi
+    username:
+    password:
+    driver-class-name: org.postgresql.Driver
+
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+      properties:
+        hibernate:
+          format_sql: none
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: mooyaho
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: cineffi24@gmail.com
+    password: hlpzfpccpypynyme
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          timeout: 5000
+          connectiontimeout: 5000
+          writetimeout: 5000
+    auth-code-expiration-millis: 300000 //5분
+
+#  jwt:
+#    expiration_time : 300,000
+
+logging:
+  level:
+    org.springframework.mail: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+kakao:
+  rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
+  redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/check
+  back_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/api/auth/login/kakao
+  deleted_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/deletedaccount
+app:
+  encryption:
+    key: "cineffiSecretKey"
+
+
+kobis:
+  api_key1: 5b5979d8f9822605465799f4de0d864a
+  api_key2: f97089e51098e3098753d84bea65f507
+  api_key3: 5873d607725ac6c9564a8954da0c178a
+  api_key4: 7af2e7f58134765d4308a5096295d274
+  api_key5: 2a45813037fb723c2d8b3dbd808e1328
+  api_key6: 4564a256f40c78acde5f8406a7b65dc6
+  api_key7: ac0934e1fbde3331f44992550b1e1d9d
+  api_key8: ab9624b11878afc7bbcafef6409d81c1
+  api_key9: c305d916b8f8d83032f21878c3db1c16
+  api_key10: 333eabf2df141a538e910bae70243fc1
+  api_key11: 0994d8ac050005fb257070390088ea85
+  api_key12: eb64f7ff5664a19e68063e2369de4cda
+  base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
+
+
+tmdb:
+  access_token: eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJjZTc0MjdlODU0YzU2ZjFlMmI0OWE2NWRmNDVjZDNiZSIsInN1YiI6IjY2MGUwN2QwMzU4MThmMDE3YzNjZGI5ZCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.744tSvIVxntYL4eGwbl6UZLNEq4yJ4YUgDaUkuTZ4fQ
+  api_key: ce7427e854c56f1e2b49a65df45cd3be
+  base_url: https://
+  path_poster: image.tmdb.org/t/p/w500
+  path_profile: image.tmdb.org/t/p/w200
+  path_movie: api.themoviedb.org/3
+  start-year: 2024
+  end-year: 2024
+  start-month: 4
+  end-month: 4
+email:
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
+---
+
+## dev profile (Docker 용)
+server:
+  port: 4000
+
+spring:
+  config:
+    activate:
+      on-profile:
+        - dev
+  # Postgres
+  datasource:
+    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com
+    username: postgres
+    password: cineffi2024!
+    driver-class-name: org.postgresql.Driver
+  #Redis
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: mooyaho
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+      properties:
+        hibernate:
+          format_sql: none
+
+email:
+  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
+
+logging:
+  level:
+    org.springframework.mail: ERROR
+    org.springframework.web: ERROR
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+    shinzo.cineffi.exception.CustomException: OFF
+
+kakao:
+  rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
+  redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/check
+  back_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/api/auth/login/kakao
+  deleted_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/deletedaccount
