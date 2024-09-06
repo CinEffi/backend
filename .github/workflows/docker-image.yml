@@ -49,10 +49,6 @@ jobs:
           docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test-dev .
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
 
-      - name: print present path
-        run: |
-          pwd
-
       - name: Deploy to prod (임시로 dev 서버에 배포)
         uses: appleboy/ssh-action@master
         id: deploy-prod
@@ -63,7 +59,8 @@ jobs:
           port: 22
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu
+            pwd
+            cd ../..
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
@@ -78,7 +75,8 @@ jobs:
           port: 22
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu
+            pwd
+            cd ../..
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
