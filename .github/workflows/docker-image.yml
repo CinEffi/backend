@@ -39,15 +39,15 @@ jobs:
         if: contains(github.ref, 'main')
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test-prod .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-prod
+          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test .
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test
 
       - name: Docker build & push to dev
         if: contains(github.ref, 'dev')
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test-dev .
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
+          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test .
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-test
 
       # docker-compose.yml 파일을 EC2로 복사
       - name: Copy docker-compose.yml to EC2
@@ -70,8 +70,9 @@ jobs:
           port: 22
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            pwd
             cd /home/ubuntu
+            sed -i 's|${DOCKER_USERNAME}|'"${{ secrets.DOCKER_USERNAME }}"'|g' docker-compose.yml
+            sed -i 's|${REDIS_PASSWORD}|'"${{ secrets.REDIS_PASSWORD }}"'|g' docker-compose.yml
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
@@ -86,8 +87,9 @@ jobs:
           port: 22
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
-            pwd
             cd /home/ubuntu
+            sed -i 's|${DOCKER_USERNAME}|'"${{ secrets.DOCKER_USERNAME }}"'|g' docker-compose.yml
+            sed -i 's|${REDIS_PASSWORD}|'"${{ secrets.REDIS_PASSWORD }}"'|g' docker-compose.yml
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
