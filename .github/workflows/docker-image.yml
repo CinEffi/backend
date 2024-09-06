@@ -71,7 +71,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             pwd
-            cd ../..
+            cd /home/ubuntu
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
@@ -87,7 +87,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             pwd
-            cd ../..
+            cd /home/ubuntu
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
