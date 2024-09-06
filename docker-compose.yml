@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
+    image: ${DOCKER_USERNAME}/docker-test
     ports:
       - "4000:4000"
     depends_on:
@@ -13,4 +13,4 @@ services:
     ports:
       - "6379:6379"
     environment:
-      - REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
