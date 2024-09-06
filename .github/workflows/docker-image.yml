@@ -49,6 +49,17 @@ jobs:
           docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/docker-test-dev .
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-test-dev
 
+      # docker-compose.yml 파일을 EC2로 복사
+      - name: Copy docker-compose.yml to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_DEV }}
+          username: ${{ secrets.EC2_USERNAME }}
+          port: 22
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ubuntu/docker-compose.yml"
+
       - name: Deploy to prod (임시로 dev 서버에 배포)
         uses: appleboy/ssh-action@master
         id: deploy-prod
