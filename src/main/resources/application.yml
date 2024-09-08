@@ -101,7 +101,7 @@ spring:
         - dev
   # Postgres
   datasource:
-    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com
+    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com/cineffi
     username: postgres
     password: cineffi2024!
     driver-class-name: org.postgresql.Driver
