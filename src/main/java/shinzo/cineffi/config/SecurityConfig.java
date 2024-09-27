@@ -47,11 +47,10 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedOrigins(List.of(
-                                "https://k0894347bbd29a.user-app.krampoline.com",
                                 "http://localhost:3000",
                                 "http://localhost:3003",
-                                "https://48fb-175-197-204-117.ngrok-free.app",
-                                "https://9e54-180-70-193-179.ngrok-free.app",
+                                "https://d2bcnsoufx2ds3.cloudfront.net/", // 프론트엔드 도메인 주소
+                                "*",
                                 "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -87,7 +86,7 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/movies/encrypt-test/**",
                                 "/api/users/{user-id}/scrap",
-                                "/api/test",
+                                "/api/health",
                                 "/api/chat/**",
                                 "/chat/**",
                                 "/ws/**"
