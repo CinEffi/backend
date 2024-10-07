@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -49,8 +50,7 @@ public class SecurityConfig {
                         configuration.setAllowedOrigins(List.of(
                                 "http://localhost:3000",
                                 "http://localhost:3003",
-                                "https://d2bcnsoufx2ds3.cloudfront.net/", // 프론트엔드 도메인 주소
-                                "*",
+                                "https://d2bcnsoufx2ds3.cloudfront.net", // 프론트엔드 도메인 주소
                                 "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -61,9 +61,9 @@ public class SecurityConfig {
                 })));
 
         http
-                .csrf(AbstractHttpConfigurer::disable)//csrf 비활성화
-                .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable)//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .csrf(AbstractHttpConfigurer::disable) //csrf 비활성화
+                .formLogin(FormLoginConfigurer::disable) //기본로그인 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable) //httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
                 .logout(customizer -> customizer
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessUrl("/")
@@ -72,6 +72,7 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/favicon.ico",
                                 "/api/auth/**",
@@ -90,7 +91,7 @@ public class SecurityConfig {
                                 "/api/chat/**",
                                 "/chat/**",
                                 "/ws/**"
-                        ).permitAll()//토큰 없이 동작해야하는 사이트
+                        ).permitAll() // 토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http
                 .requestCache(RequestCacheConfigurer::disable);
