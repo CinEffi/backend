@@ -41,7 +41,6 @@ public class MovieInitService {
     private final ActorRepository actorRepo;
     private final AvgScoreRepository avgScoreRepo;
     private final BoxOfficeDataHandler boxOfficeDataHandler;
-    private final RestTemplate restTemplate;
     private final ParseString parseString;
     private final KobisService kobisService;
 
@@ -591,7 +590,7 @@ public class MovieInitService {
         }
     }
     public Object requestData(String url, InitType type) {
-//        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         Object result = null;
         HttpHeaders headers = new HttpHeaders();
         headers.set("Accept", "application/json");
