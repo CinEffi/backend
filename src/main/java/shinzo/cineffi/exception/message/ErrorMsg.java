@@ -56,14 +56,14 @@ public enum ErrorMsg {
         /*410*/
         ACCESS_TOKEN_EXPIRED(GONE,"액세스 토큰이 만료되었습니다."),
         REFRESH_TOKEN_EXPIRED(GONE,"리프레쉬 토큰이 만료되었습니다."),
+        TMDB_APIKEY_EXPIRED(INTERNAL_SERVER_ERROR, "TMDB API 키가 정지되었습니다. 더 이상 영화를 init 할 수 없습니다.")
 
 
 
-        /* 500 INTERNAL SERVER ERROR : 그 외 서버 에러 (컴파일 관련) */
+        /* 500 INTERNAL SERVER ERROR : 그 외 서버 에러 (컴파일 관련) */,
         FAILED_TO_EXECUTE_FILE(INTERNAL_SERVER_ERROR, "파일 실행에 실패했습니다."),
         FAILED_TO_COMPILE_FILE(INTERNAL_SERVER_ERROR, "파일 컴파일에 실패했습니다."),
-        FAILED_TO_MOVIE_PROCESS(INTERNAL_SERVER_ERROR, "영화 데이터 가공에 실패했습니다."),
-
+        FAILED_TO_KOBIS_INIT_PROCESS(INTERNAL_SERVER_ERROR, "모든 코비스 키를 사용하여 더 이상 영화를 init 할 수 없습니다."),
         FAIDED_TO_CONVERT_IMAGE(INTERNAL_SERVER_ERROR, "이미지 파일 업로드에 실패했습니다."),
 
         FAIL_TO_SEND_EMAIL(INTERNAL_SERVER_ERROR, "이메일 전송에 실패했지롱");

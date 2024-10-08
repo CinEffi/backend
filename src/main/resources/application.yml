@@ -62,8 +62,6 @@ app:
 
 kobis:
   api_key: 5b5979d8f9822605465799f4de0d864a
-
-
   base_url: http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json
 
 

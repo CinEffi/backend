@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Base64;
-
 @Entity
 @Getter
 @SuperBuilder(toBuilder = true)
@@ -19,12 +17,13 @@ public class Director {
     @Column(name = "director_id")
     private Long id;
 
+    @Column(unique = true)
     private String name;
     private String engname;
 
     @Lob
     private byte[] profileImage;
 
-    private Integer tmdbId;
+    private Long tmdbId;
 
 }

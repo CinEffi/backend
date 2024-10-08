@@ -1,20 +1,20 @@
 package shinzo.cineffi.movie.repository;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import shinzo.cineffi.domain.entity.movie.Director;
 
 import java.util.Optional;
 
 public interface DirectorRepository extends JpaRepository<Director, Long> {
 
-    Optional<Director> findByName(String name);
-
-    @Query("SELECT d FROM Director d WHERE d.tmdbId = :tmdbId")
-    Optional<Director> findByTmbdId(int tmdbId);
+    @Transactional
+    Optional<Director> findByName(@Param("name") String name);
 
     @Query("SELECT d.id FROM Director d WHERE d.name = :name")
-    Long idByName(String name);
+    Optional<Long> findIdByName(String name);
 
     boolean existsByName(String name);
 }
