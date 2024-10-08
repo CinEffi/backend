@@ -31,7 +31,6 @@ import java.util.Properties;
 public class MailService {
     private final AuthCodeRepository authCodeRepository;
     private final JavaMailSender javaMailSender;
-    private final RestTemplate restTemplate;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
 
@@ -94,6 +93,7 @@ public class MailService {
 
     //생성한 메일을 전송
     public int sendMail(String toEmailAddress) {
+        RestTemplate restTemplate = new RestTemplate();
         // 씨네피 프록시 서버로 이메일 전송 요청!
         // 인증번호 생성
         createNumber();
