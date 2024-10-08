@@ -157,7 +157,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private void getDetailMovie(Movie movie, List<Movie> result) {
+    protected void getDetailMovie(Movie movie, List<Movie> result) {
         JSONObject tmdbData = (JSONObject) requestData(TMDB_BASEURL + TMDB_PATH_MOVIE + "/movie/" + movie.getTmdbId() + "?api_key=" + TMDB_API_KEY + "&language=ko-KR&append_to_response=credits", TMDB_MOVIE);
         JSONObject movieInfoResult = (JSONObject) ((JSONObject) requestData(KOBIS_BASEURL + "/movie/searchMovieInfo.json?movieCd=" + movie.getKobisCode(), KOBIS)).get("movieInfoResult");
         if(movieInfoResult == null || tmdbData == null) {
@@ -202,7 +202,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private void saveActor(JSONObject tmdbData, JSONObject kobisData, Long movieId){
+    protected void saveActor(JSONObject tmdbData, JSONObject kobisData, Long movieId){
         JSONObject credits = (JSONObject) tmdbData.getOrDefault("credits", "");
         if(credits.isEmpty() || credits.equals("")) return;
         JSONArray tmdbActors = (JSONArray) credits.getOrDefault("cast", new JSONArray());
@@ -266,7 +266,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private AvgScore getAvgScore(Long movieId) {
+    protected AvgScore getAvgScore(Long movieId) {
         AvgScore avgScore;
         Optional<AvgScore> as = avgScoreRepo.findByMovieId(movieId);
         if(as.isPresent()){
@@ -284,7 +284,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private List<MovieGenre> getMovieGenres(JSONObject tmdbData, Long movieId) {
+    protected List<MovieGenre> getMovieGenres(JSONObject tmdbData, Long movieId) {
         List<MovieGenre> genreList = new ArrayList<>();
         JSONArray genres = (JSONArray) tmdbData.getOrDefault("genres", new JSONArray());
         if(genres != null && !genres.isEmpty()){
@@ -319,7 +319,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private Director getDirector(JSONObject tmdbData, JSONObject kobisData) {
+    protected Director getDirector(JSONObject tmdbData, JSONObject kobisData) {
         Director director = null;
         JSONObject credits = (JSONObject) tmdbData.getOrDefault("credits", "");
         if(credits.isEmpty() || credits.equals("")) return director;
@@ -394,7 +394,7 @@ public class MovieInitService {
     }
 
     @Transactional
-    private Optional<Movie> saveMovie(Movie movie){
+    protected Optional<Movie> saveMovie(Movie movie){
         Movie m = null;
         Optional<Movie> movieFromDb = movieRepo.findByTmdbId(movie.getTmdbId());
         if(movie == null || movie.getTmdbId() == null || movie.getTmdbId() == 0L || movie.getTitle() == null || (movie.getId() == null && movieFromDb.isPresent() && movieFromDb.get().getPoster() != null)) return Optional.ofNullable(null);
