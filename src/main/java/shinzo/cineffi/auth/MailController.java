@@ -19,8 +19,7 @@ public class MailController {
 
     @PostMapping("/api/auth/verify/email")
     public ResponseEntity<ResponseDTO<String>> sendEmail(@RequestBody EmailRequestDTO emailRequestDTO) {
-
-        int number = mailService.sendMail(emailRequestDTO.getEmail());
+        int number = mailService.sendMail(emailRequestDTO.getEmailAddress());
         if (number == -1) throw new CustomException(FAIL_TO_SEND_EMAIL);
         ResponseDTO<String> responseDTO = ResponseDTO.<String>builder()
                 .isSuccess(true)
