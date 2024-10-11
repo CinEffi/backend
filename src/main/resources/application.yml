@@ -49,7 +49,6 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
-
 kakao:
   rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
   redirect_url: http://localhost:8080/auth/check
@@ -87,8 +86,7 @@ tmdb:
   end-year: 2024
   start-month: 4
   end-month: 4
-email:
-  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
+
 ---
 
 ## dev profile (Docker 용)
@@ -119,9 +117,6 @@ spring:
       properties:
         hibernate:
           format_sql: none
-
-email:
-  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
 
 logging:
   level:

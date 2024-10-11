@@ -298,7 +298,7 @@ public class AuthService {
     }
 
     public boolean dupMail(EmailRequestDTO request) {
-        boolean isdup = userAccountRepository.existsByEmail(request.getEmailAddress());
+        boolean isdup = userAccountRepository.existsByEmail(request.getEmail());
 
         return isdup;
     }
