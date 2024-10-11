@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 public class EmailRequestDTO {
-    String emailAddress;
+    String email;
 }
