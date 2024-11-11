@@ -1,15 +1,14 @@
 package shinzo.cineffi.user;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import shinzo.cineffi.Utils.EncryptUtil;
-import shinzo.cineffi.auth.AuthService;
+
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.domain.entity.user.Report;
 import shinzo.cineffi.domain.entity.user.User;

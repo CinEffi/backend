@@ -89,8 +89,13 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/health",
                                 "/api/chat/**",
+                                "/api/posts",
                                 "/chat/**",
-                                "/ws/**"
+                                "/ws/**",
+                                "/v3/api-docs/**",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
                         ).permitAll() // 토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http
