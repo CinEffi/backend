@@ -35,6 +35,7 @@ public class BoardController {
                         .build());
     }
 
+    @Operation(summary = "게시글 상세 조회")
     @GetMapping("/posts/{postId}")
     public ResponseEntity<ResponseDTO<?>> getPost(@PathVariable("postId") String encryptedPostId) {
         Long postId = EncryptUtil.LongDecrypt(encryptedPostId);
@@ -43,6 +44,20 @@ public class BoardController {
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
                         .result(boardService.getPost(postId))
+                        .build());
+    }
+
+    @Operation(summary = "댓글 목록 조회")
+    @GetMapping("/posts/{postId}/comments")
+    public ResponseEntity<ResponseDTO<?>> getComments(
+            @PathVariable("postId") String encryptedPostId,
+            @ParameterObject Pageable pageable) {
+        Long postId = EncryptUtil.LongDecrypt(encryptedPostId);
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(boardService.getCommentList(postId, pageable))
                         .build());
     }
 }
