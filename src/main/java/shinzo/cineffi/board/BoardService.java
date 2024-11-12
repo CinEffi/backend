@@ -7,28 +7,32 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
+import shinzo.cineffi.board.repository.CommentRepository;
 import shinzo.cineffi.board.repository.PostRepository;
 import shinzo.cineffi.board.repository.WeeklyHotPostRepository;
-import shinzo.cineffi.domain.dto.GetPostDto;
-import shinzo.cineffi.domain.dto.PageResponse;
-import shinzo.cineffi.domain.dto.UserDto;
+import shinzo.cineffi.domain.dto.*;
+import shinzo.cineffi.domain.entity.board.Comment;
 import shinzo.cineffi.domain.entity.board.Post;
 import shinzo.cineffi.domain.entity.board.WeeklyHotPost;
+import shinzo.cineffi.exception.CustomException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static shinzo.cineffi.domain.entity.board.WeeklyHotPost.HotPostStatusType.ACTIVE;
+import static shinzo.cineffi.exception.message.ErrorMsg.POST_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BoardService {
 
     private final PostRepository postRepository;
     private final WeeklyHotPostRepository weeklyHotPostRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<GetPostDto> getPostList(Pageable pageable) {
+    public PageResponse<GetPostsDto> getPostList(Pageable pageable) {
         Page<Post> pagedPosts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
         List<WeeklyHotPost> weeklyHotPosts = weeklyHotPostRepository.findAllByHotPostStatus(ACTIVE);
 
@@ -39,7 +43,7 @@ public class BoardService {
                     .stream().map(hotPost -> hotPost.getPost()).toList()
                     .contains(post);
 
-            result.add(GetPostDto.builder()
+            result.add(GetPostsDto.builder()
                     .postId(EncryptUtil.LongEncrypt(post.getId()))
                     .title(post.getTitle())
                     .createdAt(post.getCreatedAt())
@@ -51,9 +55,33 @@ public class BoardService {
                     .build());
         }
 
-        PageResponse pageResponse = new PageResponse().setPagingInfo(pagedPosts);
-        pageResponse.setContents(result);
+        PageResponse pageResponse = new PageResponse().from(pagedPosts, result, pageable);
 
         return pageResponse;
+    }
+
+    @Transactional(readOnly = true)
+    public GetPostDto getPost(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+        UserDto userDto = new UserDto().from(post.getWriter());
+
+        return new GetPostDto().from(post, userDto);
+    }
+
+    public PageResponse<GetCommentsDto> getCommentList(Long postId, Pageable pageable) {
+        Page<Comment> pagedCommentList = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId, pageable);
+
+        List<GetCommentsDto> getCommentsDtos = pagedCommentList.stream().map(comment -> {
+            UserDto userDto = new UserDto().from(comment.getWriter());
+            return new GetCommentsDto().from(comment, userDto);
+        }).toList();
+
+        return new PageResponse<>(
+                getCommentsDtos,
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pagedCommentList.getTotalElements(),
+                pagedCommentList.getTotalPages(),
+                pagedCommentList.hasNext());
     }
 }

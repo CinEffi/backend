@@ -4,5 +4,5 @@ import lombok.Getter;
 
 @Getter
 public class GetPostsRes {
-    PageResponse<GetPostDto> postList;
+    PageResponse<GetPostsDto> postList;
 }

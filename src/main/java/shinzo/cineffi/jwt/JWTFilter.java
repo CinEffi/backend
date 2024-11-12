@@ -47,7 +47,7 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().equals("/api/reviews/hot")||
                         request.getRequestURI().equals("/api/reviews/new")||
                         request.getRequestURI().matches("/api/movies/\\d+"))||
-                        request.getRequestURI().matches("/api/posts")||
+                        request.getRequestURI().startsWith("/api/posts")||
                         request.getRequestURI().startsWith("/swagger-ui")||
                         request.getRequestURI().contains("api-docs")
                         && !request.getRequestURI().equals("/api/auth/user/check")

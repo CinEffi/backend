@@ -1,6 +1,9 @@
 ---
 
 ## local
+server:
+  port: 4000
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/cineffi

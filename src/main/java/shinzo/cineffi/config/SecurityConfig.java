@@ -90,6 +90,7 @@ public class SecurityConfig {
                                 "/api/health",
                                 "/api/chat/**",
                                 "/api/posts",
+                                "/api/posts/**",
                                 "/chat/**",
                                 "/ws/**",
                                 "/v3/api-docs/**",
