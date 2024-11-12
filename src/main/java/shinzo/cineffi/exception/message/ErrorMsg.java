@@ -42,6 +42,7 @@ public enum ErrorMsg {
         TOKEN_NOT_FOUND(NOT_FOUND,"토큰을 찾을 수 없습니다."),
         USERCHAT_NOT_FOUND(NOT_FOUND, "채팅정보를 찾을 수 없습니다."),
         CHATROOM_NON_FOUND(NOT_FOUND, "채팅방이 존재하지 않습니다."),
+        POST_NOT_FOUND(NOT_FOUND, "게시글이 존재하지 않습니다."),
         /* 409 CONFLICT : Resource 의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
         DUPLICATE_USER(CONFLICT,"이미 가입된 사용자입니다."),
         DUPLICATE_NICKNAME(CONFLICT,"중복 닉네임입니다."),

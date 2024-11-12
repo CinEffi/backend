@@ -10,25 +10,29 @@ import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.board.repository.PostRepository;
 import shinzo.cineffi.board.repository.WeeklyHotPostRepository;
 import shinzo.cineffi.domain.dto.GetPostDto;
+import shinzo.cineffi.domain.dto.GetPostsDto;
 import shinzo.cineffi.domain.dto.PageResponse;
 import shinzo.cineffi.domain.dto.UserDto;
 import shinzo.cineffi.domain.entity.board.Post;
 import shinzo.cineffi.domain.entity.board.WeeklyHotPost;
+import shinzo.cineffi.exception.CustomException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static shinzo.cineffi.domain.entity.board.WeeklyHotPost.HotPostStatusType.ACTIVE;
+import static shinzo.cineffi.exception.message.ErrorMsg.POST_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BoardService {
 
     private final PostRepository postRepository;
     private final WeeklyHotPostRepository weeklyHotPostRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<GetPostDto> getPostList(Pageable pageable) {
+    public PageResponse<GetPostsDto> getPostList(Pageable pageable) {
         Page<Post> pagedPosts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
         List<WeeklyHotPost> weeklyHotPosts = weeklyHotPostRepository.findAllByHotPostStatus(ACTIVE);
 
@@ -39,7 +43,7 @@ public class BoardService {
                     .stream().map(hotPost -> hotPost.getPost()).toList()
                     .contains(post);
 
-            result.add(GetPostDto.builder()
+            result.add(GetPostsDto.builder()
                     .postId(EncryptUtil.LongEncrypt(post.getId()))
                     .title(post.getTitle())
                     .createdAt(post.getCreatedAt())
@@ -55,5 +59,13 @@ public class BoardService {
         pageResponse.setContents(result);
 
         return pageResponse;
+    }
+
+    @Transactional
+    public GetPostDto getPost(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+        UserDto userDto = new UserDto().from(post.getWriter());
+
+        return new GetPostDto().from(post, userDto);
     }
 }
