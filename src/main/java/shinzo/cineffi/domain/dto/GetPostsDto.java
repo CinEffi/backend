@@ -17,6 +17,9 @@ public class GetPostsDto {
     @Schema(description = "제목")
     private String title;
 
+    @Schema(description = "조회수")
+    private Integer view;
+
     @Schema(description = "작성시간", example = "2024/11/11T09:51:01")
     @JsonFormat(pattern = "yyyy/MM/dd'T'hh:mm:ss")
     private LocalDateTime createdAt;

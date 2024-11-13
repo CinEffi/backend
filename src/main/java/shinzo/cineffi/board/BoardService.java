@@ -50,6 +50,7 @@ public class BoardService {
             result.add(GetPostsDto.builder()
                     .postId(EncryptUtil.LongEncrypt(post.getId()))
                     .title(post.getTitle())
+                    .view(post.getView())
                     .createdAt(post.getCreatedAt())
                     .user(new UserDto().from(post.getWriter()))
                     .tags(List.of())
