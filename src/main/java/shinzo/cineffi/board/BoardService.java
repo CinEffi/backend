@@ -64,6 +64,7 @@ public class BoardService {
         return pageResponse;
     }
 
+    @Transactional(readOnly = true)
     public GetPostDto getPost(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
         UserDto userDto = new UserDto().from(post.getWriter());
