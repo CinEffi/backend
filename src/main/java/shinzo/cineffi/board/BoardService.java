@@ -14,7 +14,11 @@ import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.board.Comment;
 import shinzo.cineffi.domain.entity.board.Post;
 import shinzo.cineffi.domain.entity.board.WeeklyHotPost;
+import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.response.PageResponse;
 import shinzo.cineffi.exception.CustomException;
+import shinzo.cineffi.exception.message.ErrorMsg;
+import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,12 +28,12 @@ import static shinzo.cineffi.exception.message.ErrorMsg.POST_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class BoardService {
 
     private final PostRepository postRepository;
     private final WeeklyHotPostRepository weeklyHotPostRepository;
     private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<GetPostsDto> getPostList(Pageable pageable) {
@@ -60,7 +64,6 @@ public class BoardService {
         return pageResponse;
     }
 
-    @Transactional(readOnly = true)
     public GetPostDto getPost(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
         UserDto userDto = new UserDto().from(post.getWriter());
@@ -68,6 +71,7 @@ public class BoardService {
         return new GetPostDto().from(post, userDto);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<GetCommentsDto> getCommentList(Long postId, Pageable pageable) {
         Page<Comment> pagedCommentList = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId, pageable);
 
@@ -83,5 +87,23 @@ public class BoardService {
                 pagedCommentList.getTotalElements(),
                 pagedCommentList.getTotalPages(),
                 pagedCommentList.hasNext());
+    }
+
+    @Transactional
+    public void postPostComment(Long decryptedPostId, Long userId, String content) {
+        // 유저 검사
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorMsg.UNAUTHORIZED_MEMBER));
+
+        // 게시글 엔티티 조회
+        Post post = postRepository.findById(decryptedPostId)
+                .orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+
+        // 저장
+        commentRepository.save(Comment.builder()
+                                .post(post)
+                                .writer(user)
+                                .content(content)
+                                .build());
     }
 }
