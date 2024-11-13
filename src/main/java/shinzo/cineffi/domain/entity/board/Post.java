@@ -45,4 +45,12 @@ public class Post extends BaseEntity {
         this.likeNumber = 0;
     }
 
+    public void increaseView() {
+        this.view++;
+    }
+
+    public void increaseCommentNumber() {
+        this.commentNumber++;
+    }
+
 }

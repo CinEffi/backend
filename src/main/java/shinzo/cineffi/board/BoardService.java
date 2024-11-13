@@ -64,10 +64,13 @@ public class BoardService {
         return pageResponse;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public GetPostDto getPost(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
         UserDto userDto = new UserDto().from(post.getWriter());
+
+        // 조회수 증가
+        post.increaseView();
 
         return new GetPostDto().from(post, userDto);
     }
@@ -106,5 +109,8 @@ public class BoardService {
                                 .writer(user)
                                 .content(content)
                                 .build());
+
+        // 게시글의 댓글 수 증가
+        post.increaseCommentNumber();
     }
 }
