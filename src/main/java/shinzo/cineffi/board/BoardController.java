@@ -30,12 +30,10 @@ public class BoardController {
     @Operation(summary = "게시글 목록 조회 API", description = "게시판의 게시글 목록을 조회합니다.")
     @GetMapping("/posts")
     public ResponseEntity<ResponseDTO<?>> getPostList(@ParameterObject Pageable pageable) {
-        PageResponse<GetPostsDto> postList = boardService.getPostList(pageable);
-
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(postList)
+                        .result(boardService.getPostList(pageable))
                         .build());
     }
 
