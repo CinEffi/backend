@@ -9,10 +9,9 @@ import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
 @Entity
-@Builder
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class Comment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,15 +26,22 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private User writer;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(nullable = false)
     private Integer likeNumber;
 
-
     @PrePersist
     public void setDefaultValues() {
         this.likeNumber = 0;
     }
+
+    @Builder
+    public Comment(Post post, User writer, String content) {
+        this.post = post;
+        this.writer = writer;
+        this.content = content;
+    }
+
 }

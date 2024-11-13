@@ -3,9 +3,7 @@ package shinzo.cineffi.review;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
@@ -18,6 +16,7 @@ import shinzo.cineffi.domain.entity.score.Score;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.entity.user.UserAnalysis;
 import shinzo.cineffi.domain.enums.ScoreTypeEvent;
+import shinzo.cineffi.domain.response.GetCollectionRes;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
 import shinzo.cineffi.movie.repository.MovieRepository;
@@ -29,7 +28,6 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.*;
 
-import static org.springframework.security.crypto.codec.Utf8.decode;
 import static shinzo.cineffi.user.ImageConverter.decodeImage;
 
 @Service

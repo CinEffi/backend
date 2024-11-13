@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import shinzo.cineffi.Utils.EncryptUtil;
-import shinzo.cineffi.domain.dto.FollowReq;
+import shinzo.cineffi.domain.request.FollowReq;
 import shinzo.cineffi.domain.dto.ResponseDTO;
 import shinzo.cineffi.exception.message.SuccessMsg;
 

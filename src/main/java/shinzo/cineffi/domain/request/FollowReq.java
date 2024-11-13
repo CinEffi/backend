@@ -1,4 +1,4 @@
-package shinzo.cineffi.domain.dto;
+package shinzo.cineffi.domain.request;
 
 import lombok.Data;
 
