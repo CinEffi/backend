@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static shinzo.cineffi.domain.entity.board.WeeklyHotPost.HotPostStatusType.ACTIVE;
-import static shinzo.cineffi.exception.message.ErrorMsg.POST_NOT_FOUND;
+import static shinzo.cineffi.exception.message.ErrorMsg.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +35,7 @@ public class BoardService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PageResponse<GetPostsDto> getPostList(Pageable pageable) {
         Page<Post> pagedPosts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
         List<WeeklyHotPost> weeklyHotPosts = weeklyHotPostRepository.findAllByHotPostStatus(ACTIVE);
@@ -113,5 +113,18 @@ public class BoardService {
 
         // 게시글의 댓글 수 증가
         post.increaseCommentNumber();
+    }
+
+    @Transactional
+    public void patchPost(Long postId, Long loginUserId) {
+        User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+
+        // 해당 유저가 해당 게시글 작성자인지 검사
+        if (!post.getWriter().equals(user))
+            throw new CustomException(ACCESS_DENIED);
+
+        // 삭제
+        post.setIsDelete(true);
     }
 }

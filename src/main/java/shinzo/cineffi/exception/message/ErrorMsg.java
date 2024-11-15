@@ -30,6 +30,7 @@ public enum ErrorMsg {
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),
         USER_MUTED(BAD_REQUEST, "뮤트된 사용자입니다."),
+        ACCESS_DENIED(UNAUTHORIZED, "권한이 없는 사용자입니다."),
 
         /* 403 FORBIDDEN : 권한 없음 */
         Invalid_token(FORBIDDEN,"잘못된 토큰입니다."),
@@ -69,16 +70,8 @@ public enum ErrorMsg {
 
         FAIL_TO_SEND_EMAIL(INTERNAL_SERVER_ERROR, "이메일 전송에 실패했지롱");
 
-
-
-
-
-
-
         private final HttpStatus httpStatus;
         private final String detail;
-
-
         }
 
 
