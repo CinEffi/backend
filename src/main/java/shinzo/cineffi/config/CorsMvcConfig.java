@@ -10,7 +10,7 @@ public class CorsMvcConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry corsRegistry){
         corsRegistry.addMapping("/**")
                 .allowedOrigins("https://d1za9u0b27ndib.cloudfront.net/")
-                .allowedOrigins("http://d2bcnsoufx2ds3.cloudfront.net/")
+                .allowedOrigins("http://d1za9u0b27ndib.cloudfront.net/")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
     }

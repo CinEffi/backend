@@ -50,7 +50,7 @@ public class SecurityConfig {
                         configuration.setAllowedOrigins(List.of(
                                 "http://localhost:3000",
                                 "http://localhost:3003",
-                                "https://d2bcnsoufx2ds3.cloudfront.net", // 프론트엔드 도메인 주소
+                                "https://d1za9u0b27ndib.cloudfront.net", // 프론트엔드 도메인 주소
                                 "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
