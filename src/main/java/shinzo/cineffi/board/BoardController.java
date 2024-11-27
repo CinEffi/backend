@@ -3,6 +3,7 @@ package shinzo.cineffi.board;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_ID;
 @RequiredArgsConstructor
 @RequestMapping("/api")
 @Tag(name = "게시판")
+@Slf4j
 public class BoardController {
     private final BoardService boardService;
 

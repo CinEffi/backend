@@ -148,7 +148,8 @@ public class MovieService {
         List<CrewListDTO> crewList = getActorAndDirectorList(movieId);
         Float myScore = (userId != null) ? getUserScoreForMovie(movieId, userId) : null;
 
-        Review existingReview = userId != null ? reviewRepository.findByMovieAndUserIdAndIsDeleteFalse(movie, userId) : null;
+        Review existingReview = (userId != null) ?
+                reviewRepository.findByMovieAndUserIdAndIsDeleteFalse(movie, userId) : null;
         InMovieDetailDTO inMovieDetail = InMovieDetailDTO.builder()
                 .movieId(movie.getId())
                 .movieTitle(movie.getTitle())
@@ -178,6 +179,7 @@ public class MovieService {
         Pageable pageable = PageRequest.of(0, 8);
 
         Movie movie = movieRepo.findById(movieId).orElse(null);
+
         if (movie != null && movie.getDirector() != null) {
             crewList.add(CrewListDTO.builder()
                     .name(movie.getDirector().getName())
