@@ -3,25 +3,33 @@ package shinzo.cineffi.domain.entity.board;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.Where;
 import shinzo.cineffi.domain.entity.BaseEntity;
-import shinzo.cineffi.domain.entity.user.User;
 
 @Where(clause = "is_delete = false")
 @Entity
 @Builder
+@Getter
+@NoArgsConstructor
 @AllArgsConstructor
-public class CommentLike extends BaseEntity {
+@Table(name = "post_tag")
+public class PostTag extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "comment_like_id")
+    @Column(name = "post_tag_id")
     private Long id;
 
-    @JoinColumn(nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    private User user;
-
-    @JoinColumn(nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
     private Post post;
+
+    @Column(nullable = false)
+    private String content;
+
+    public void setIsDelete(boolean isDelete) {
+        super.setIsDelete(isDelete);
+    }
 }
