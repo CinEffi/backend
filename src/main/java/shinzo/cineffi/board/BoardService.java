@@ -164,5 +164,16 @@ public class BoardService {
         post.setTags(postTagList);
     }
 
+    @Transactional
+    public void patchComment(Long commentId, Long loginUserId) {
+        User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new CustomException(COMMENT_NOT_FOUND));
 
+        // 해당 유저가 해당 게시글 작성자인지 검사
+        if (!comment.getWriter().equals(user))
+            throw new CustomException(ACCESS_DENIED);
+
+        // 삭제
+        comment.setIsDelete(true);
+    }
 }

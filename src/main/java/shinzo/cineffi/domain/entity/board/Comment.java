@@ -5,9 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
+import java.util.Objects;
+
+@Where(clause = "is_delete = false")
 @Entity
 @Getter
 @NoArgsConstructor
@@ -44,5 +48,24 @@ public class Comment extends BaseEntity {
         this.content = content;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true; // 같은 객체이면 true
+        if (o == null) return false; // 비교하는 객체가 null 이면 false
+
+        Post that = (Post) o;
+        if (this.getId() == null || that.getId() == null) return false; // id가 null이면 false
+
+        return Objects.equals(this.getId(), that.getId()); // 엔티티 Id로 비교
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, post, writer, content, likeNumber);
+    }
+
+    public void setIsDelete(boolean isDelete) {
+        super.setIsDelete(isDelete);
+    }
 
 }

@@ -127,5 +127,23 @@ public class BoardController {
                         .build());
     }
 
+    @Operation(summary = "댓글 삭제 API")
+    @PatchMapping("/comments/{commentId}")
+    public ResponseEntity<ResponseDTO<?>> patchComment(@PathVariable("commentId") String encryptCommentId) {
+        // 게시글 정보
+        Long commentId = EncryptUtil.LongDecrypt(encryptCommentId);
 
+        // 로그인 유저 정보
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if (loginUserId == null)
+            throw new CustomException(NOT_LOGGED_ID);
+
+        // 삭제
+        boardService.patchComment(commentId, loginUserId);
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .build());
+    }
 }

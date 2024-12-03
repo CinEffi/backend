@@ -3,9 +3,11 @@ package shinzo.cineffi.domain.entity.board;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.hibernate.annotations.Where;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
+@Where(clause = "is_delete = false")
 @Entity
 @Builder
 @AllArgsConstructor
