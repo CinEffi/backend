@@ -38,6 +38,7 @@ public enum ErrorMsg {
         UNAUTHORIZED_TOKEN(FORBIDDEN,"잘못된 Refresh 토큰 입니다"),
         /* 404 NOT_FOUND : Resource 를 찾을 수 없음 */
         USER_NOT_FOUND(NOT_FOUND, "사용자가 존재하지 않습니다."),
+        COMMENT_NOT_FOUND(NOT_FOUND, "댓글이 존재하지 않습니다."),
         MOVIE_NOT_FOUND(NOT_FOUND, "영화를 찾을 수 없습니다."),
         REVIEW_NOT_FOUND(NOT_FOUND, "리뷰를 찾을 수 없습니다." ),
         TOKEN_NOT_FOUND(NOT_FOUND,"토큰을 찾을 수 없습니다."),

@@ -9,6 +9,8 @@ import org.hibernate.annotations.Where;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Where(clause = "is_delete = false")
@@ -26,8 +28,7 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Lob
-    @Column(nullable = true)
+    @Column(nullable = true, columnDefinition = "TEXT")
     private String content;
 
     @JoinColumn(nullable = false)
@@ -42,6 +43,9 @@ public class Post extends BaseEntity {
 
     @Column(nullable = false)
     private Integer likeNumber;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostTag> tags;
 
     // 기본값 설정
     @PrePersist
@@ -78,4 +82,13 @@ public class Post extends BaseEntity {
     public void setIsDelete(boolean isDelete) {
         super.setIsDelete(isDelete);
     }
+
+    public void setTags(List<PostTag> tagList) {
+        this.tags = tagList;
+    }
+
+    public void clearTags() {
+        this.tags.clear();
+    }
+
 }

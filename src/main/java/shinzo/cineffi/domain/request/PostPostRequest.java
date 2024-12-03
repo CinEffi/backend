@@ -11,7 +11,7 @@ public class PostPostRequest {
     @Schema(description = "제목")
     private String title;
 
-    @Schema(description = "내용(HTML 형식)")
+    @Schema(description = "내용(게시글의 HTML 문서 전체)")
     private String content;
 
     @Schema(description = "태그 목록")

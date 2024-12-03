@@ -9,10 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
 import shinzo.cineffi.board.repository.CommentRepository;
 import shinzo.cineffi.board.repository.PostRepository;
+import shinzo.cineffi.board.repository.PostTagRepository;
 import shinzo.cineffi.board.repository.WeeklyHotPostRepository;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.board.Comment;
 import shinzo.cineffi.domain.entity.board.Post;
+import shinzo.cineffi.domain.entity.board.PostTag;
 import shinzo.cineffi.domain.entity.board.WeeklyHotPost;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.response.PageResponse;
@@ -31,6 +33,7 @@ import static shinzo.cineffi.exception.message.ErrorMsg.*;
 public class BoardService {
 
     private final PostRepository postRepository;
+    private final PostTagRepository postTagRepository;
     private final WeeklyHotPostRepository weeklyHotPostRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
@@ -127,4 +130,39 @@ public class BoardService {
         // 삭제
         post.setIsDelete(true);
     }
+
+    @Transactional
+    /* 게시글 태그 설정 메서드 : 이전 거는 삭제되고 인자에 지정한대로 저장됨 */
+    public void submitPost(Long userId, String title, String content, List<String> tags) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Post post = postRepository.save(Post.builder()
+                .title(title)
+                .content(content)
+                .writer(user)
+                .build());
+        addTags(post, tags); // 태그 추가
+    }
+
+    @Transactional
+    public void addTags(Post post, List<String> tagList) {
+        // 이미 존재하는 태그가 있는지 확인, 있다면 삭제
+        List<PostTag> existingTags = postTagRepository.findAllByPost(post);
+        if (post.getTags() != null || !existingTags.isEmpty()) {
+            existingTags.stream().forEach(tag -> tag.setIsDelete(true));
+            post.clearTags();
+        }
+
+        // 인자로 받은 태그 리스트를 게시글 태그로 새로 지정
+        List<PostTag> postTagList = tagList.stream().map(tag -> {
+            PostTag postTag = PostTag.builder()
+                    .post(post)
+                    .content(tag)
+                    .build();
+            postTagRepository.save(postTag);
+            return postTag;
+        }).toList();
+        post.setTags(postTagList);
+    }
+
+
 }
