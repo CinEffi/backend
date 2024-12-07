@@ -7,15 +7,9 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
-import shinzo.cineffi.board.repository.CommentRepository;
-import shinzo.cineffi.board.repository.PostRepository;
-import shinzo.cineffi.board.repository.PostTagRepository;
-import shinzo.cineffi.board.repository.WeeklyHotPostRepository;
+import shinzo.cineffi.board.repository.*;
 import shinzo.cineffi.domain.dto.*;
-import shinzo.cineffi.domain.entity.board.Comment;
-import shinzo.cineffi.domain.entity.board.Post;
-import shinzo.cineffi.domain.entity.board.PostTag;
-import shinzo.cineffi.domain.entity.board.WeeklyHotPost;
+import shinzo.cineffi.domain.entity.board.*;
 import shinzo.cineffi.domain.entity.user.User;
 import shinzo.cineffi.domain.response.PageResponse;
 import shinzo.cineffi.exception.CustomException;
@@ -24,6 +18,7 @@ import shinzo.cineffi.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static shinzo.cineffi.domain.entity.board.WeeklyHotPost.HotPostStatusType.ACTIVE;
 import static shinzo.cineffi.exception.message.ErrorMsg.*;
@@ -34,8 +29,10 @@ public class BoardService {
 
     private final PostRepository postRepository;
     private final PostTagRepository postTagRepository;
+    private final PostLikeRepository postLikeRepository;
     private final WeeklyHotPostRepository weeklyHotPostRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -81,6 +78,10 @@ public class BoardService {
 
     @Transactional(readOnly = true)
     public PageResponse<GetCommentsDto> getCommentList(Long postId, Pageable pageable) {
+        // 존재하는 게시글인지 검사
+        postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+
+        // 댓글 목록 조회
         Page<Comment> pagedCommentList = commentRepository.findAllByPostIdOrderByCreatedAtAsc(postId, pageable);
 
         List<GetCommentsDto> getCommentsDtos = pagedCommentList.stream().map(comment -> {
@@ -119,7 +120,7 @@ public class BoardService {
     }
 
     @Transactional
-    public void patchPost(Long postId, Long loginUserId) {
+    public void removePost(Long postId, Long loginUserId) {
         User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
 
@@ -127,12 +128,18 @@ public class BoardService {
         if (!post.getWriter().equals(user))
             throw new CustomException(ACCESS_DENIED);
 
-        // 삭제
+        // 게시글 댓글 삭제
+        commentRepository.findAllByPostId(postId).stream().forEach(comment -> comment.setIsDelete(true));
+
+        // 게시글 좋아요 삭제
+        postLikeRepository.findAllByPostId(postId).stream().forEach(postLike -> postLike.setIsDelete(true));
+
+        // 게시글삭제
         post.setIsDelete(true);
     }
 
-    @Transactional
     /* 게시글 태그 설정 메서드 : 이전 거는 삭제되고 인자에 지정한대로 저장됨 */
+    @Transactional
     public void submitPost(Long userId, String title, String content, List<String> tags) {
         User user = userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         Post post = postRepository.save(Post.builder()
@@ -165,7 +172,7 @@ public class BoardService {
     }
 
     @Transactional
-    public void patchComment(Long commentId, Long loginUserId) {
+    public void removeComment(Long commentId, Long loginUserId) {
         User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new CustomException(COMMENT_NOT_FOUND));
 
@@ -173,7 +180,77 @@ public class BoardService {
         if (!comment.getWriter().equals(user))
             throw new CustomException(ACCESS_DENIED);
 
+        // 댓글 수 감소
+        comment.getPost().decreaseCommentNumber();
+
+        // 댓글 좋아요 삭제
+        commentLikeRepository.findAllByCommentId(commentId).stream().forEach(commentLike -> commentLike.setIsDelete(true));
+
         // 삭제
         comment.setIsDelete(true);
     }
+
+    @Transactional
+    public boolean switchPostLike(Long postId, Long loginUserId) {
+        User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+
+        Optional<PostLike> postLike = postLikeRepository.findByUserAndPost(user, post);
+
+        if (postLike.isEmpty()) {// 기존 좋아요가 없으면
+            likePost(user, post); // 좋아요
+            return true;
+        } else { // 있으면
+            unlikePost(postLike.get()); // 좋아요 취소
+            return false;
+        }
+    }
+
+    public void likePost(User user, Post post) {
+        // 저장
+        postLikeRepository.save(PostLike.builder()
+                .post(post)
+                .user(user)
+                .build());
+
+        // 좋아요 수 증가
+        post.increaseLikeNumber();
+    }
+
+    public void unlikePost(PostLike postLike) {
+        postLike.setIsDelete(true); // 좋아요 삭제
+        postLike.getPost().decreaseLikeNumber(); // 좋아요 수 감소
+    }
+
+    @Transactional
+    public boolean switchCommentLike(Long commentId, Long loginUserId) {
+        User user = userRepository.findById(loginUserId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new CustomException(COMMENT_NOT_FOUND));
+
+        Optional<CommentLike> commentLike = commentLikeRepository.findByUserAndComment(user, comment);
+        if (commentLike.isEmpty()) {// 좋아요가 없으면
+            likeComment(user, comment); // 좋아요
+            return true;
+        } else { // 좋아요가 있으면
+            unlikeComment(commentLike.get()); // 좋아요 취소
+            return false;
+        }
+
+    }
+
+    public void likeComment(User user, Comment comment) {
+        // 저장
+        commentLikeRepository.save(CommentLike.builder()
+                .comment(comment)
+                .user(user)
+                .build());
+
+        comment.increaseLikeNumber(); // 좋아요 수 증가
+    }
+
+    public void unlikeComment(CommentLike commentLike) {
+        commentLike.setIsDelete(true); // 좋아요 삭제
+        commentLike.getComment().decreaseLikeNumber(); // 좋아요 수 감소
+    }
+
 }
