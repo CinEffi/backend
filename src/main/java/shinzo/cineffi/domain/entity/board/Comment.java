@@ -68,4 +68,12 @@ public class Comment extends BaseEntity {
         super.setIsDelete(isDelete);
     }
 
+    public void increaseLikeNumber() {
+        this.likeNumber++;
+    }
+
+    public void decreaseLikeNumber() {
+        this.likeNumber--;
+    }
+
 }

@@ -61,6 +61,10 @@ public class Post extends BaseEntity {
     public void increaseCommentNumber() {
         this.commentNumber++;
     }
+    public void decreaseCommentNumber() { this.commentNumber--; }
+
+    public void increaseLikeNumber() { this.likeNumber++; }
+    public void decreaseLikeNumber() { this.likeNumber--; }
 
     @Override
     public boolean equals(Object o) {
@@ -89,5 +93,6 @@ public class Post extends BaseEntity {
     public void clearTags() {
         this.tags.clear();
     }
+
 
 }

@@ -1,8 +1,7 @@
 package shinzo.cineffi.domain.entity.board;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.*;
 import org.hibernate.annotations.Where;
 import shinzo.cineffi.domain.entity.BaseEntity;
 import shinzo.cineffi.domain.entity.user.User;
@@ -10,7 +9,9 @@ import shinzo.cineffi.domain.entity.user.User;
 @Where(clause = "is_delete = false")
 @Entity
 @Builder
+@Getter
 @AllArgsConstructor
+@NoArgsConstructor
 public class PostLike extends BaseEntity {
 
     @Id
@@ -25,4 +26,8 @@ public class PostLike extends BaseEntity {
     @JoinColumn(nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
     private Post post;
+
+    public void setIsDelete(boolean isDelete) {
+        super.setIsDelete(isDelete);
+    }
 }

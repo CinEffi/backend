@@ -1,6 +1,7 @@
 package shinzo.cineffi.board;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +75,30 @@ public class BoardController {
                         .build());
     }
 
+
+    @ApiResponse(description = "result가 true이면 좋아요 처리, false이면 좋아요 취소 처리된 것입니다.")
+    @Operation(summary = "게시글 좋아요 API", description = "좋아요가 되어있으면 취소, 안되어있으면 좋아요")
+    @PostMapping("/posts/{postId}/likes")
+    public ResponseEntity<ResponseDTO<?>> postPostLike(@PathVariable("postId") String encryptedPostId) {
+        // 게시글 정보
+        Long postId = EncryptUtil.LongDecrypt(encryptedPostId);
+
+        // 로그인 유저 정보
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if (loginUserId == null)
+            throw new CustomException(NOT_LOGGED_ID);
+
+        // 좋아요 작업
+        boolean result = boardService.switchPostLike(postId, loginUserId);
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(result)
+                        .build());
+    }
+
+
     @Operation(summary = "게시글 삭제 API")
     @PatchMapping("/posts/{postId}")
     public ResponseEntity<ResponseDTO<?>> patchPost(@PathVariable("postId") String encryptedPostId) {
@@ -86,7 +111,7 @@ public class BoardController {
             throw new CustomException(NOT_LOGGED_ID);
 
         // 삭제
-        boardService.patchPost(postId, loginUserId);
+        boardService.removePost(postId, loginUserId);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
@@ -127,6 +152,28 @@ public class BoardController {
                         .build());
     }
 
+    @ApiResponse(description = "result가 true이면 좋아요 처리, false이면 좋아요 취소 처리된 것입니다.")
+    @Operation(summary = "댓글 좋아요 API")
+    @PostMapping("/comments/{commentId}/likes")
+    public ResponseEntity<ResponseDTO<?>> postCommentLike(@PathVariable("commentId") String encryptedCommentId) {
+        // 게시글 정보
+        Long commentId = EncryptUtil.LongDecrypt(encryptedCommentId);
+
+        // 로그인 유저 정보
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        if (loginUserId == null)
+            throw new CustomException(NOT_LOGGED_ID);
+
+        // 좋아요 작업
+        boolean result = boardService.switchCommentLike(commentId, loginUserId);
+
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(result)
+                        .build());
+    }
+
     @Operation(summary = "댓글 삭제 API")
     @PatchMapping("/comments/{commentId}")
     public ResponseEntity<ResponseDTO<?>> patchComment(@PathVariable("commentId") String encryptCommentId) {
@@ -139,7 +186,7 @@ public class BoardController {
             throw new CustomException(NOT_LOGGED_ID);
 
         // 삭제
-        boardService.patchComment(commentId, loginUserId);
+        boardService.removeComment(commentId, loginUserId);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
