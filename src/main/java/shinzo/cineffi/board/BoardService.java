@@ -66,14 +66,22 @@ public class BoardService {
     }
 
     @Transactional
-    public GetPostDto getPost(Long postId) {
+    public GetPostDto getPost(Long postId, Long userId) {
+        // 유저 및 게시글을 조회하고 로그인 되어있을 경우 좋아요 여부를 조회한다.
         Post post = postRepository.findById(postId).orElseThrow(() -> new CustomException(POST_NOT_FOUND));
+        boolean isLike = false;
+        if (userId != null) {
+            User loginUser = userRepository.findById(userId).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+            isLike = postLikeRepository.findByUserAndPost(loginUser, post).isPresent();
+        }
+
+        // 작성자 객체 생성
         UserDto userDto = new UserDto().from(post.getWriter());
 
         // 조회수 증가
         post.increaseView();
 
-        return new GetPostDto().from(post, userDto);
+        return new GetPostDto().from(post, userDto, isLike);
     }
 
     @Transactional(readOnly = true)
