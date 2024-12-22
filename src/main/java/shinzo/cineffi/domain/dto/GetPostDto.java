@@ -24,16 +24,20 @@ public class GetPostDto {
     @Schema(description = "좋아요 수")
     private Integer likeNumber;
 
+    @Schema(description = "좋아요 여부 (비 로그인 시 항상 false)")
+    private Boolean isLike;
+
     @Schema(description = "작성일시")
     @JsonFormat(pattern = "yyyy/MM/dd'T'hh:mm:ss")
     private LocalDateTime createdAt;
 
-    public GetPostDto from(Post post, UserDto userDto) {
+    public GetPostDto from(Post post, UserDto userDto, boolean isLike) {
         this.title = post.getTitle();
         this.content = post.getContent();
         this.user = userDto;
         this.view = post.getView();
         this.likeNumber = post.getLikeNumber();
+        this.isLike = isLike;
         this.createdAt = post.getCreatedAt();
 
         return this;

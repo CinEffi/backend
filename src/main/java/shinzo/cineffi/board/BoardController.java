@@ -45,12 +45,13 @@ public class BoardController {
     @Operation(summary = "게시글 상세 조회 API")
     @GetMapping("/posts/{postId}")
     public ResponseEntity<ResponseDTO<?>> getPost(@PathVariable("postId") String encryptedPostId) {
+        Long loginUserId = getLoginUserId(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         Long postId = EncryptUtil.LongDecrypt(encryptedPostId);
 
         return ResponseEntity.ok(
                 ResponseDTO.builder()
                         .message(SuccessMsg.SUCCESS.getDetail())
-                        .result(boardService.getPost(postId))
+                        .result(boardService.getPost(postId, loginUserId))
                         .build());
     }
 
