@@ -28,7 +28,7 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     @Order(1)
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        if (//검사하긴하는데 있어도되고없어도되는애들+ 검사하면 안되는 애들
+        if ( // 검사하긴 하는데 있어도 되고 없어도 되는 애들 + 검사하면 안되는 애들
                 (request.getRequestURI().startsWith("/api/auth") ||
                         request.getRequestURI().equals("/api/health") ||
                         request.getRequestURI().equals("/api/movies/init") ||
@@ -48,6 +48,7 @@ public class JWTFilter extends OncePerRequestFilter {
                         request.getRequestURI().equals("/api/reviews/new")||
                         request.getRequestURI().matches("/api/movies/\\d+"))||
                         request.getRequestURI().startsWith("/api/posts")||
+                        request.getRequestURI().equals("/api/posts/hot")||
                         request.getRequestURI().startsWith("/swagger-ui")||
                         request.getRequestURI().contains("api-docs")
                         && !request.getRequestURI().equals("/api/auth/user/check")

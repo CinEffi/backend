@@ -91,6 +91,7 @@ public class SecurityConfig {
                                 "/api/chat/**",
                                 "/api/posts",
                                 "/api/posts/**",
+                                "/api/posts/hot",
                                 "/chat/**",
                                 "/ws/**",
                                 "/v3/api-docs/**",
