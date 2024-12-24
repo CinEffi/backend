@@ -120,6 +120,17 @@ public class BoardController {
                         .build());
     }
 
+    @Operation(summary = "핫 게시글 조회 API")
+    @GetMapping("/posts/hot")
+    public ResponseEntity<ResponseDTO<?>> getHotPosts (@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(
+                ResponseDTO.builder()
+                        .message(SuccessMsg.SUCCESS.getDetail())
+                        .result(boardService.getHotPostList(pageable))
+                        .build());
+
+    }
+
     @Operation(summary = "댓글 목록 조회 API")
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<ResponseDTO<?>> getComments(

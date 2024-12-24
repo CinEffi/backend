@@ -11,6 +11,7 @@ import shinzo.cineffi.board.repository.*;
 import shinzo.cineffi.domain.dto.*;
 import shinzo.cineffi.domain.entity.board.*;
 import shinzo.cineffi.domain.entity.user.User;
+import shinzo.cineffi.domain.response.GetHotPostsRes;
 import shinzo.cineffi.domain.response.PageResponse;
 import shinzo.cineffi.exception.CustomException;
 import shinzo.cineffi.exception.message.ErrorMsg;
@@ -261,4 +262,27 @@ public class BoardService {
         commentLike.getComment().decreaseLikeNumber(); // 좋아요 수 감소
     }
 
+    public PageResponse<GetPostsDto> getHotPostList(Pageable pageable) {
+        Page<WeeklyHotPost> weeklyHotPosts = weeklyHotPostRepository.findAllByHotPostStatus(ACTIVE, pageable);
+
+        ArrayList result = new ArrayList<>();
+
+        for (WeeklyHotPost hotPost : weeklyHotPosts) {
+            Post post = hotPost.getPost();
+
+            result.add(GetPostsDto.builder()
+                    .postId(EncryptUtil.LongEncrypt(post.getId()))
+                    .title(post.getTitle())
+                    .view(post.getView())
+                    .createdAt(post.getCreatedAt())
+                    .user(new UserDto().from(post.getWriter()))
+                    .tags(List.of())
+                    .likeNumber(post.getLikeNumber())
+                    .commentNumber(post.getCommentNumber())
+                    .isHotPost(true)
+                    .build());
+        }
+
+        return new PageResponse().from(weeklyHotPosts, result, pageable);
+    }
 }
