@@ -20,7 +20,6 @@ import static shinzo.cineffi.exception.message.ErrorMsg.NOT_LOGGED_IN;
 @RequiredArgsConstructor
 @RequestMapping("/api/reviews")
 public class ReviewController {
-
     private final ReviewService reviewService;
 
     @PostMapping("/create")
