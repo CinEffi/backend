@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -47,11 +48,9 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         configuration.setAllowCredentials(true);
                         configuration.setAllowedOrigins(List.of(
-                                "https://k0894347bbd29a.user-app.krampoline.com",
                                 "http://localhost:3000",
                                 "http://localhost:3003",
-                                "https://48fb-175-197-204-117.ngrok-free.app",
-                                "https://9e54-180-70-193-179.ngrok-free.app",
+                                "https://d1za9u0b27ndib.cloudfront.net", // 프론트엔드 도메인 주소
                                 "ws://localhost:4001"));
                         configuration.setAllowedMethods(Collections.singletonList("*"));
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
@@ -62,9 +61,9 @@ public class SecurityConfig {
                 })));
 
         http
-                .csrf(AbstractHttpConfigurer::disable)//csrf 비활성화
-                .formLogin(FormLoginConfigurer::disable)//기본로그인 비활성화
-                .httpBasic(AbstractHttpConfigurer::disable)//httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
+                .csrf(AbstractHttpConfigurer::disable) //csrf 비활성화
+                .formLogin(FormLoginConfigurer::disable) //기본로그인 비활성화
+                .httpBasic(AbstractHttpConfigurer::disable) //httpBasic(헤더에 사용자 이름과 비밀번호 추가) 비활성화
                 .logout(customizer -> customizer
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessUrl("/")
@@ -73,6 +72,7 @@ public class SecurityConfig {
 
         http
                 .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/favicon.ico",
                                 "/api/auth/**",
@@ -87,11 +87,18 @@ public class SecurityConfig {
                                 "/api/users/{user-id}/scrap",
                                 "/api/movies/encrypt-test/**",
                                 "/api/users/{user-id}/scrap",
-                                "/api/test",
+                                "/api/health",
                                 "/api/chat/**",
+                                "/api/posts",
+                                "/api/posts/**",
+                                "/api/posts/hot",
                                 "/chat/**",
-                                "/ws/**"
-                        ).permitAll()//토큰 없이 동작해야하는 사이트
+                                "/ws/**",
+                                "/v3/api-docs/**",
+                                "/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll() // 토큰 없이 동작해야하는 사이트
                         .anyRequest().authenticated());
         http
                 .requestCache(RequestCacheConfigurer::disable);

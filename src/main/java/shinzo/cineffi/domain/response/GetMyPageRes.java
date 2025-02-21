@@ -1,10 +1,11 @@
-package shinzo.cineffi.domain.dto;
+package shinzo.cineffi.domain.response;
 
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import shinzo.cineffi.domain.dto.LabelDTO;
 
 @Data
 @Getter

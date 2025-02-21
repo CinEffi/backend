@@ -12,8 +12,9 @@ import java.util.Properties;
 @RestController
 public class TestController {
 
-    @GetMapping("/api/test")
-    public String test() {;
+    @GetMapping("/api/health")
+    @CrossOrigin
+    public String test() {
 
         return "백엔드와 통신 성공! 이제 안심하라구!";
     }

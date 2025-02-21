@@ -73,7 +73,6 @@ public class BoxOfficeDataHandler {
 
     private JSONArray request(String targetDt) {
         HttpClient client = HttpClient.newBuilder()
-                .proxy(ProxySelector.of(new InetSocketAddress("krmp-proxy.9rum.cc", 3128)))  // 프록시 호스트 및 포트
                 .build();
         String url = String.format("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=%s&targetDt=%s", kobisService.curKobisKey, targetDt);
         HttpRequest request = HttpRequest.newBuilder()

@@ -1,12 +1,10 @@
 package shinzo.cineffi.movie;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import shinzo.cineffi.Utils.EncryptUtil;
-import shinzo.cineffi.domain.dto.GetScrapRes;
+import shinzo.cineffi.domain.response.GetScrapRes;
 import shinzo.cineffi.domain.entity.movie.Movie;
 import shinzo.cineffi.domain.entity.movie.MovieGenre;
 import shinzo.cineffi.domain.entity.movie.Scrap;

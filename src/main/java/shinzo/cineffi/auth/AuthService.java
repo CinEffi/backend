@@ -38,7 +38,6 @@ public class AuthService {
     private final UserAnalysisRepository userAnalysisRepository;
     private final GenreRecordRepository genreRecordRepository;
     private final FollowRepository followRepository;
-    private final RestTemplate restTemplate;
 
 //    private final EncryptUtil encryptUtil;
     @Value("${kakao.rest_api_key}")
@@ -64,7 +63,7 @@ public class AuthService {
     }
 
     public KakaoToken requestKakaoToken(String code){
-//        RestTemplate rt = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
         //요청보낼 헤더 생성
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -101,7 +100,7 @@ public class AuthService {
 
     //카카오 토큰으로 카카오 이메일 가져오기
     private String requestKakaoEmail(String accessToken){
-//        RestTemplate rt = new RestTemplate();
+        RestTemplate restTemplate = new RestTemplate();
 
         //헤더 생성
         HttpHeaders headers = new HttpHeaders();

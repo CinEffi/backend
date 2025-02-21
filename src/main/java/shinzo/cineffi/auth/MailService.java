@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import shinzo.cineffi.Utils.EmailSender;
 import shinzo.cineffi.auth.repository.AuthCodeRepository;
 import shinzo.cineffi.domain.dto.AuthCodeDTO;
 import shinzo.cineffi.domain.entity.user.AuthCode;
@@ -30,45 +31,15 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class MailService {
     private final AuthCodeRepository authCodeRepository;
-    private final JavaMailSender javaMailSender;
-    private final RestTemplate restTemplate;
+    private final EmailSender emailSender;
     private static final String senderEmail = "cineffi24@gmail.com";
     private static int number;
-
-    @Value("${email.proxy-url}")
-    private String cineffiProxyServer;
-
 
     public static void createNumber(){
         number = (int)(Math.random() * (90000)) + 100000;// (int) Math.random() * (최댓값-최소값+1) + 최소값
     }
     private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
-
-    public MimeMessage CreateMail(String request){
-
-
-        createNumber();
-        MimeMessage message = javaMailSender.createMimeMessage();
-
-        try {
-            message.setFrom(senderEmail);
-            message.setRecipients(MimeMessage.RecipientType.TO, request);
-            message.setSubject("이메일 인증");
-            String body = "";
-            body += "<h3>" + "요청하신 인증 번호입니다." + "</h3>";
-            body += "<h1>" + number + "</h1>";
-            body += "<h3>" + "감사합니다." + "</h3>";
-            message.setText(body,"UTF-8", "html");
-            message.saveChanges();
-            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
-            saveAuthCode(request,number,expirationTime);
-        } catch (MessagingException e) {
-            logger.error("Error occurred while creating email message", e);
-        }
-
-        return message;
-    }
     public void saveAuthCode(String email,int code, LocalDateTime expirationTime) {
         AuthCode authCode1 = authCodeRepository.findByEmail(email);
         if(authCode1 != null){
@@ -92,43 +63,28 @@ public class MailService {
                 .forEach(authCodeRepository::delete);
     }
 
-    //생성한 메일을 전송
+    // 생성한 메일을 전송
     public int sendMail(String toEmailAddress) {
-        // 씨네피 프록시 서버로 이메일 전송 요청!
         // 인증번호 생성
         createNumber();
 
-        // 프록시 서버 url 지정
-        String url = cineffiProxyServer + "/mail-send";
+        // 이메일 제목
+        String subject = "[Cineffi] 회원가입 인증번호 안내";
 
-        // 요청 객체 생성
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Accept", "application/json");
+        // 이메일 본문
+        String body = "";
+        body += "요청하신 인증 번호입니다.\n";
+        body += number;
+        body += "\n감사합니다.";
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("authCode", number);
-        body.put("emailAddress", toEmailAddress);
+        // 메일 전송
+        emailSender.sendEmail(toEmailAddress, subject, body);
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        // 만료시간 저장
+        LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
+        saveAuthCode(toEmailAddress, number, expirationTime);
 
-        // 요청 보내기
-        System.out.println("스프링 -> 파이썬 프록시 요청 보내기!");
-        try {
-            Map<String, Object> response = parseJson(restTemplate.postForObject(url, entity, String.class));
-
-            if (response.get("isSuccess") == Boolean.FALSE || response.get("isSuccess") == null) {
-                System.out.println("실패!");
-                return -1;
-            }
-
-            // 만료시간 저장
-            LocalDateTime expirationTime = LocalDateTime.now().plusMinutes(5);
-            saveAuthCode(toEmailAddress, number, expirationTime);
-
-            return number;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return number;
     }
     //이메일 인증번호 체크
     public boolean checkCode (AuthCodeDTO authCodeDTO){

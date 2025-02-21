@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/cineffi-backend.cineffi.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cineffi-backend.cineffi.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/cineffi.main.iml" filepath="$PROJECT_DIR$/.idea/modules/cineffi.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/shinzo.cineffi.main.iml" filepath="$PROJECT_DIR$/.idea/modules/shinzo.cineffi.main.iml" />
     </modules>

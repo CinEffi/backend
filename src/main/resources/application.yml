@@ -1,26 +1,29 @@
 ---
 
 ## local
+server:
+  port: 4000
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/cineffi
-    username:
-    password:
+    username: cineffi
+    password: mooyaho
     driver-class-name: org.postgresql.Driver
 
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       properties:
         hibernate:
           format_sql: none
   data:
     redis:
       host: localhost
-      port: 6379
       password: mooyaho
+      port: 6379
 
   mail:
     host: smtp.gmail.com
@@ -51,7 +54,7 @@ logging:
 
 kakao:
   rest_api_key: 1c96ae86d9c0b5ceb524f9aed3327476
-  redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/check
+  redirect_url: http://localhost:8080/auth/check
   back_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/api/auth/login/kakao
   deleted_redirect_url: https://k0894347bbd29a.user-app.krampoline.com/auth/deletedaccount
 app:
@@ -86,8 +89,7 @@ tmdb:
   end-year: 2024
   start-month: 4
   end-month: 4
-email:
-  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
+
 ---
 
 ## dev profile (Docker 용)
@@ -101,7 +103,7 @@ spring:
         - dev
   # Postgres
   datasource:
-    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com
+    url: jdbc:postgresql://cineffi-db.cl044i44muvk.ap-northeast-2.rds.amazonaws.com/cineffi
     username: postgres
     password: cineffi2024!
     driver-class-name: org.postgresql.Driver
@@ -114,13 +116,10 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
       properties:
         hibernate:
           format_sql: none
-
-email:
-  proxy-url: https://1e81-59-12-233-239.ngrok-free.app
 
 logging:
   level:

@@ -1,8 +1,9 @@
-package shinzo.cineffi.domain.dto;
+package shinzo.cineffi.domain.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import shinzo.cineffi.domain.dto.MovieDTO;
 
 import java.util.List;
 

@@ -9,9 +9,8 @@ public class CorsMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry corsRegistry){
         corsRegistry.addMapping("/**")
-                .allowedOrigins("https://k7f10638b4382a.user-app.krampoline.com/") // 프론트 주소
-                .allowedOrigins("http://cineffi-2.s3-website.ap-northeast-2.amazonaws.com/") // S3 주소
-                .allowedOrigins("https://cineffi-2.s3-website.ap-northeast-2.amazonaws.com/") // S3 주소
+                .allowedOrigins("https://d1za9u0b27ndib.cloudfront.net/")
+                .allowedOrigins("http://d1za9u0b27ndib.cloudfront.net/")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
     }

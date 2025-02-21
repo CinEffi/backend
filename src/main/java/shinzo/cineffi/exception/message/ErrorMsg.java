@@ -30,6 +30,7 @@ public enum ErrorMsg {
         UNAUTHORIZED_MEMBER(UNAUTHORIZED, "인증된 사용자가 아닙니다."),
         NOT_LOGGED_ID(UNAUTHORIZED, "로그인이 되어있지 않습니다."),
         USER_MUTED(BAD_REQUEST, "뮤트된 사용자입니다."),
+        ACCESS_DENIED(UNAUTHORIZED, "권한이 없는 사용자입니다."),
 
         /* 403 FORBIDDEN : 권한 없음 */
         Invalid_token(FORBIDDEN,"잘못된 토큰입니다."),
@@ -37,11 +38,13 @@ public enum ErrorMsg {
         UNAUTHORIZED_TOKEN(FORBIDDEN,"잘못된 Refresh 토큰 입니다"),
         /* 404 NOT_FOUND : Resource 를 찾을 수 없음 */
         USER_NOT_FOUND(NOT_FOUND, "사용자가 존재하지 않습니다."),
+        COMMENT_NOT_FOUND(NOT_FOUND, "댓글이 존재하지 않습니다."),
         MOVIE_NOT_FOUND(NOT_FOUND, "영화를 찾을 수 없습니다."),
         REVIEW_NOT_FOUND(NOT_FOUND, "리뷰를 찾을 수 없습니다." ),
         TOKEN_NOT_FOUND(NOT_FOUND,"토큰을 찾을 수 없습니다."),
         USERCHAT_NOT_FOUND(NOT_FOUND, "채팅정보를 찾을 수 없습니다."),
         CHATROOM_NON_FOUND(NOT_FOUND, "채팅방이 존재하지 않습니다."),
+        POST_NOT_FOUND(NOT_FOUND, "게시글이 존재하지 않습니다."),
         /* 409 CONFLICT : Resource 의 현재 상태와 충돌. 보통 중복된 데이터 존재 */
         DUPLICATE_USER(CONFLICT,"이미 가입된 사용자입니다."),
         DUPLICATE_NICKNAME(CONFLICT,"중복 닉네임입니다."),
@@ -68,16 +71,8 @@ public enum ErrorMsg {
 
         FAIL_TO_SEND_EMAIL(INTERNAL_SERVER_ERROR, "이메일 전송에 실패했지롱");
 
-
-
-
-
-
-
         private final HttpStatus httpStatus;
         private final String detail;
-
-
         }
 
 

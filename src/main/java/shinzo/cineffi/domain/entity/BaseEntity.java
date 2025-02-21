@@ -30,15 +30,15 @@ public abstract class BaseEntity {
     @Column(columnDefinition = "TIMESTAMP(3) WITHOUT TIME ZONE")
     private LocalDateTime modifiedAt;
 
-    @ColumnDefault("false")
-    @Builder.Default
-    private Boolean isDelete = false;
+    @Column(name = "is_delete", nullable = false)
+    private Boolean isDelete;
 
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
         this.modifiedAt = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).toLocalDateTime();
+        isDelete = false;
     }
 
     @PreUpdate

@@ -1,4 +1,4 @@
-package shinzo.cineffi.domain.dto;
+package shinzo.cineffi.domain.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
