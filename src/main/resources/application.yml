@@ -3,6 +3,8 @@
 ## local
 server:
   port: 4000
+  http:
+    port: 80
 
 spring:
   datasource:
@@ -95,6 +97,8 @@ tmdb:
 ## dev profile (Docker 용)
 server:
   port: 4000
+  http:
+    port: 80
 
 spring:
   config:
