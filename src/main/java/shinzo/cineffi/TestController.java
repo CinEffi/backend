@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 
-    @GetMapping("/api/health")
+    @GetMapping("/")
     @CrossOrigin
     public ResponseEntity<?> test() {
 
