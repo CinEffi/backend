@@ -30,7 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         if ( // 검사하긴 하는데 있어도 되고 없어도 되는 애들 + 검사하면 안되는 애들
                 (request.getRequestURI().startsWith("/api/auth") ||
-                        request.getRequestURI().equals("/api/health") ||
+                        request.getRequestURI().equals("/") ||
                         request.getRequestURI().equals("/api/movies/init") ||
                         request.getRequestURI().equals("/api/movies/update") ||
                         request.getRequestURI().equals("/api/movies/boxOffice") ||
