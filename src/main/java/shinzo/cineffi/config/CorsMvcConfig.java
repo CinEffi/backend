@@ -11,6 +11,7 @@ public class CorsMvcConfig implements WebMvcConfigurer {
         corsRegistry.addMapping("/**")
                 .allowedOrigins("https://d1za9u0b27ndib.cloudfront.net/")
                 .allowedOrigins("http://d1za9u0b27ndib.cloudfront.net/")
+                .allowedOrigins("https://cineffi-elb-994338199.ap-northeast-2.elb.amazonaws.com")
                 .allowedMethods("GET", "POST", "PUT", "DELETE")
                 .allowedHeaders("*");
     }
